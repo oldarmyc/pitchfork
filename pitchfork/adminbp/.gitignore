@@ -1,0 +1,31 @@
+config.py
+.idea*
+cert.pem
+*.py[co]
+.DS_Store
+.Python
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+include
+lib
+var
+sdist
+develop-eggs
+.installed.cfg
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+
+#Translations
+*.mo

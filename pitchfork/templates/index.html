@@ -1,0 +1,216 @@
+{% extends "_fluid_base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block addHeaders %}
+    <style>
+        div.loading-div, div.loading-div-vars {
+            float: left;
+            margin: -46px 0 0 140px;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <div class="row-fluid">
+        <div class="span3">
+            <div class="well sidebar-nav">
+                {% if active_products %}
+                    <ul class="nav nav-list">
+                        <li class="nav-header">Cloud Products</li>
+                        {% for product in active_products %}
+                            {% set setting = api_settings.get(product) %}
+                            <li>
+                                {% if setting %}
+                                    <a href="{{ setting.get('app_url') }}" title="{{ setting.get('title') }}">{{ setting.get('title') }}</a>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+        <div class="span9">
+            <div class="hero-unit">
+                <h1>Pitchfork</h1>
+                <p>Cloud API interactive Website Application</p>
+                {% if not session.get('username') %}
+                    <p><a href="/admin/login" title="Login to Application" class="btn btn-primary">Login to Application</a></p>
+                {% endif %}
+            </div>
+            <div class="row-fluid">
+                {% if session.get('username') %}
+                    <h3>Search</h3>
+                    <p>
+                        <input type="text" placeholder="Search Title and Description" id="search_api" name="search_api" class="search-input">
+                        <a onclick="submitSearch();" class="btn btn-info search-button" title="Search API Calls">Search</a>
+                    </p>
+                    <div id="front_call_wrapper">
+                        <h3>Most Accessed Calls</h3>
+                        <div id="global_vars">
+                            <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
+                            <span class="input-label">Data Center:</span><select id="data_center" name="data_center">
+                                <option value="none" selected="selected">Select Data Center</option>
+                                {% for option in data_centers %}
+                                    <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div id="api_call_items">
+                            {% include "_api_call_wrapper_template.html" %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='js/bootstrap-modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
+    <script>
+
+        var global_count = 0;
+
+        function validate_field(field_name) {
+            if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0 & $.trim($('#' + field_name).val()) != 'none' ) {
+                return true;
+            }
+            else {
+                $('#' + field_name).addClass('error');
+                return false;
+            }
+        }
+
+        $("#data_center").change(function () {
+            if ($(this).val() == "none") {
+                $(this).addClass("empty");
+            }
+            else {
+                $(this).removeClass("empty");
+            }
+            // Clear out results on page as the DC changing affects that data and makes it invalid
+            $('.code-block').text('None');
+            // Hide the results after clearing them
+            $('.code-blocks-wrapper').hide();
+            if ( global_count > 1 ) {
+                $('#generated_messages').html('<div class="alert"><button type="button" class="close" data-dismiss="alert">&times;</button><p>Reponses have been cleared as the data does not apply to the new data center</p></div>');
+            }
+            else {
+                global_count += 1;
+            }
+        });
+
+        $("#data_center").change();
+
+        function show_element(div_id, index) {
+            $('.' + div_id).toggle('slow', function() {
+                if ( $('.' + div_id).is(':hidden') ) {
+                    $('.toggle-element-' + index).html('API Call Details');
+                }
+                else {
+                    $('.toggle-element-' + index).html('Hide API Details');
+                }
+            });
+        }
+
+        $('#api_call_items').on('click', '.api_call_submit', function() {
+            var form_submit = $(this).attr('name');
+            $("#" + form_submit + "_form").unbind('submit').bind('submit', function(e){
+                e.preventDefault();
+                $('#loading_div_' + form_submit).show();
+                var sending = {}
+                var validated = false
+                var data = $("#" + form_submit + "_form").serialize()
+                var send_to = '';
+                $.each(data.split('&'), function (index, elem) {
+                    var vals = elem.split('=');
+                    if ( vals[0] == 'app_url_link' ) {
+                        send_to = unescape(vals[1].replace(/\+/g, ' ')) + '/api_call/process'
+                    }
+                    sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
+                });
+                var message = "You must provide the following data before the request can be sent:<br /><br />"
+                var dc_check = false
+
+                if ( validate_field('data_center') ) {
+                    sending['data_center'] = $('#data_center').val();
+                    sending['ddi'] = $('#ddi').val().trim();
+                    dc_check = true;
+                } else {
+                    $('#data_center').addClass('error');
+                    message += "<strong>Data Center</strong>";
+                }
+
+                if ( dc_check ) {
+                    sending['testing'] = false;
+                    validated = true;
+                }
+
+                if ( validated ) {
+                    $.ajax({
+                        url: send_to,
+                        type: "post",
+                        data: JSON.stringify(sending),
+                        contentType: "application/json",
+                        success: function(data){
+                            $('#loading_div_' + form_submit).hide();
+                            if ( !$('#api_results_wrapper_' + form_submit).is(':visible') ) {
+                                $('#api_results_wrapper_' + form_submit).toggle('slow')
+                            }
+                            $('#api_url_' + form_submit).text(data.api_url)
+
+                            var header_content = JSON.stringify(data.request_headers, null, 4);
+                            $('#api_headers_' + form_submit).html('<pre>' + header_content + '</pre>')
+
+                            if ( data.data_package ) {
+                                if ( $('#api_body_wrapper_' + form_submit).is(':hidden') ) {
+                                    $('#api_body_wrapper_' + form_submit).toggle();
+                                }
+                                var data_format = JSON.stringify(data.data_package, null, 4);
+                                $('#api_body_' + form_submit).html('<pre>' + data_format + '</pre>');
+                            }
+                            
+                            var response_headers = JSON.stringify(data.response_headers, null, 4);
+                            $('#api_response_headers_' + form_submit).html('<pre>' + response_headers + '</pre>')
+
+                            if ( data.response_code >= 400 ) {
+                                var response_body = JSON.stringify(data.response_body, null, 4);
+                                $('#api_content_' + form_submit).html('<pre>' + response_body + '</pre>');
+                            }
+                            else {
+                                var response_content = JSON.stringify(data.response_body, null, 4);
+                                $('#api_content_' + form_submit).html('<pre>' + response_content + '</pre>');
+                            }
+                        },
+                        error: function(data) {
+                            $('#loading_div_' + form_submit).hide();
+                        }
+                    });
+                }
+                else {
+                    bootbox.alert(message);
+                    $('#loading_div_' + form_submit).hide();
+                }
+            });
+        });
+
+        function submitSearch() {
+            var search_string = $('#search_api').val();
+            var sending = {};
+            sending['search_string'] = search_string;
+            $.ajax({
+                url: '/search',
+                type: "post",
+                data: JSON.stringify(sending),
+                contentType: "application/json",
+                success: function(data){
+                    $('#api_call_items').html(data);
+                },
+                error: function(data) {
+                    $('#api_call_items').html('<strong>There was an error with the request</strong>');
+                }
+            });
+        }
+
+    </script>
+{% endblock %}

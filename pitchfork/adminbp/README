@@ -1,0 +1,83 @@
+Admin Blueprint Application
+
+An easy way to get Administrative functions into an application
+
+Base Functionality:
+  Login/Logout
+  Submit Feedback - Must have APP_EMAIL specified in config or 
+                    provide an email address after the fact to enable
+
+Administrator Functions:
+  Edit App Title, App. Email, and Footer
+  Add/Remove Administrators
+  Build Application Menu System (Order, Group, Enable/Disable)
+  Add Roles to define different access levels
+
+Uses edir/LDAP to Login to application
+Uses Mongo as the database engine
+
+Collection the system uses is called Settings. 
+There will only be one document in this collection.
+
+All URLs will be prefixed with /admin and they are as follows:
+
+/admin/settings
+/admin/settings/menu
+/admin/settings/roles
+
+/admin - Temp URL to be a base index
+
+The layout is twitter bootstrap using alert, tooltip, dropdown jquery
+
+You can add the following items in the Main Application Config file, or
+edit the check_and_initialize function in main.py to set the defaults when
+the system goes and checks for the first time.
+
+ADMIN_SSO : Default user (Use SSO) to be an admin
+ADMIN_NAME : Full Name of Admin
+APP_EMAIL : Default email address to send email from. 
+            Adding an email address allows for feedback submission
+
+Getting it to all Work:
+
+Install the requirements for the Application using the requirements.txt file
+
+pip install -r requirements.txt
+
+Add the following lines to your main application file:
+
+** Start Additions **
+
+*Registering the Blueprint
+DIR_NAME_CLONE = Name you cloned repo into
+
+from DIR_NAME_CLONE import bp as admin_bp
+app.register_blueprint(admin_bp, url_prefix='/admin')
+
+*Importing and setting the global context processors (Global functions for all
+templates)
+
+from DIR_NAME_CLONE.context_processor import utility_processor
+app.context_processor(utility_processor)
+
+** End Additions **
+
+For the rest of your app you can import the decorators file to use to check
+permissions on any route in your application.
+
+* Import the file
+from DIR_NAME_CLONE.decorators import check_perms
+
+* Place as decorator on your routes
+@check_perms(request)
+
+As you add more levels of permissions and roles, you can edit the permissions
+file as well, to gain more checks to be used throughout the application.
+
+Forms for the admin section are in the database as well, and generated dynamically
+for all admin forms. This allows for easy manipulation of labels and order of form
+fields. Dynamic forms can be used for the main application forms as well, it is up
+to the programmer whether to utilize them.
+
+Additional Context Processors can be added to main application and will not
+override but add to the admin context processors provided by the admin section.

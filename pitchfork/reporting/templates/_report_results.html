@@ -1,0 +1,53 @@
+<div id="results_query">
+    {% if results %}
+        <h3>{{ title }} - ({{ results.count() }})</h3>
+        <table class="table">
+            <tr>
+                <th class="header-left">Name</th>
+                <th class="header-center">DDI</th>
+                <th class="header-center">DC</th>
+                <th>Product</th>
+                <th>Completed</th>
+                <th>Call Run</th>
+                <th class="header-center">Verb</th>
+                <th class="header-center">Resp. Code</th>
+                <th class="header-center">Details</th>
+                <th class="header-center">API Docs</th>
+            </tr>
+            {% for item in results %}
+                <tr class="{{ loop.cycle('bg-odd', 'bg-even') }}">
+                    <td>
+                        {{ item.get('username') }}
+                    </td>
+                    <td class="cell-center">
+                        {{ item.get('ddi') }}
+                    </td>
+                    <td class="cell-center">
+                        {{ item.get('data_center')|upper }}
+                    </td>
+                    <td>
+                        {{ item.get('product') }}
+                    </td>
+                    <td>
+                        {{ item.get('completed_at').strftime('%m-%d-%Y') }}
+                    </td>
+                    <td>
+                        {{ item.get('details').get('title') }}
+                    </td>
+                    <td class="cell-center">
+                        {{ item.get('request').get('verb') }}
+                    </td>
+                    <td class="cell-center">
+                        {{ item.get('response').get('code') }}
+                    </td>
+                    <td class="cell-center">
+                        <a onClick="toggle_modal('{{ item.get('_id') }}')" class="call-details-link" title="{{ item.get('details').get('title') }} Full Details">Details</a>
+                    </td>
+                    <td class="cell-center">
+                        <a href="{{ item.get('details').get('doc_url') }}" title="{{ item.get('details').get('title') }} Documentation" target="_blank">Docs</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</div>

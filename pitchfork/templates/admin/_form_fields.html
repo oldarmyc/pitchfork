@@ -1,0 +1,78 @@
+<div id='current_fields'>
+    <h4>Current Fields</h4>
+    {% if fields %}
+        <table class="table" style="width: 97%;">
+            <tr>
+                <th>Name</th>
+                <th>Label</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th style="text-align: center;">Default Value</th>
+                <th style="text-align: center;">Required</th>
+                <th style="text-align: center;">Active</th>
+                <th>Order</th>
+                <th style="text-align: center;">Actions</th>
+            </tr>
+            {% for field in fields %}
+                <tr>
+                    <td>
+                        {{ field.get('name') }}
+                    </td>
+                    <td>
+                        {{ field.get('label') }}
+                    </td>
+                    <td>
+                        {{ field.get('field_type') }}
+                    </td>
+                    <td>
+                        {% if field.get('description') %}
+                            {{ field.get('description') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if field.get('default') %}
+                            {{ field.get('default_value') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if field.get('required') %}
+                            <i class="icon-ok"></i>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if field.get('active') %}
+                            <i class="icon-ok-circle"></i>
+                        {% else %}
+                            <i class="icon-ban-circle"></i>
+                        {% endif %}
+                    </td>
+                    <td style="padding-left: 13px;">
+                        {% if loop.first and fields|length > 1 %}
+                            <a onClick="demote_form_element('{{ form_id }}','{{ field.get('name') }}')" class="tooltip-title" title="Demote Form Field"><i class="icon-arrow-down"></i></a>
+                        {% elif loop.last and fields|length > 1 %}
+                            <a onClick="promote_form_element('{{ form_id }}','{{ field.get('name') }}')" class="tooltip-title" title="Promote Form Field"><i class="icon-arrow-up"></i></a>
+                        {% elif fields|length > 1 %}
+                            <a onClick="promote_form_element('{{ form_id }}','{{ field.get('name') }}')" class="tooltip-title" title="Promote Form Field"><i class="icon-arrow-up"></i></a>
+                            <a onClick="demote_form_element('{{ form_id }}','{{ field.get('name') }}')" class="tooltip-title" title="Demote Form Field"><i class="icon-arrow-down"></i></a>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        <a href="/admin/forms/fields/{{ form_id }}/{{ field.get('name') }}" data-toggle="modal" data-target="#edit_custom_fields_form" class="tooltip-title" title="Edit Form Element"><i class="icon-pencil"></i></a>
+                        {% if field.get('active') %}
+                            <a href="/admin/forms/fields/deactivate/{{ form_id }}/{{ field.get('name') }}" class="tooltip-title" title="Disable Form Element"><i class="icon-ban-circle"></i></a>
+                        {% else %}
+                            <a href="/admin/forms/fields/activate/{{ form_id }}/{{ field.get('name') }}" class="tooltip-title" title="Disable Form Element"><i class="icon-ok-circle"></i></a>
+                        {% endif %}
+                        <a href="/admin/forms/fields/delete/{{ form_id }}/{{ field.get('name') }}" class="tooltip-title" title="Delete Form Element"><i class="icon-trash"></i></a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No fields have been created for this form</p>
+    {% endif %}
+</div>

@@ -1,0 +1,78 @@
+<h4>Menu Details</h4>
+<table class="table">
+    <tr>
+        <th>Name</th>
+        <th>Display Name</th>
+        <th>Parent</th>
+        <th>URL</th>
+        <th>Permissions</th>
+        <th>Active</th>
+        <th>Order</th>
+        <th></th>
+    </tr>
+    {% for menu_item in menu_list %}
+        <tr>
+            <td>
+                {{ menu_item.get('name') }}
+            </td>
+            <td>
+                {{ menu_item.get('display_name') }}
+            </td>
+            <td>
+                {% if menu_item.get('parent') %}
+                    {{ menu_item.get('parent') }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>
+                {{ menu_item.get('url') }}
+            </td>
+            <td>
+                {{ menu_item.get('view_permissions')|title }}
+            </td>
+            <td style="padding-left: 23px;">
+                {% if menu_item.get('active') %}
+                    <i class="icon-ok-circle"></i>
+                {% else %}
+                    <i class="icon-ban-circle"></i>
+                {% endif %}
+            </td>
+            <td style="padding-left: 14px;">
+                <div class="up-down-arrows">
+                    {% if menu_item.get('parent') and menu_item.get('parent') != "" %}
+                        {% if loop.first %}
+                            {% if loop.index < loop.length %}
+                                {% if (menu_item.get('parent') == menu_list[(loop.index)].get('parent')) %}
+                                    <a id="{{ menu_item.get('name') }}" onClick="demote_child_element('{{ menu_item.get('name') }}')" class="tooltip-title" title="Demote Menu Item"><i class="icon-arrow-down"></i></a>
+                                {% endif %}
+                            {% endif %}
+                        {% elif loop.last %}
+                            {% if (menu_item.get('parent') == menu_list[(loop.index - 2)].get('parent')) %}
+                                <a id="{{ menu_item.get('name') }}" onClick="promote_child_element('{{ menu_item.get('name') }}')" class="tooltip-title" title="Promote Menu Item"><i class="icon-arrow-up"></i></a>
+                            {% endif %}
+                        {% else %}
+                            {% if (menu_item.get('parent') == menu_list[(loop.index - 2)].get('parent')) and (menu_item.get('parent') == menu_list[(loop.index)].get('parent')) %}
+                                <a id="{{ menu_item.get('name') }}" onClick="promote_child_element('{{ menu_item.get('name') }}')" class="tooltip-title" title="Promote Menu Item"><i class="icon-arrow-up"></i></a>
+                                <a id="{{ menu_item.get('name') }}" onClick="demote_child_element('{{ menu_item.get('name') }}')" class="tooltip-title" title="Demote Menu Item"><i class="icon-arrow-down"></i></a>
+                            {% elif (menu_item.get('parent') == menu_list[(loop.index - 2)].get('parent')) and (menu_item.get('parent') != menu_list[(loop.index)].get('parent')) %}
+                                <a id="{{ menu_item.get('name') }}" onClick="promote_child_element('{{ menu_item.get('name') }}')" class="tooltip-title" title="Promote Menu Item"><i class="icon-arrow-up"></i></a>
+                            {% elif (menu_item.get('parent') != menu_list[(loop.index - 2)].get('parent')) and (menu_item.get('parent') == menu_list[(loop.index)].get('parent')) %}
+                                <a id="{{ menu_item.get('name') }}" onClick="demote_child_element('{{ menu_item.get('name') }}')" class="tooltip-title" title="Demote Menu Item"><i class="icon-arrow-down"></i></a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </td>
+            <td id="tooltip">
+                <a href="/admin/settings/menu/{{ menu_item.get('name') }}" data-toggle="modal" class="tooltip-title" data-target="#edit_menu" title="Edit Menu Item"><i class="icon-pencil"></i></a>
+                {% if menu_item.get('active') %}
+                    <a href="/admin/settings/menu/toggle/disable/{{ menu_item.get('name') }}" class="tooltip-title" title="Disable Menu Item"><i class="icon-ban-circle"></i></a>
+                {% else %}
+                    <a href="/admin/settings/menu/toggle/enable/{{ menu_item.get('name') }}" class="tooltip-title" title="Enable Menu Item"><i class="icon-ok-circle"></i></a>    
+                {% endif %}
+                <a href="/admin/settings/menu/remove/{{ menu_item.get('name') }}" class="tooltip-title" title="Delete Menu Item"><i class="icon-trash"></i></a>
+            </td>
+        </tr>
+    {% endfor %}
+</table>

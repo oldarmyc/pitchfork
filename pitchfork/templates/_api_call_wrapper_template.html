@@ -1,0 +1,178 @@
+<div id="global_call_wrapper">
+    {% if most_accessed is string %}
+        <p>{{ most_accessed }}</p>
+    {% else %}
+        {% for api_call in most_accessed %}
+            <section id="{{ api_call.get('title')|lower|slug }}">
+                <div id="api_call_wrapper" class="{{ loop.cycle('bg-odd', 'bg-even') }}">
+                    <h4>{{ api_call.get('title') }} - {{ api_call.get('prod_title') }}</h4>
+                    <div id="api_description">
+                        {{ api_call.get('short_description')|nl2br|tab2spaces|safe }}
+                    </div>
+                    <div id="show_hide" class="out-api">
+                        <a onclick="show_element('{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}', {{loop.index}})" class="toggle-element-{{ loop.index }} btn btn-primary">API Call Details</a>
+                    </div>
+                    <div id="total_api_wrap">
+                        <div id="api_call_inner" class="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" style="display: none;">
+                            <div id="basic_api_info">
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <span class="ep-label">Endpoint:</span>
+                                        </td>
+                                        <td>
+                                            <span class="basic-values">{{ api_call.get('endpoint') }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="ep-label">URI:</span>
+                                        </td>
+                                        <td>
+                                            <span class="basic-values">{{ api_call.get('api_uri') }}</span>
+                                        </td>
+                                    </tr>
+                                    {% if api_call.get('add_to_header') %}
+                                        <tr>
+                                            <td>
+                                                <span class="ep-label">Add Header:</span>
+                                            </td>
+                                            <td>
+                                                <span class="basic-values">{{ api_call.get('custom_header_key') }}: {{ api_call.get('custom_header_value') }}</span>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <td>
+                                             <span class="ep-label">Verb:</span>
+                                        </td>
+                                        <td>
+                                            <span class="basic-values">{{ api_call.get('verb') }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                             <span class="ep-label">Docs:</span>
+                                        </td>
+                                        <td>
+                                            {% if api_call.get('doc_url') %}
+                                                <span class="basic-values"><a href="{{ api_call.get('doc_url') }}" target="_blank" title="API Documents URL">API Reference Document</a></span>
+                                            {% else %}
+                                                <span class="basic-values">No Documentation Linked</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                                {% if api_call.get('verb')|lower == 'post' or api_call.get('verb')|lower == 'put' or api_call.get('verb')|lower == 'delete' %}
+                                    <p style="margin: 5px 0" class="text-error">Note: This action can be destructive, or result in additional charges to a customers account. Please proceed with caution.</p>
+                                {% endif %}
+                            </div>
+                            {% if api_call.get('variables') %}
+                                <form class="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}_form" action="" id="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}_form" method="POST">
+                                    <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
+                                    <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
+                                    <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
+                                    <input id="app_url_link" name="app_url_link" type="hidden" value="{{ api_call.get('app_link') }}">
+                                    <input id="api_endpoint" name="api_endpoint" type="hidden" value="{{ api_call.get('endpoint') }}">
+                                    <table class="table parameters" style="width: 90%">
+                                        <tr>
+                                            <th>Parameter</th>
+                                            <th></th>
+                                            <th>Type</th>
+                                            <th style="text-align: center;">Required</th>
+                                            <th>Description</th>
+                                        </tr>
+                                        {% for var in api_call.get('variables') %}
+                                            <tr>
+                                                <td>
+                                                    {{ var.get('variable_name') }}
+                                                </td>
+                                                <td{% if var.get('required') %} class="required"{% endif %}>
+                                                    {% if var.get('field_display') == 'TextField' %}
+                                                        <input id="{{ var.get('variable_name') }}" name="{{ var.get('variable_name') }}" type="text" placeholder="{{ var.get('variable_name')|unslug|title }}">
+                                                    {% elif var.get('field_display') == 'SelectField' %}
+                                                        <select id="{{ var.get('variable_name') }}" name="{{ var.get('variable_name') }}">
+                                                            {% for var in parse_field_data(var.get('field_display_data')) %}
+                                                                <option value="{{ var }}">{{ var }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {{ var.get('field_type') }}
+                                                </td>
+                                                <td style="text-align: center;">
+                                                    {% if var.get('required') %}
+                                                        <span class="required">Yes</span>
+                                                    {% else %}
+                                                        No
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {{ var.get('description') }}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                    <p style="font-size: 12px;"><span class="required">*</span> Required for API Call</p>
+                                    <input name="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="api_call_submit btn btn-info" type="submit" value="Send API Call" name="submit">
+                                </form>
+                                <div id="loading_div_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="loading-div-vars" style="display: none;">
+                                    <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
+                                </div>
+                            {% else %}
+                                <form class="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}_form" action="" id="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}_form" method="POST">
+                                    <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
+                                    <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
+                                    <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
+                                    <input id="app_url_link" name="app_url_link" type="hidden" value="{{ api_call.get('app_link') }}">
+                                    <input id="api_endpoint" name="api_endpoint" type="hidden" value="{{ api_call.get('endpoint') }}">
+                                    <input name="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="api_call_submit btn btn-info no-var-btn" type="submit" value="Send API Call" name="submit">
+                                </form>
+                                <div id="loading_div_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="loading-div" style="display: none;">
+                                    <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
+                                </div>
+                            {% endif %}
+                            <div id="api_results_wrapper_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="code-blocks-wrapper" style="display: none">
+                                <div id="api_uri">
+                                    <h5>Request URL</h5>
+                                    <div class="code-block" id="api_url_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}">
+                                        URL Here
+                                    </div>
+                                </div>
+                                <div id="api_headers">
+                                    <h5>Request Headers</h5>
+                                    <div class="code-block" id="api_headers_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}">
+                                        Request Headers Here
+                                    </div>
+                                </div>
+                                <div id="api_body_wrapper_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" style="display: none;">
+                                    <h5>Request Data Object</h5>
+                                    <div class="code-block" id="api_body_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}">
+                                        Data Object if any
+                                    </div>
+                                </div>
+                                <div id="api_response_headers">
+                                    <h5>Response Headers</h5>
+                                    <div class="code-block" id="api_response_headers_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}">
+                                        Response Code
+                                        Request ID
+                                    </div>
+                                </div>
+                                <div id="api_response_body">
+                                    <h5>Response Body</h5>
+                                    <div class="code-block" id="api_content_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}">
+                                        Body Here
+                                    </div>
+                                </div>
+                                <div id="show_hide" class="in-api">
+                                    <a onclick="show_element('{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}', {{loop.index}})" class="toggle-element-{{ loop.index }} btn btn-primary">API Call Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        {% endfor %}
+    {% endif %}
+</div>

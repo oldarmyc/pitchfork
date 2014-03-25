@@ -1,0 +1,79 @@
+{% extends "admin/_admin_base.html" %}
+{% block title %} - Manage Administrators{% endblock %}
+{% block addHeaders %}
+    <style>
+        div#form_errors {
+            position: relative;
+            margin: -34px 0 0 240px;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <h2>{{ title }}</h2>
+    <div class="row-fluid">
+        <h4>Administrators</h4>
+        <div id="add_admin_form">
+            <form method="POST" action="/admin/settings/admins" class="form-horizontal">
+                {{ form.hidden_tag() }}
+                {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
+                    <div class="control-group{% if field.errors %} error{% endif %}">
+                        {{ field.label(class="control-label") }}
+                        <div class="controls">
+                            {{ field|safe }}
+                            <div id="form_errors">
+                                {% for error in field.errors %}
+                                    <span style="color: #B94A48;">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                <div class="control-group">
+                    <div class="controls">
+                        {% for field in form if (field.widget.input_type == 'submit') %}
+                            {{ field(class="btn") }}
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <h5>Current Administrators</h5>
+        {% if settings.get('administrators') %}
+            <table class="table" style="width: 500px;">
+                <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th></th>
+                </tr>
+                {% for user in settings.get('administrators') %}
+                    <tr>
+                        <td>
+                            {{ user.get('admin') }}
+                        </td>
+                        <td>
+                            {{ user.get('admin_name') }}
+                        </td>
+                        <td>
+                            {{ user.get('admin_email') }}
+                        </td>
+                        <td>
+                            <a href="/admin/settings/remove/admin/{{ user.get('admin') }}" class="tooltip-title" title="Remove administrator from system"><i class="icon-trash"></i></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>There are no Administrators setup on the system</p>
+        {% endif %}
+    </div>
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-tooltip.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.tooltip-title').tooltip();
+        });
+    </script>
+{% endblock %}

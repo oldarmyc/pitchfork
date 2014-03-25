@@ -1,0 +1,84 @@
+{% extends "admin/_admin_base.html" %}
+{% block title %} - Manage Roles & Permissions{% endblock %}
+{% block addHeaders %}
+    <style>
+        
+    </style>
+{% endblock %}
+{% block body %}
+    <div class="row-fluid">
+        <h2>Application Roles & Permissions</h2>
+        <div class="span7">
+            <h4>{{ title }}</h4>
+            <form method="POST" action="" class="form-horizontal">
+                {{ form.hidden_tag() }}
+                {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit' ) %}
+                    <div class="control-group{% if field.errors %} error{% endif %}" id="{{ field.name }}_top">
+                        {{ field.label(class="control-label") }}
+                        <div class="controls">
+                            {{ field|safe }}
+                            {% for error in field.errors %}
+                                <span style="color: #B94A48;">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+                <div class="control-group">
+                    <div class="controls">
+                        {% for field in form if (field.widget.input_type == 'submit') %}
+                            {{ field(class="btn") }}
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+            <h5>Current Roles</h5>
+            {% if roles %}
+                <table class="table">
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                    {% for role in roles %}
+                        <tr>
+                            <td>
+                                {{ role.get('display_name') }}
+                            </td>
+                            <td style="padding-left: 20px;">
+                                {% if role.get('active') %}
+                                    <i class="icon-ok-circle"></i>
+                                {% else %}
+                                    <i class="icon-ban-circle"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if role.get('name') != 'administrators' %}
+                                    <a href="/admin/settings/permissions/{{ role.get('name') }}" class="tooltip-title" title="Edit Permissions"><i class="icon-pencil"></i></a>
+                                {% else %}
+                                    &nbsp;&nbsp;&nbsp;
+                                {% endif %}
+                                {% if role.get('active') %}
+                                    <a href="/admin/settings/roles/toggle/disable/{{ role.get('name') }}" class="tooltip-title" title="Disable Role"><i class="icon-ban-circle"></i></a>
+                                {% else %}
+                                    <a href="/admin/settings/roles/toggle/enable/{{ role.get('name') }}" class="tooltip-title" title="Enable Role"><i class="icon-ok-circle"></i></a>
+                                {% endif %}
+                                <a href="/admin/settings/roles/remove/{{ role.get('name') }}" class="tooltip-title" title="Remove Role"><i class="icon-trash"></i></a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>There are no Roles setup on the system</p>
+            {% endif %}
+        </div>
+        <div style="clear:both;"></div>
+    </div>
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-tooltip.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.tooltip-title').tooltip();
+        });
+    </script>
+{% endblock %}

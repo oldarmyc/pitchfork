@@ -1,0 +1,193 @@
+{% extends "admin/_admin_base.html" %}
+{% block title %} - Manage Form Fields{% endblock %}
+{% block addHeaders %}
+{% endblock %}
+{% block body %}
+    <h2>{{ title }}</h2>
+    <div id="manage_buttons">
+        <a class="btn btn-primary add-field-button" data-toggle="modal" data-target="#add_custom_fields_form">Add New Field</a>
+        <a href="/admin/forms" title="Back to Forms" class="btn btn-info">Manage Forms</a>
+    </div>
+    <div id="custom_form_fields">
+        {% include 'admin/_form_fields.html' %}
+    </div>
+
+    <div id="add_custom_fields_form" class="modal hide">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h4>Add Custom Field</h4>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="" class="form-horizontal" id="fields_add_form">
+                {{ form.hidden_tag() }}
+                {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
+                    <div class="control-group{% if field.errors %} error{% endif %}" id="{{ field.name }}_top">
+                        {{ field.label(class="control-label") }}
+                        <div class="controls">
+                            {{ field }}
+                            {% if field.name == "field_choices" %}
+                                <p style="font-size: 12px;" class="text-info"><strong>Note:</strong> Coma seperated list or one option per line<br />If no choices are given you will have to dynamically<br />insert them when called</p>
+                            {% endif %}
+                            <span class="{{ field.name }}" style="display: none; color: #B94A48;">Field Required</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </form>
+        </div>
+        <div class="modal-footer">
+            <input class="btn btn-primary" id="add_field_submit" name="submit" type="submit" form="fields_add_form" value="Submit">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        </div>
+    </div>
+
+    <div id="edit_custom_fields_form" class="modal hide">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h4>Edit Custom Field</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+            <input class="btn btn-primary" id="edit_field_submit" name="submit" type="submit" form="fields_edit_form" value="Submit">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        </div>
+    </div>
+
+
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-tooltip.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-modal.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.tooltip-title').tooltip();
+        });
+
+        function data_tooltip() {
+            $('body').tooltip({
+                selector: '.tooltip-title'
+            });
+        }
+
+        function replace_html(url_path, div_id, response_message) {
+            var message = '<div class="alert"><button type="button" class="close" data-dismiss="alert">&times;</button><p>' + response_message + '</p></div';
+            $.get(url_path, function(result) {
+                $(div_id).html(result);
+                $('#generated_messages').html(message);
+            });
+        }
+
+        function promote_form_element(form_id, field_name) {
+            var data = {};
+            data['form_id'] = form_id;
+            data['field_name'] = field_name;
+            $.ajax({
+                url: "/admin/forms/fields/promote",
+                type: "post",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                success: function(data){
+                    replace_html('/admin/forms/fields/html/' + form_id, '#custom_form_fields', data.message);
+                    data_tooltip();
+                },
+                error: function(data) {
+                    console.log('There was an error processing the request')
+                }
+            });
+        }
+
+        function demote_form_element(form_id, field_name) {
+            var data = {};
+            data['form_id'] = form_id;
+            data['field_name'] = field_name;
+            $.ajax({
+                url: "/admin/forms/fields/demote",
+                type: "post",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                success: function(data){
+                    replace_html('/admin/forms/fields/html/' + form_id, '#custom_form_fields', data.message);
+                    data_tooltip();
+                },
+                error: function(data) {
+                    console.log('There was an error processing the request')
+                }
+            });
+        }
+
+        function validate_field(field_name, error, span) {
+            if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0) {
+                $('#' + error).removeClass('error');
+                $('span.' + span).hide();
+                return true;
+            }
+            else {
+                $('#' + error).addClass('error');
+                $('span.' + span).show();
+                return false;
+            }
+        }
+
+        $('#add_field_submit').click(function() {
+            console.log('Got to click')
+            $("#fields_add_form").unbind('submit').bind('submit', function(e){
+                var label = validate_field('label', 'label_top', 'label')
+                var name = validate_field('name', 'name_top', 'name')
+                var field_type = validate_field('field_type', 'field_type_top', 'field_type')
+                if ( label & name & field_type ) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            });
+        });
+
+        $('#edit_field_submit').click(function() {
+            $("#fields_edit_form").unbind('submit').bind('submit', function(e){
+                var label = validate_field('fields_edit_form #label', 'edit_label_top', 'edit_label')
+                var name = validate_field('fields_edit_form #name', 'edit_name_top', 'edit_name')
+                var field_type = validate_field('fields_edit_form #field_type', 'edit_field_type_top', 'edit_field_type')
+                if ( label & name & field_type ) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            });
+        });
+        
+        $('body').on('hidden', '.modal', function () {
+            $(this).removeData('modal');
+        });
+
+        $('#field_type').change(function() {
+            var selectVal = $('#field_type :selected').val();
+            if (selectVal == 'SelectField' || selectVal == 'RadioField' || selectVal == 'SelectMultipleField') {
+                $('#field_choices_top').show();
+            } else { $('#field_choices_top').hide(); }
+        })
+
+        $('#default').change(function() {
+            var selectVal = $('input[name="default"]:checked').length > 0;
+            if (selectVal) {
+                $('#default_value_top').show();
+            } else { $('#default_value_top').hide(); }
+        })
+
+        $('body').on('change', '#fields_edit_form #field_type', function() {
+            var selectVal = $('#fields_edit_form #field_type :selected').val();
+            if (selectVal == 'SelectField' || selectVal == 'RadioField' || selectVal == 'SelectMultipleField') {
+                $('#edit_field_choices_top').show();
+            } else { $('#edit_field_choices_top').hide(); }
+        })
+
+        $('body').on('change', '#fields_edit_form #default', function() {
+            var selectVal = $('#fields_edit_form input[name="default"]:checked').length > 0;
+            if (selectVal) {
+                $('#edit_default_value_top').show();
+            } else { $('#edit_default_value_top').hide(); }
+        })
+        
+    </script>
+{% endblock %}

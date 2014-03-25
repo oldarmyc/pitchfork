@@ -1,0 +1,154 @@
+{% extends "admin/_admin_base.html" %}
+{% block title %} - Manage Forms{% endblock %}
+{% block addHeaders %}
+{% endblock %}
+{% block body %}
+    <h2>Application Custom Forms</h2>
+    <div id="add_menu_button">
+        <a class="btn btn-primary add-form-button" data-toggle="modal" data-target="#add_custom_form">Add New Form</a>
+    </div>
+    <div id="current_forms">
+        <h4>Current Forms</h4>
+        <table class="table">
+            <tr>
+                <th>Name</th>
+                <th>Submission URL</th>
+                <th style="text-align: center;">System Form</th>
+                <th style="text-align: center;">Active</th>
+                <th style="text-align: center;">Actions</th>
+                <th></th>
+            </tr>
+            {% for custom_form in all_forms %}
+                <tr>
+                    <td>
+                        {{ custom_form.get('display_name') }}
+                    </td>
+                    <td>
+                        {{ custom_form.get('submission_url') }}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if custom_form.get('system_form') %}
+                            <i class="icon-ok"></i>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if custom_form.get('active') %}
+                            <i class="icon-ok-circle"></i>
+                        {% else %}
+                            <i class="icon-ban-circle"></i>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        <a href="/admin/forms/{{ custom_form.get('_id') }}" data-toggle="modal" data-target="#edit_custom_form" class="tooltip-title" title="Edit Custom Form"><i class="icon-pencil"></i></a>
+                        {% if custom_form.get('active') %}
+                            <a href="/admin/forms/deactivate/{{ custom_form.get('_id') }}" class="tooltip-title" title="Deactivate Custom Form"><i class="icon-ban-circle"></i></a>
+                        {% else %}
+                            <a href="/admin/forms/activate/{{ custom_form.get('_id') }}" class="tooltip-title" title="Activate Custom Form"><i class="icon-ok-circle"></i></a>
+                        {% endif %}
+                        {% if not custom_form.get('system_form') %}
+                            <a href="/admin/forms/delete/{{ custom_form.get('_id') }}" class="tooltip-title" title="Delete Custom Form"><i class="icon-trash"></i></a>
+                        {% else %}
+                            <a class="tooltip-title" title="Unable to delete System Form"><i class="icon-minus"></i></a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/admin/forms/fields/{{ custom_form.get('_id') }}" class="btn btn-info">Manage Fields</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div id="add_custom_form" class="modal hide">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h4>Add Custom Form</h4>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="" class="form-horizontal" id="add_form">
+                {{ form.hidden_tag() }}
+                {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit' ) %}
+                    <div class="control-group{% if field.errors %} error{% endif %}" id="{{ field.name }}_top">
+                        {{ field.label(class="control-label") }}
+                        <div class="controls">
+                            {{ field|safe }}
+                            <span class="{{ field.name }}" style="display: none; color: #B94A48;">Field Required</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </form>
+        </div>
+        <div class="modal-footer">
+            <input class="btn btn-primary" id="add_form_submit" name="submit" type="submit" form="add_form" value="Submit">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        </div>
+    </div>
+
+    <div id="edit_custom_form" class="modal hide">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h4>Edit Custom Form</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+            <input class="btn btn-primary" id="edit_form_submit" name="submit" type="submit" form="edit_form" value="Submit">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        </div>
+    </div>
+
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-tooltip.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-modal.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.tooltip-title').tooltip();
+        });
+
+        function validate_field(field_name, error, span) {
+            if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0) {
+                $('#' + error).removeClass('error');
+                $('span.' + span).hide();
+                return true;
+            }
+            else {
+                $('#' + error).addClass('error');
+                $('span.' + span).show();
+                return false;
+            }
+        }
+
+        $('#add_form_submit').click(function() {
+            $("#add_form").unbind('submit').bind('submit', function(e){
+                var url = validate_field('submission_url', 'submission_url_top', 'submission_url')
+                var name = validate_field('name', 'name_top', 'name')
+                if ( url & name ) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            });
+        });
+
+        $('#edit_form_submit').click(function() {
+            $("#edit_form").unbind('submit').bind('submit', function(e){
+                var url = validate_field('edit_form #submission_url', 'edit_submission_url_top', 'edit_submission_url')
+                var name = validate_field('edit_form #name', 'edit_name_top', 'edit_name')
+                if ( url & name ) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            });
+        });
+        
+        $('body').on('hidden', '.modal', function () {
+            $(this).removeData('modal');
+        });
+    </script>
+{% endblock %}

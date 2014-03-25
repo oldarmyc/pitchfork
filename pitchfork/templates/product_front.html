@@ -1,0 +1,380 @@
+{% extends "_base_call.html" %}
+{% block title %}
+	{{ tab_title }}
+{% endblock %}
+{% block addHeaders %}
+{% endblock %}
+{% block body %}
+    <div id="static_div_header">
+        <div id="generated_messages">&nbsp;</div>
+    	<h3>{{ title }}{% if testing %} - Testing API Calls{% endif %}</h3>
+        <div id="global_vars">
+            <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
+            {% if require_dc %}
+                <span class="input-label">{% if restrict_dcs %}Region{% else %}Data Center{% endif %}:</span><select id="data_center" name="data_center">
+                    {% if restrict_dcs %}
+                        <option value="none" selected="selected">Select Region</option>
+                    {% else %}
+                        <option value="none" selected="selected">Select Data Center</option>
+                    {% endif %}
+                    {% for option in data_centers %}
+                        <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="span3">
+            <div class="well sidebar-nav">
+                <ul class="nav nav-list">
+                    <li class="nav-header">API Calls</li>
+                    {% for menu in api_calls %}
+                        <li>
+                            <a href="#{{ menu.get('title')|lower|slug }}" class="toc">{{ menu.get('title') }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="span9">
+            <div id="global_call_wrapper">
+                {% for api_call in api_calls.rewind() %}
+                    <section id="{{ api_call.get('title')|lower|slug }}">
+                        <div id="api_call_wrapper" class="{{ loop.cycle('bg-odd', 'bg-even') }}">
+                            <h4>{{ api_call.get('title') }}</h4>
+                            <div id="api_description">
+                                {{ api_call.get('short_description')|nl2br|tab2spaces|safe }}
+                            </div>
+                            <div id="show_hide" class="out-api">
+                                <a onclick="show_element('{{ api_call.get('title')|lower|slug }}', {{loop.index}})" class="toggle-element-{{ loop.index }} btn btn-primary">API Call Details</a>
+                            </div>
+                            <div id="total_api_wrap">
+                                <div id="api_call_inner" class="{{ api_call.get('title')|lower|slug }}" style="display: none;">
+                                    <div id="basic_api_info">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <span class="ep-label">Endpoint:</span>
+                                                </td>
+                                                <td>
+                                                    <span class="basic-values api-call-endpoint">{{ api_settings.get('us_api') }}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span class="ep-label">URI:</span>
+                                                </td>
+                                                <td>
+                                                    <span class="basic-values">{{ api_call.get('api_uri') }}</span>
+                                                </td>
+                                            </tr>
+                                            {% if api_call.get('add_to_header') %}
+                                                <tr>
+                                                    <td>
+                                                        <span class="ep-label">Add Header:</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="basic-values">{{ api_call.get('custom_header_key') }}: {{ api_call.get('custom_header_value') }}</span>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                            <tr>
+                                                <td>
+                                                    <span class="ep-label">Verb:</span>
+                                                </td>
+                                                <td>
+                                                    <span class="basic-values">{{ api_call.get('verb') }}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                     <span class="ep-label">Docs:</span>
+                                                </td>
+                                                <td>
+                                                    {% if api_call.get('doc_url') %}
+                                                        <span class="basic-values"><a href="{{ api_call.get('doc_url') }}" target="_blank" title="API Documents URL">API Reference Document</a></span>
+                                                    {% else %}
+                                                        <span class="basic-values">No Documentation Linked</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        {% if api_call.get('verb')|lower == 'post' or api_call.get('verb')|lower == 'put' or api_call.get('verb')|lower == 'delete' %}
+                                            <p style="margin: 5px 0" class="text-error">Note: This action can be destructive, or result in additional charges to a customers account. Please proceed with caution.</p>
+                                        {% endif %}
+                                    </div>
+                                    {% if api_call.get('variables') %}
+                                        <form class="{{ api_call.get('title')|lower|slug }}_form" action="" id="{{ api_call.get('title')|lower|slug }}_form" method="POST">
+                                            <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
+                                            <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
+                                            <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
+                                            <table class="table parameters" style="width: 90%">
+                                                <tr>
+                                                    <th>Parameter</th>
+                                                    <th></th>
+                                                    <th>Type</th>
+                                                    <th style="text-align: center;">Required</th>
+                                                    <th>Description</th>
+                                                </tr>
+                                                {% for var in api_call.get('variables') %}
+                                                    <tr>
+                                                        <td>
+                                                            {{ var.get('variable_name') }}
+                                                        </td>
+                                                        <td{% if var.get('required') %} class="required"{% endif %}>
+                                                            {% if var.get('field_display') == 'TextField' %}
+                                                                <input id="{{ var.get('variable_name') }}" name="{{ var.get('variable_name') }}" type="text" placeholder="{{ var.get('variable_name')|unslug|title }}">
+                                                            {% elif var.get('field_display') == 'SelectField' %}
+                                                                <select id="{{ var.get('variable_name') }}" name="{{ var.get('variable_name') }}">
+                                                                    {% for var in parse_field_data(var.get('field_display_data')) %}
+                                                                        <option value="{{ var }}">{{ var }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {{ var.get('field_type') }}
+                                                        </td>
+                                                        <td style="text-align: center;">
+                                                            {% if var.get('required') %}
+                                                                <span class="required">Yes</span>
+                                                            {% else %}
+                                                                No
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {{ var.get('description') }}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </table>
+                                            <p style="font-size: 12px;"><span class="required">*</span> Required for API Call</p>
+                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-info" type="submit" value="Send API Call" name="submit">
+                                        </form>
+                                        <div id="loading_div_{{ api_call.get('title')|lower|slug }}" class="loading-div-vars" style="display: none;">
+                                            <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
+                                        </div>
+                                    {% else %}
+                                        <form class="{{ api_call.get('title')|lower|slug }}_form" action="" id="{{ api_call.get('title')|lower|slug }}_form" method="POST">
+                                            <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
+                                            <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
+                                            <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
+                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-info no-var-btn" type="submit" value="Send API Call" name="submit">
+                                        </form>
+                                        <div id="loading_div_{{ api_call.get('title')|lower|slug }}" class="loading-div" style="display: none;">
+                                            <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
+                                        </div>
+                                    {% endif %}
+                                    <div id="api_results_wrapper_{{ api_call.get('title')|lower|slug }}" class="code-blocks-wrapper" style="display: none">
+                                        <div id="api_uri">
+                                            <h5>Request URL</h5>
+                                            <div class="code-block" id="api_url_{{ api_call.get('title')|lower|slug }}">
+                                                URL Here
+                                            </div>
+                                        </div>
+                                        <div id="api_headers">
+                                            <h5>Request Headers</h5>
+                                            <div class="code-block" id="api_headers_{{ api_call.get('title')|lower|slug }}">
+                                                Request Headers Here
+                                            </div>
+                                        </div>
+                                        <div id="api_body_wrapper_{{ api_call.get('title')|lower|slug }}" style="display: none;">
+                                            <h5>Request Data Object</h5>
+                                            <div class="code-block" id="api_body_{{ api_call.get('title')|lower|slug }}">
+                                                Data Object if any
+                                            </div>
+                                        </div>
+                                        <div id="api_response_headers">
+                                            <h5>Response Headers</h5>
+                                            <div class="code-block" id="api_response_headers_{{ api_call.get('title')|lower|slug }}">
+                                                Response Code
+                                                Request ID
+                                            </div>
+                                        </div>
+                                        <div id="api_response_body">
+                                            <h5>Response Body</h5>
+                                            <div class="code-block" id="api_content_{{ api_call.get('title')|lower|slug }}">
+                                                Body Here
+                                            </div>
+                                        </div>
+                                        <div id="show_hide" class="in-api">
+                                            <a onclick="show_element('{{ api_call.get('title')|lower|slug }}', {{loop.index}})" class="toggle-element-{{ loop.index }} btn btn-primary">API Call Details</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                {% endfor %}
+            </div>
+        </div>
+        <a class="scrollup">Scroll</a>
+    </div>
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='js/bootstrap-modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
+	<script>
+        $(document).ready(function(){
+            $(window).scroll(function(){
+                if ( $(this).scrollTop() > 100 ) {
+                    $('.scrollup').fadeIn();
+                } else {
+                    $('.scrollup').fadeOut();
+                }
+            });
+        });
+
+        $('.scrollup').click(function(){
+            $('html, body').animate({ scrollTop: 0 }, 600);
+            return false;
+        });
+
+        $('.toc').click(function(e) {
+            e.preventDefault();
+            $('html, body').animate( { scrollTop: ( $( $(this).attr('href') ).offset().top - 210 ) }, 600);
+        });
+
+        var global_count = 0;
+        var require_dc = {{ require_dc|lower }};
+
+        function validate_field(field_name) {
+            if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0 & $.trim($('#' + field_name).val()) != 'none' ) {
+                return true;
+            }
+            else {
+                $('#' + field_name).addClass('error');
+                return false;
+            }
+        }
+
+        $("#data_center").change(function () {
+            if ($(this).val() == "none") {
+                $(this).addClass("empty");
+            }
+            else {
+                $(this).removeClass("empty");
+            }
+            // Clear out results on page as the DC changing affects that data and makes it invalid
+            $('.code-block').text('None');
+            // Hide the results after clearing them
+            $('.code-blocks-wrapper').hide();
+            if ( global_count > 1 ) {
+                $('#generated_messages').html('<div class="alert"><button type="button" class="close" data-dismiss="alert">&times;</button><p>Reponses have been cleared as the data does not apply to the new data center</p></div>');
+            }
+            else {
+                global_count += 1;
+            }
+            if ( {{ restrict_dcs|lower }} ) {
+                if ( $('#data_center').val() == 'us' ) {
+                    $('span.api-call-endpoint').text("{{ api_settings.get('us_api') }}")
+                } else if ( $('#data_center').val() == 'uk' ) {
+                    $('span.api-call-endpoint').text("{{ api_settings.get('uk_api') }}")
+                } else {
+                    $('span.api-call-endpoint').text("{{ api_settings.get('us_api') }}")
+                }
+            }
+        });
+
+        $("#data_center").change();
+
+        function show_element(div_id, index) {
+            $('.' + div_id).toggle('slow', function() {
+                if ( $('.' + div_id).is(':hidden') ) {
+                    $('.toggle-element-' + index).html('API Call Details');
+                }
+                else {
+                    $('.toggle-element-' + index).html('Hide Details');
+                }
+            });
+        }
+
+        $('.api_call_submit').on('click', function() {
+            var form_submit = $(this).attr('name');
+            $("#" + form_submit + "_form").unbind('submit').bind('submit', function(e){
+                e.preventDefault();
+                $('#loading_div_' + form_submit).show();
+                var sending = {};
+                var validated = false;
+                var data = $("#" + form_submit + "_form").serialize();
+                $.each(data.split('&'), function (index, elem) {
+                    var vals = elem.split('=');
+                    sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
+                });
+
+                var message = "You must provide the following data before the request can be sent:<br /><br />"
+                var dc_check = false
+
+                if ( require_dc ) {
+                    if ( validate_field('data_center') ) {
+                        sending['data_center'] = $('#data_center').val();
+                        sending['ddi'] = $('#ddi').val().trim();
+                        dc_check = true;
+                    } else {
+                        $('#data_center').addClass('error');
+                        if ( {{ restrict_dcs|lower }} ) {
+                            message += "<strong>Region</strong>";
+                        } else {
+                            message += "<strong>Data Center</strong>";
+                        }
+                    }
+                } else {
+                    sending['ddi'] = $('#ddi').val().trim();
+                    dc_check = true;
+                }
+
+                if ( dc_check ) {
+                    sending['testing'] = {{ testing|lower }};
+                    validated = true;
+                }
+
+                if ( validated ) {
+                    $.ajax({
+                        url: "{{ api_process }}",
+                        type: "post",
+                        data: JSON.stringify(sending),
+                        contentType: "application/json",
+                        success: function(data){
+                            $('#loading_div_' + form_submit).hide();
+                            if ( !$('#api_results_wrapper_' + form_submit).is(':visible') ) {
+                                $('#api_results_wrapper_' + form_submit).toggle('slow')
+                            }
+                            $('#api_url_' + form_submit).text(data.api_url)
+
+                            var header_content = JSON.stringify(data.request_headers, null, 4);
+                            $('#api_headers_' + form_submit).html('<pre>' + header_content + '</pre>')
+
+                            if ( data.data_package ) {
+                                if ( $('#api_body_wrapper_' + form_submit).is(':hidden') ) {
+                                    $('#api_body_wrapper_' + form_submit).toggle();
+                                }
+                                var data_format = JSON.stringify(data.data_package, null, 4);
+                                $('#api_body_' + form_submit).html('<pre>' + data_format + '</pre>');
+                            }
+                            var response_headers = JSON.stringify(data.response_headers, null, 4);
+                            $('#api_response_headers_' + form_submit).html('<pre>' + response_headers + '</pre>')
+
+                            if ( data.response_code >= 400 ) {
+                                var response_body = JSON.stringify(data.response_body, null, 4);
+                                $('#api_content_' + form_submit).html('<pre>' + response_body + '</pre>');
+                            }
+                            else {
+                                var response_content = JSON.stringify(data.response_body, null, 4);
+                                $('#api_content_' + form_submit).html('<pre>' + response_content + '</pre>');
+                            }
+                        },
+                        error: function(data) {
+                            $('#loading_div_' + form_submit).hide();
+                        }
+                    });
+                }
+                else {
+                    bootbox.alert(message);
+                    $('#loading_div_' + form_submit).hide();
+                }
+            });
+        });
+
+	</script>
+{% endblock %}

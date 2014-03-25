@@ -1,0 +1,210 @@
+{% extends "admin/_admin_base.html" %}
+{% block title %} - Manage Menus{% endblock %}
+{% block addHeaders %}
+{% endblock %}
+{% block body %}
+    
+    <h2>{{ title }}</h2>
+    <div id="add_menu_button">
+        <a class="btn btn-primary add-menu-item" data-toggle="modal" data-target="#menu_item_form">Add Menu Item</a>
+    </div>
+    <div id='child_order_menu'>
+        {% include 'admin/_menu_children.html' %}
+    </div>
+
+    <div id='parent_order_menu'>
+        {% include 'admin/_menu_parent.html' %}
+    </div>
+
+    <div id="menu_item_form" class="modal hide">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h4>Add Menu Item</h4>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="" class="form-horizontal" id="add_menu_item_form">
+                {{ menu_form.hidden_tag() }}
+                {% for field in menu_form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit' ) %}
+                    <div class="control-group{% if field.errors %} error{% endif %}" id="{{ field.name }}_top">
+                        {{ field.label(class="control-label") }}
+                        <div class="controls">
+                            {{ field|safe }}
+                            <span class="{{ field.name }}" style="display: none; color: #B94A48;">Field Required</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </form>
+        </div>
+        <div class="modal-footer">
+            <input class="btn btn-primary" id="add_menu_item_submit" name="submit" type="submit" form="add_menu_item_form" value="Submit">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        </div>
+    </div>
+
+    <div id="edit_menu" class="modal hide">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h4>Edit Menu Item</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+            <input class="btn btn-primary" id="edit_menu_item_submit" name="submit" type="submit" form="edit_menu_item_form" value="Submit">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        </div>
+    </div>
+
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-tooltip.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-modal.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.tooltip-title').tooltip();
+        });
+
+        function data_tooltip() {
+            $('body').tooltip({
+                selector: '.tooltip-title'
+            });
+        }
+
+        function validate_field(field_name, error, span) {
+            if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0) {
+                $('#' + error).removeClass('error');
+                $('span.' + span).hide();
+                return true;
+            }
+            else {
+                $('#' + error).addClass('error');
+                $('span.' + span).show();
+                return false;
+            }
+        }
+
+        function replace_html(url_path, div_id, response_message) {
+            var message = '<div class="alert"><button type="button" class="close" data-dismiss="alert">&times;</button><p>' + response_message + '</p></div';
+            $.get(url_path, function(result) {
+                $(div_id).html(result);
+                $('#generated_messages').html(message);
+            });
+        }
+
+        function promote_top_element(name) {
+            var data = {};
+            data['name'] = name;
+            $.ajax({
+                url: "/admin/settings/menu/top_level/promote",
+                type: "post",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                success: function(data){
+                    replace_html('/admin/settings/menu/top_level/html', '#parent_order_menu', data.message);
+                    data_tooltip();
+                },
+                error: function(data) {
+                    console.log('There was an error processing the request')
+                }
+            });
+        }
+
+        function demote_top_element(name) {
+            var data = {};
+            data['name'] = name;
+            $.ajax({
+                url: "/admin/settings/menu/top_level/demote",
+                type: "post",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                success: function(data){
+                    replace_html('/admin/settings/menu/top_level/html', '#parent_order_menu', data.message);
+                    data_tooltip();
+                },
+                error: function(data) {
+                    console.log('There was an error processing the request')
+                }
+            });
+        }
+
+        function promote_child_element(name) {
+            var data = {};
+            data['name'] = name;
+            $.ajax({
+                url: "/admin/settings/menu/promote",
+                type: "post",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                success: function(data){
+                    replace_html('/admin/settings/menu/child/html', '#child_order_menu', data.message);
+                    data_tooltip();
+                },
+                error: function(data) {
+                    console.log('There was an error processing the request')
+                }
+            });
+        }
+
+        function demote_child_element(name) {
+            var data = {};
+            data['name'] = name;
+            $.ajax({
+                url: "/admin/settings/menu/demote",
+                type: "post",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                success: function(data){
+                    replace_html('/admin/settings/menu/child/html', '#child_order_menu', data.message);
+                    data_tooltip();
+                },
+                error: function(data) {
+                    console.log('There was an error processing the request')
+                }
+            });
+        }
+
+        $('body').on('hidden', '.modal', function () {
+            $(this).removeData('modal');
+        });
+
+        $('#add_menu_item_submit').click(function() {
+            $("#add_menu_item_form").unbind('submit').bind('submit', function(e){
+                var url = validate_field('menu_item_url', 'menu_item_url_top', 'menu_item_url');
+                var name = validate_field('menu_display_name', 'menu_display_name_top', 'menu_display_name')
+                if ( url & name ) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            });
+        });
+
+        $('#edit_menu_item_submit').click(function() {
+            $("#edit_menu_item_form").unbind('submit').bind('submit', function(e){
+                var url = validate_field('edit_menu_item_form #menu_item_url', 'edit_menu_item_url_top', 'edit_menu_item_url');
+                var name = validate_field('edit_menu_item_form #menu_display_name', 'edit_menu_display_name_top', 'edit_menu_display_name');
+                if ( url & name ) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            });
+        });
+
+        $('body').on('change', '#parent_menu', function() {
+            var selectVal = $(this).val();
+            if (selectVal == 'Add New Parent') {
+                $('body #new_parent_top').show();
+            } else { $('body #new_parent_top').hide(); }
+        });
+
+        $('body').on('change', '#edit_menu_item_form #parent_menu', function() {
+            var selectVal = $(this).val();
+            if (selectVal == 'Add New Parent') {
+                $('body #edit_new_parent_top').show();
+            } else { $('body #edit_new_parent_top').hide(); }
+        });
+    </script>
+
+{% endblock %}

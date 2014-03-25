@@ -1,0 +1,90 @@
+{% extends "admin/_admin_base.html" %}
+{% block title %} - {{ title }}{% endblock %}
+{% block addHeaders %}
+{% endblock %}
+{% block body %}
+    <div class="row-fluid">
+        <h2>Permission Settings</h2>
+        <h4>{{ title }}</h4>
+        <h5>Application</h5>
+        <form method="POST" action="" class="form-horizontal">
+            {{ form.hidden_tag() }}
+            <table class="table permissions-table">
+            {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
+                {% if field.widget.input_type == 'text' %}
+                    {% set admin_loop = loop.index %}
+                    {% if loop.index % 3 != 1 %}
+                        {% if loop.index % 3 == 2 %}
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        {% elif loop.index % 3 == 0 %}
+                                <td></td>
+                            </tr>
+                        {% endif %}
+                    {% endif %}
+                    </table>
+                    <h5>{{ field.label(id="label_header") }}</h5>
+                    <table class="table permissions-table">
+                {% else %}
+                    {% if admin_loop %}
+                        {% if (loop.index - admin_loop) % 3 == 0 %}
+                                <td>
+                                    {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                </td>
+                            </tr>
+                        {% elif (loop.index - admin_loop) % 3 == 1 %}
+                            <tr>
+                                <td>
+                                    {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                </td>
+                        {% else %}
+                            <td>
+                                {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                            </td>
+                        {% endif %}
+                    {% else %}
+                        {% if loop.index % 3 == 0 %}
+                                <td>
+                                    {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                </td>
+                            </tr>
+                        {% elif loop.index % 3 == 1 %}
+                            <tr>
+                                <td>
+                                    {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                </td>
+                        {% else %}
+                            <td>
+                                {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                            </td>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                {% if loop.last %}
+                    {% if (loop.index - admin_loop) % 3 != 0 %}
+                        {% if (loop.index - admin_loop) % 3 == 1 %}
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        {% elif (loop.index - admin_loop) % 3 == 2 %}
+                                <td></td>
+                            </tr>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            </table>
+            <div class="control-group">
+                <div>
+                    {% for field in form if (field.widget.input_type == 'submit') %}
+                        {{ field(class="btn") }}
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+{% block jquery %}
+
+{% endblock %}
