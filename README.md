@@ -52,17 +52,12 @@ ADMIN_NAME --> Full name of admin
 SECRET_KEY --> Used for cookie
 
 Optional Changes:
-MONGO_USER = 'Username for mongo database instance'
-
-MONGO_PASS = 'Password for mongo database instance'
-
-You can add to the KWARGS config item to add a replica set like the following example:
-
-MONGO_KWARGS = {'tz_aware': True, 'replicaSet': 'my_replica_set'}
-
-For more information on the options for Mongo see the hapPyMongo documentation
-
-https://github.com/sivel/happymongo
+    MONGO_USER = 'Username for mongo database instance'
+    MONGO_PASS = 'Password for mongo database instance'
+    You can add to the KWARGS config item to add a replica set like the following example:
+    MONGO_KWARGS = {'tz_aware': True, 'replicaSet': 'my_replica_set'}
+    For more information on the options for Mongo see the hapPyMongo documentation
+    https://github.com/sivel/happymongo
 
 ##### Running the Application:
 Save the file. To run the application type the following:
