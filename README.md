@@ -25,16 +25,16 @@ Warnings are on the calls that do things that could potentially impact an accoun
 #### Want to run it locally?
 All you need is Python 2.7, Mongodb, and a web browser
 
-## Create a virtual environment to run it in:
+##### Create a virtual environment to run it in:
 mkvirtualenv your_virtual_env_name
 cd into your new virtual environment
 git clone https://github.com/rackerlabs/pitchfork.git
 cd pitchfork
 
-## Use pip to install the requirements:
+##### Use pip to install the requirements:
 pip install -r requirements
 
-## Setup the config file:
+##### Setup the config file:
 cp pitchfork/config/config.example.py pitchfork/config/config.py
 vi pitchfork/config/config.py
 
@@ -54,7 +54,7 @@ MONGO_KWARGS = {'tz_aware': True, 'replicaSet': 'my_replica_set'}
 For more information on the options for Mongo see the hapPyMongo documentation
 https://github.com/sivel/happymongo
 
-## Running the Application:
+##### Running the Application:
 Save the file. To run the application type the following:
 python runapp.py
 
