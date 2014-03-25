@@ -21,3 +21,51 @@ For each API call you will be shown the following information in the browser.
 * Response Body
 
 Warnings are on the calls that do things that could potentially impact an account (creates, updates, deletes, etc.).
+
+#### Want to run it locally?
+All you need is Python 2.7, Mongodb, and a web browser
+
+##### Create a virtual environment
+**Note:** The below example uses virtualenvwrapper
+
+````
+mkvirtualenv pitchfork
+cd pitchfork
+git clone https://github.com/rackerlabs/pitchfork.git
+cd pitchfork
+workon pitchfork
+````
+
+##### Use pip to install the requirements:
+```
+pip install -r requirements
+```
+
+##### Setup the config file:
+````
+cp pitchfork/config/config.example.py pitchfork/config/config.py
+vi pitchfork/config/config.py
+````
+
+*Change the following for your setup:*  
+**MONGO_DATABASE** : Database name to use  
+**ADMIN** : Cloud account username for first admin  
+**ADMIN_NAME** : Full name of admin for the account above   
+**SECRET_KEY** : Used for sessions
+
+*Optional Additions:*  
+**MONGO_USER** = 'Username for mongo database instance'  
+**MONGO_PASS** = 'Password for mongo database instance'  
+
+You can add to the KWARGS config item to add a replica set:  
+MONGO_KWARGS = {'tz_aware': True, 'replicaSet': 'my_replica_set'}
+
+For more information on the options for Mongo see the hapPyMongo documentation.
+https://github.com/sivel/happymongo
+
+##### Running the Application:
+After you have saved the config file and your mongo database is up and running, run the following command to start the application.
+````
+python runapp.py
+````
+Browse to http://localhost:5000 to view the application and login using your Cloud credentials
