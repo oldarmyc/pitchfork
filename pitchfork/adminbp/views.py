@@ -1366,7 +1366,7 @@ def login():
     results, title, placeholder = None, None, None
     form = help.deploy_custom_form('login_form')
     title = 'Log In'
-    placeholder = 'API Key or User Password'
+    placeholder = 'API Key'
 
     if request.method == 'POST':
         if form.validate_on_submit():
