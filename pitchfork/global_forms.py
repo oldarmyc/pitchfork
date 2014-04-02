@@ -69,7 +69,8 @@ class CallVariables(Form):
             ('text', 'text'),
             ('integer', 'integer'),
             ('boolean', 'boolean'),
-            ('float', 'decimal')
+            ('float', 'decimal'),
+            ('list', 'list')
         ]
     )
     field_display = MySelectField(
