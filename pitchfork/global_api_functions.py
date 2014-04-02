@@ -192,6 +192,12 @@ def recursive_dict_object(
                             if _value.lower() == 'false':
                                 _value = ''
                             sub_list.append(bool(_value.strip()))
+                        elif var_type == 'list':
+                            _temp_store  = []
+                            for item in _value.strip().split(','):
+                                _temp_store.append(item.strip())
+
+                            sub_list.append(_temp_store)
                         else:
                             sub_list.append(_value.strip())
 
@@ -226,6 +232,12 @@ def recursive_dict_object(
                             if _value.lower() == 'false':
                                 _value = ''
                             temp_dict[str(_pkey_value)] = bool(_value.strip())
+                        elif var_type == 'list':
+                            _temp_store  = []
+                            for item in _value.strip().split(','):
+                                _temp_store.append(item.strip())
+
+                            temp_dict[str(_pkey_value)] = _temp_store
                         else:
                             temp_dict[str(_pkey_value)] = _value.strip()
                     else:
