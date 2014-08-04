@@ -38,7 +38,7 @@ workon pitchfork
 
 ##### Use pip to install the requirements:
 ```
-pip install -r requirements
+pip install -r requirements.txt
 ```
 
 ##### Setup the config file:
@@ -50,7 +50,7 @@ vi pitchfork/config/config.py
 *Change the following for your setup:*  
 **MONGO_DATABASE** : Database name to use  
 **ADMIN** : Cloud account username for first admin  
-**ADMIN_NAME** : Full name of admin for the account above   
+**ADMIN_NAME** : Full name of admin for the account above
 **SECRET_KEY** : Used for sessions
 
 *Optional Additions:*  
