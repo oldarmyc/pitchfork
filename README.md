@@ -38,7 +38,7 @@ workon pitchfork
 
 ##### Use pip to install the requirements:
 ```
-pip install -r requirements
+pip install -r requirements.txt
 ```
 
 ##### Setup the config file:
