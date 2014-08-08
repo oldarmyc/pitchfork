@@ -39,6 +39,7 @@ from autoscale import bp as autoscale_bp
 from images import bp as images_bp
 from big_data import bp as bigdata_bp
 from orchestration import bp as orchestration_bp
+from cloud_feeds import bp as cloudfeeds_bp
 from manage_globals import bp as manage_bp
 from reporting import bp as report_bp
 # End Blueprint import
@@ -62,6 +63,7 @@ app.register_blueprint(autoscale_bp, url_prefix='/autoscale')
 app.register_blueprint(images_bp, url_prefix='/images')
 app.register_blueprint(bigdata_bp, url_prefix='/big_data')
 app.register_blueprint(orchestration_bp, url_prefix='/orchestration')
+app.register_blueprint(cloudfeeds_bp, url_prefix='/cloud_feeds')
 app.register_blueprint(manage_bp, url_prefix='/manage')
 app.register_blueprint(report_bp, url_prefix='/reporting')
 
