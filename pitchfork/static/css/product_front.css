@@ -222,7 +222,7 @@ span.input-label {
 
 div.loading-div, div.loading-div-vars {
     float: left;
-    margin: -46px 0 0 140px;
+    margin: -46px 0 0 250px;
 }
 
 span.loading-text {
@@ -273,4 +273,8 @@ a.scrollup {
 
 span.error-response {
     color: #B94A48;
+}
+
+a.testing-button {
+    margin: -11px 0 0 30px;
 }
