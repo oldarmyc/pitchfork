@@ -22,6 +22,9 @@
                     {% endfor %}
                 </select>
             {% endif %}
+			{% if not testing and check_if_admin %}
+                <a onClick="goto_testing()" class="btn btn-primary testing-button">Goto Testing</a>
+            {% endif %}
         </div>
     </div>
     <div class="row-fluid">
@@ -227,6 +230,12 @@
                 }
             });
         });
+
+		function goto_testing() {
+            var pathname = window.location.pathname;
+            pathname += 'testing';
+            window.location = pathname;
+        }
 
         $('.scrollup').click(function(){
             $('html, body').animate({ scrollTop: 0 }, 600);
