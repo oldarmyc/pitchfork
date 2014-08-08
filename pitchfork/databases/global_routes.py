@@ -315,6 +315,9 @@ def add_edit_api(api_id=None):
         form.doc_url.data = api_call.get('doc_url')
         form.tested.data = bool(api_call.get('tested'))
         form.remove_token.data = bool(api_call.get('remove_token'))
+        form.remove_content_type.data = bool(
+            api_call.get('remove_content_type')
+        )
         form.required_key.data = bool(api_call.get('required_key'))
         form.required_key_name.data = api_call.get('required_key_name')
         form.required_key_type.data = api_call.get('required_key_type', '')
@@ -417,6 +420,9 @@ def add_edit_api(api_id=None):
                         'remove_token': bool(
                             request.form.get('remove_token')
                         ),
+                        'remove_content_type': bool(
+                            request.form.get('remove_content_type')
+                        ),
                         'required_key': bool(
                             request.form.get('required_key')
                         ),
@@ -448,6 +454,9 @@ def add_edit_api(api_id=None):
                     'doc_url': request.form.get('doc_url'),
                     'remove_token': bool(
                         request.form.get('remove_token')
+                    ),
+                    'remove_content_type': bool(
+                        request.form.get('remove_content_type')
                     ),
                     'required_key': bool(
                         request.form.get('required_key')
