@@ -154,14 +154,14 @@
                                         Data Object if any
                                     </div>
                                 </div>
-                                <div id="api_response_headers">
+                                <div id="api_response_headers" class="response-headers-{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}">
                                     <h5>Response Headers</h5>
                                     <div class="code-block" id="api_response_headers_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}">
                                         Response Code
                                         Request ID
                                     </div>
                                 </div>
-                                <div id="api_response_body">
+                                <div id="api_response_body" class="response-body-{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}">
                                     <h5>Response Body</h5>
                                     <div class="code-block" id="api_content_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}">
                                         Body Here
