@@ -357,7 +357,18 @@ def process_api_request(url, verb, data, headers):
         response_headers = dict(response.headers)
 
     try:
-        content = json.loads(response.content)
+        content_type = response_headers.get('content-type').split(';')
+    except:
+        content_type = []
+
+    try:
+        if (
+            'application/xml' in content_type or
+            'application/atom+xml' in content_type
+        ):
+            content = response.content
+        else:
+            content = json.loads(response.content)
     except:
         temp = re.findall('<body>(.+?)<\/body>', response.content, re.S)
         if temp:
