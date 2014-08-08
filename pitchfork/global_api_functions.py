@@ -317,6 +317,9 @@ def create_custom_header(api_call, request):
     if not api_call.get('remove_token'):
         header['X-Auth-Token'] = session.get('cloud_token')
 
+    if request.get('mock') and not request.get('api_token'):
+        header['X-Auth-Token'] = '{api-token}'
+
     if api_call.get('add_to_header'):
         temp_value = api_call.get('custom_header_value')
         key_value = re.sub('(\{(.+?)\})', evaluate_replace, temp_value)
