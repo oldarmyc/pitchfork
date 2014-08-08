@@ -100,6 +100,7 @@ class ApiCall(Form):
     use_data = BooleanField('Use Data?:')
     data_object = TextAreaField('Data Object:')
     remove_token = BooleanField('Remove Token:')
+    remove_content_type = BooleanField('Remove Content Type:')
     required_key = BooleanField('Required Key:')
     required_key_name = TextField('Key Name:')
     required_key_type = MySelectField(
