@@ -22,6 +22,8 @@ For each API call you will be shown the following information in the browser.
 
 Warnings are on the calls that do things that could potentially impact an account (creates, updates, deletes, etc.).
 
+Mocking is available to allow for the call to be built out using the parameters you have chosen so you can see all of the details. The only difference is the call will not actually be executed.
+
 #### Want to run it locally?
 All you need is Python 2.7, Mongodb, and a web browser
 
