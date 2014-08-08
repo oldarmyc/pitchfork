@@ -115,7 +115,8 @@
                                         {% endfor %}
                                     </table>
                                     <p style="font-size: 12px;"><span class="required">*</span> Required for API Call</p>
-                                    <input name="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="api_call_submit btn btn-info" type="submit" value="Send API Call" name="submit">
+                                    <input name="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="api_call_submit btn btn-warning" type="submit" value="Send API Call">
+                                    <input name="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="api_call_submit btn btn-info" type="submit" value="Mock API Call">
                                 </form>
                                 <div id="loading_div_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="loading-div-vars" style="display: none;">
                                     <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
@@ -127,7 +128,8 @@
                                     <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
                                     <input id="app_url_link" name="app_url_link" type="hidden" value="{{ api_call.get('app_link') }}">
                                     <input id="api_endpoint" name="api_endpoint" type="hidden" value="{{ api_call.get('endpoint') }}">
-                                    <input name="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="api_call_submit btn btn-info no-var-btn" type="submit" value="Send API Call" name="submit">
+                                    <input name="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="api_call_submit btn btn-warning" type="submit" value="Send API Call">
+                                    <input name="{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="api_call_submit btn btn-info" type="submit" value="Mock API Call">
                                 </form>
                                 <div id="loading_div_{{ api_call.get('title')|lower|slug }}-{{ api_call.get('prod_title')|lower|slug }}" class="loading-div" style="display: none;">
                                     <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
