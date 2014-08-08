@@ -563,7 +563,7 @@ def api_call_execute():
         request.json.get('api_url')
     )
 
-    if not request.json.get('testing'):
+    if not request.json.get('testing') and not request.json.get('mock'):
         api_call = getattr(g.db, COLLECTION).find_and_modify(
             query={
                 '_id': ObjectId(request.json.get('api_id'))
@@ -581,24 +581,40 @@ def api_call_execute():
             }
         )
 
-    api_url = globe.process_api_url(temp_url, request)
+    if not request.json.get('mock'):
+        api_url = globe.process_api_url(temp_url, request)
+    else:
+        if data_center is None and request.json.get('ddi') is None:
+            api_url = temp_url
+        else:
+            api_url = globe.process_api_url(temp_url, request)
 
     """ Process data structure if there is one provided in the setup """
     if api_call.get('use_data'):
-        data_package = globe.process_api_data_request(api_call, request.json)
+        if not request.json.get('mock'):
+            data_package = globe.process_api_data_request(
+                api_call,
+                request.json
+            )
+        else:
+            data_package = json.loads(api_call.get('data_object'))
 
     header = globe.create_custom_header(api_call, request.json)
 
     """ Send off the request and retrieve the data elements """
-    request_headers, response_headers, \
-        response_body, response_code = globe.process_api_request(
-            api_url,
-            request.json.get('api_verb'),
-            data_package,
-            header
-        )
+    if not request.json.get('mock'):
+        request_headers, response_headers, \
+            response_body, response_code = globe.process_api_request(
+                api_url,
+                request.json.get('api_verb'),
+                data_package,
+                header
+            )
+    else:
+        response_headers, response_body, response_code = None, None, None
+        request_headers = header
 
-    if not request.json.get('testing'):
+    if not request.json.get('testing') and not request.json.get('mock'):
         globe.log_api_call_request(
             request_headers,
             response_headers,
