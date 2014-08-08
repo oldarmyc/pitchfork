@@ -115,6 +115,7 @@
 
         $('#api_call_items').on('click', '.api_call_submit', function() {
             var form_submit = $(this).attr('name');
+            var form_value = $(this).attr('value');
             $("#" + form_submit + "_form").unbind('submit').bind('submit', function(e){
                 e.preventDefault();
                 $('#loading_div_' + form_submit).show();
@@ -132,18 +133,30 @@
                 var message = "You must provide the following data before the request can be sent:<br /><br />"
                 var dc_check = false
 
-                if ( validate_field('data_center') ) {
-                    sending['data_center'] = $('#data_center').val();
-                    sending['ddi'] = $('#ddi').val().trim();
-                    dc_check = true;
+                if ( form_value != 'Mock API Call' ) {
+                    if ( validate_field('data_center') ) {
+                        sending['data_center'] = $('#data_center').val();
+                        sending['ddi'] = $('#ddi').val().trim();
+                        dc_check = true;
+                    } else {
+                        $('#data_center').addClass('error');
+                        message += "<strong>Data Center</strong>";
+                    }
                 } else {
-                    $('#data_center').addClass('error');
-                    message += "<strong>Data Center</strong>";
+                    if ( $('#data_center').val() != 'none' ) {
+                        sending['data_center'] = $('#data_center').val();
+                    }
+                    dc_check = true;
                 }
 
                 if ( dc_check ) {
                     sending['testing'] = false;
                     validated = true;
+                }
+
+                if ( form_value == 'Mock API Call') {
+                    validated = true;
+                    sending['mock'] = true;
                 }
 
                 if ( validated ) {

@@ -150,7 +150,8 @@
                                                 {% endfor %}
                                             </table>
                                             <p style="font-size: 12px;"><span class="required">*</span> Required for API Call</p>
-                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-info" type="submit" value="Send API Call" name="submit">
+                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-warning" type="submit" value="Send API Call">
+                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-info" type="submit" value="Mock API Call">
                                         </form>
                                         <div id="loading_div_{{ api_call.get('title')|lower|slug }}" class="loading-div-vars" style="display: none;">
                                             <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
@@ -160,7 +161,8 @@
                                             <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
                                             <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
                                             <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
-                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-info no-var-btn" type="submit" value="Send API Call" name="submit">
+                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-warning no-var-btn" type="submit" value="Send API Call">
+                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-info no-var-btn" type="submit" value="Mock API Call">
                                         </form>
                                         <div id="loading_div_{{ api_call.get('title')|lower|slug }}" class="loading-div" style="display: none;">
                                             <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
@@ -292,6 +294,7 @@
 
         $('.api_call_submit').on('click', function() {
             var form_submit = $(this).attr('name');
+			var form_value = $(this).attr('value');
             $("#" + form_submit + "_form").unbind('submit').bind('submit', function(e){
                 e.preventDefault();
                 $('#loading_div_' + form_submit).show();
@@ -306,10 +309,10 @@
                 var message = "You must provide the following data before the request can be sent:<br /><br />"
                 var dc_check = false
 
-                if ( require_dc ) {
+                if ( require_dc && form_value != 'Mock API Call' ) {
                     if ( validate_field('data_center') ) {
                         sending['data_center'] = $('#data_center').val();
-                        sending['ddi'] = $('#ddi').val().trim();
+						sending['ddi'] = $('#ddi').val().trim();
                         dc_check = true;
                     } else {
                         $('#data_center').addClass('error');
@@ -319,14 +322,24 @@
                             message += "<strong>Data Center</strong>";
                         }
                     }
+                } else if (require_dc) {
+                    if ( $('#data_center').val() != 'none' ) {
+                        sending['data_center'] = $('#data_center').val();
+						sending['ddi'] = $('#ddi').val().trim();
+                    }
                 } else {
-                    sending['ddi'] = $('#ddi').val().trim();
                     dc_check = true;
                 }
+
 
                 if ( dc_check ) {
                     sending['testing'] = {{ testing|lower }};
                     validated = true;
+                }
+
+				if ( form_value == 'Mock API Call') {
+                    validated = true;
+                    sending['mock'] = true;
                 }
 
                 if ( validated ) {
