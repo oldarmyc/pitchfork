@@ -310,9 +310,10 @@ def create_custom_header(api_call, request):
     def evaluate_replace(m):
         return re.sub(m.group(1), request.get(m.group(2)), m.group(0))
 
-    header = {
-        'Content-Type': 'application/json'
-    }
+    header = {}
+    if not api_call.get('remove_content_type'):
+        header['Content-Type'] = 'application/json'
+
     if not api_call.get('remove_token'):
         header['X-Auth-Token'] = session.get('cloud_token')
 
