@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import render_template, redirect, url_for, \
-    request, flash, g, current_app, jsonify
+from flask import render_template, redirect, url_for, request
+from flask import flash, g, current_app, jsonify
 from bson.objectid import ObjectId
 
 
 import pymongo
+import json
 import requests
 import pitchfork.global_forms as global_forms
 import pitchfork.global_api_functions as globe
@@ -167,7 +168,6 @@ def product_manage():
     if request.method == 'POST' and form.validate_on_submit():
         active = bool(request.form.get('active'))
         require_dc = bool(request.form.get('require_dc'))
-
         if api_settings:
             g.db.api_settings.update(
                 {
