@@ -109,11 +109,14 @@ def process_api_url(url, request):
     """ Regex loop to replace the URL with the needed values """
 
     def evaluate_replace(m):
-        return re.sub(
-            m.group(1),
-            request.json.get(m.group(2)).strip(),
-            m.group(0)
-        )
+        if request.json.get(m.group(2)):
+            return re.sub(
+                m.group(1),
+                request.json.get(m.group(2)).strip(),
+                m.group(0)
+            )
+        else:
+            return m.group(1)
 
     api_url = re.sub('(\{(.+?)\})', evaluate_replace, url)
 
