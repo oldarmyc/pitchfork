@@ -38,7 +38,7 @@ class ImagesTests(unittest.TestCase):
         sess['role'] = 'logged_in'
         sess['_permanent'] = True
         sess['ddi'] = '654846'
-        sess['cloud_token'] = 'b26dac35f5fa4993b0732a4227687695'
+        sess['cloud_token'] = uuid4().hex
 
     def setup_admin_login(self, sess):
         sess['username'] = 'oldarmyc'
@@ -46,7 +46,7 @@ class ImagesTests(unittest.TestCase):
         sess['role'] = 'administrators'
         sess['_permanent'] = True
         sess['ddi'] = '654846'
-        sess['cloud_token'] = 'b26dac35f5fa4993b0732a4227687695'
+        sess['cloud_token'] = uuid4().hex
 
     def setup_useable_api_call(self, tested=None):
         data = {
@@ -1045,4 +1045,7 @@ class ImagesTests(unittest.TestCase):
         )
         self.teardown_app_data()
 
-    """ End Autoscale """
+    """ End Images """
+
+if __name__ == '__main__':
+    unittest.main()

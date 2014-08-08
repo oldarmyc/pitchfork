@@ -37,16 +37,16 @@ class MonitoringTests(unittest.TestCase):
         sess['csrf_token'] = 'csrf_token'
         sess['role'] = 'logged_in'
         sess['_permanent'] = True
-        sess['ddi'] = '654846'
-        sess['cloud_token'] = 'b26dac35f5fa4993b0732a4227687695'
+        sess['ddi'] = '123456'
+        sess['cloud_token'] = uuid4().hex
 
     def setup_admin_login(self, sess):
         sess['username'] = 'oldarmyc'
         sess['csrf_token'] = 'csrf_token'
         sess['role'] = 'administrators'
         sess['_permanent'] = True
-        sess['ddi'] = '654846'
-        sess['cloud_token'] = 'b26dac35f5fa4993b0732a4227687695'
+        sess['ddi'] = '123456'
+        sess['cloud_token'] = uuid4().hex
 
     def setup_useable_api_call(self, tested=None):
         data = {
@@ -109,7 +109,7 @@ class MonitoringTests(unittest.TestCase):
         else:
             return token
 
-    """ Product Management Autoscale - Perms Test """
+    """ Product Management Monitoring - Perms Test """
 
     def test_pf_monitoring_manage_admin_perms(self):
         with pitchfork.app.test_client() as c:
@@ -183,6 +183,8 @@ class MonitoringTests(unittest.TestCase):
                 data=data,
                 follow_redirects=True
             )
+
+        print response.data
 
         self.assertIn(
             (
@@ -1044,4 +1046,7 @@ class MonitoringTests(unittest.TestCase):
         )
         self.teardown_app_data()
 
-    """ End Autoscale """
+    """ End Monitoring """
+
+if __name__ == '__main__':
+    unittest.main()

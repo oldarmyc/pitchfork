@@ -38,7 +38,7 @@ class PitchforkTests(unittest.TestCase):
         sess['role'] = 'logged_in'
         sess['_permanent'] = True
         sess['ddi'] = '654846'
-        sess['cloud_token'] = 'b26dac35f5fa4993b0732a4227687695'
+        sess['cloud_token'] = uuid4().hex
 
     def setup_admin_login(self, sess):
         sess['username'] = 'oldarmyc'
@@ -46,7 +46,7 @@ class PitchforkTests(unittest.TestCase):
         sess['role'] = 'administrators'
         sess['_permanent'] = True
         sess['ddi'] = '654846'
-        sess['cloud_token'] = 'b26dac35f5fa4993b0732a4227687695'
+        sess['cloud_token'] = uuid4().hex
 
     def setup_useable_admin(self):
         pitchfork.db.settings.update(
@@ -230,7 +230,7 @@ class PitchforkTests(unittest.TestCase):
             response = self.app.get('/admin/login')
 
         self.assertIn(
-            'placeholder="API Key or User Password"',
+            'placeholder="API Key"',
             response.data,
             'Placeholder for login is incorrect'
         )
