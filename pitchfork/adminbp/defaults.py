@@ -111,12 +111,21 @@ def check_and_initialize():
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
+                        'display_name': 'Feeds',
+                        'name': 'cloud_feeds',
+                        'parent': 'cloud_products',
+                        'url': '/cloud_feeds',
+                        'parent_order': 2,
+                        'order': 7,
+                        'view_permissions': 'logged_in'
+                    }, {
+                        'active': True,
                         'display_name': 'First Gen Servers',
                         'name': 'first_gen_servers',
                         'parent': 'cloud_products',
                         'url': '/fg_servers',
                         'parent_order': 2,
-                        'order': 7,
+                        'order': 8,
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
@@ -125,7 +134,7 @@ def check_and_initialize():
                         'parent': 'cloud_products',
                         'url': '/identity',
                         'parent_order': 2,
-                        'order': 8,
+                        'order': 9,
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
@@ -134,7 +143,7 @@ def check_and_initialize():
                         'parent': 'cloud_products',
                         'url': '/images',
                         'parent_order': 2,
-                        'order': 9,
+                        'order': 10,
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
@@ -143,7 +152,7 @@ def check_and_initialize():
                         'parent': 'cloud_products',
                         'url': '/load_balancers',
                         'parent_order': 2,
-                        'order': 10,
+                        'order': 11,
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
@@ -152,7 +161,7 @@ def check_and_initialize():
                         'parent': 'cloud_products',
                         'url': '/monitoring',
                         'parent_order': 2,
-                        'order': 11,
+                        'order': 12,
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
@@ -161,7 +170,7 @@ def check_and_initialize():
                         'parent': 'cloud_products',
                         'url': '/networks',
                         'parent_order': 2,
-                        'order': 12,
+                        'order': 13,
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
@@ -170,7 +179,7 @@ def check_and_initialize():
                         'parent': 'cloud_products',
                         'url': '/ng_servers',
                         'parent_order': 2,
-                        'order': 13,
+                        'order': 14,
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
@@ -179,7 +188,7 @@ def check_and_initialize():
                         'parent': 'cloud_products',
                         'url': '/orchestration',
                         'parent_order': 2,
-                        'order': 14,
+                        'order': 15,
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
@@ -188,7 +197,7 @@ def check_and_initialize():
                         'parent': 'cloud_products',
                         'url': '/queues',
                         'parent_order': 2,
-                        'order': 15,
+                        'order': 16,
                         'view_permissions': 'logged_in'
                     }, {
                         'active': True,
@@ -246,12 +255,21 @@ def check_and_initialize():
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
+                        'display_name': 'Feeds',
+                        'name': 'manage_feeds',
+                        'parent': 'manage_products',
+                        'url': '/cloud_feeds/manage',
+                        'parent_order': 3,
+                        'order': 7,
+                        'view_permissions': 'administrators'
+                    }, {
+                        'active': True,
                         'display_name': 'FG Servers',
                         'name': 'fg_servers_setup',
                         'parent': 'manage_products',
                         'url': '/fg_servers/manage',
                         'parent_order': 3,
-                        'order': 7,
+                        'order': 8,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -260,7 +278,7 @@ def check_and_initialize():
                         'parent': 'manage_products',
                         'url': '/identity/manage',
                         'parent_order': 3,
-                        'order': 8,
+                        'order': 9,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -269,7 +287,7 @@ def check_and_initialize():
                         'parent': 'manage_products',
                         'url': '/images/manage',
                         'parent_order': 3,
-                        'order': 9,
+                        'order': 10,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -278,13 +296,13 @@ def check_and_initialize():
                         'parent': 'manage_products',
                         'url': '/load_balancers/manage',
                         'parent_order': 3,
-                        'order': 10,
+                        'order': 11,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
                         'display_name': 'Monitoring',
                         'name': 'monitoring_manage',
-                        'order': 11,
+                        'order': 12,
                         'parent': 'manage_products',
                         'parent_order': 3,
                         'url': '/monitoring/manage',
@@ -296,7 +314,7 @@ def check_and_initialize():
                         'parent': 'manage_products',
                         'url': '/networks/manage',
                         'parent_order': 3,
-                        'order': 12,
+                        'order': 13,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -305,7 +323,7 @@ def check_and_initialize():
                         'parent': 'manage_products',
                         'url': '/ng_servers/manage',
                         'parent_order': 3,
-                        'order': 13,
+                        'order': 14,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -314,7 +332,7 @@ def check_and_initialize():
                         'parent': 'manage_products',
                         'url': '/orchestration/manage',
                         'parent_order': 3,
-                        'order': 14,
+                        'order': 15,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -323,7 +341,7 @@ def check_and_initialize():
                         'parent': 'manage_products',
                         'url': '/queues/manage',
                         'parent_order': 3,
-                        'order': 15,
+                        'order': 16,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -381,12 +399,21 @@ def check_and_initialize():
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
+                        'display_name': 'Feeds',
+                        'name': 'feeds_api',
+                        'parent': 'api_settings',
+                        'url': '/cloud_feeds/manage/api',
+                        'parent_order': 4,
+                        'order': 7,
+                        'view_permissions': 'administrators'
+                    }, {
+                        'active': True,
                         'display_name': 'FG Servers',
                         'name': 'fg_servers_api',
                         'parent': 'api_settings',
                         'url': '/fg_servers/manage/api',
                         'parent_order': 4,
-                        'order': 7,
+                        'order': 8,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -395,7 +422,7 @@ def check_and_initialize():
                         'parent': 'api_settings',
                         'url': '/identity/manage/api',
                         'parent_order': 4,
-                        'order': 8,
+                        'order': 9,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -404,7 +431,7 @@ def check_and_initialize():
                         'parent': 'api_settings',
                         'url': '/images/manage/api',
                         'parent_order': 4,
-                        'order': 9,
+                        'order': 10,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -413,7 +440,7 @@ def check_and_initialize():
                         'parent': 'api_settings',
                         'url': '/load_balancers/manage/api',
                         'parent_order': 4,
-                        'order': 10,
+                        'order': 11,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -422,7 +449,7 @@ def check_and_initialize():
                         'parent': 'api_settings',
                         'url': '/monitoring/manage/api',
                         'parent_order': 4,
-                        'order': 11,
+                        'order': 12,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -431,7 +458,7 @@ def check_and_initialize():
                         'parent': 'api_settings',
                         'url': '/networks/manage/api',
                         'parent_order': 4,
-                        'order': 12,
+                        'order': 13,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -440,7 +467,7 @@ def check_and_initialize():
                         'parent': 'api_settings',
                         'url': '/ng_servers/manage/api',
                         'parent_order': 4,
-                        'order': 13,
+                        'order': 14,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -449,7 +476,7 @@ def check_and_initialize():
                         'parent': 'api_settings',
                         'url': '/orchestration/manage/api',
                         'parent_order': 4,
-                        'order': 14,
+                        'order': 15,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -458,7 +485,7 @@ def check_and_initialize():
                         'parent': 'api_settings',
                         'url': '/queues/manage/api',
                         'parent_order': 4,
-                        'order': 15,
+                        'order': 16,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
@@ -618,6 +645,8 @@ def check_and_initialize():
                             '/networks/api_call/process',
                             '/big_data/',
                             '/big_data/api_call/process',
+                            '/cloud_feeds/',
+                            '/cloud_feeds/api_call/process',
                             '/autoscale/',
                             '/autoscale/api_call/process',
                             '/block_storage/',
@@ -658,6 +687,7 @@ def check_and_initialize():
                     'cbs',
                     'cloud_db',
                     'cloud_dns',
+                    'cloud_feeds',
                     'fg_servers',
                     'cloud_identity',
                     'images',
@@ -788,6 +818,22 @@ def check_and_initialize():
                     'doc_url': (
                         'http://docs.rackspace.com/auth/api/v2.0/'
                         'auth-client-devguide/content/Overview-d1e65.html'
+                    )
+                },
+                'cloud_feeds': {
+                    'app_url': '/cloud_feeds',
+                    'title': 'Cloud Feeds',
+                    'require_dc': True,
+                    'us_api': (
+                        'https://{data_center}.feeds.api.rackspacecloud.com'
+                    ),
+                    'uk_api': (
+                        'https://{data_center}.feeds.api.rackspacecloud.com'
+                    ),
+                    'active': True,
+                    'doc_url': (
+                        'http://docs.rackspace.com/cloud-feeds/api/'
+                        'v1.0/feeds-devguide/content/overview.html'
                     )
                 },
                 'cloud_networks': {
