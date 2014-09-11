@@ -51,13 +51,13 @@ def add_fields_to_form(count):
         setattr(
             F,
             'variable_%i' % i,
-            global_forms.FormField(global_forms.CallVariables)
+            global_forms.fields.FormField(global_forms.CallVariables)
         )
 
     setattr(
         F,
         'submit',
-        global_forms.SubmitField('Submit')
+        global_forms.fields.SubmitField('Submit')
     )
     return F()
 
