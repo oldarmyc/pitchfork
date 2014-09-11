@@ -16,7 +16,7 @@ from flask.ext.wtf import Form
 from wtforms import fields, validators
 
 
-class MySelectField(SelectField):
+class MySelectField(fields.SelectField):
     def pre_validate(self, form):
         """
         Overrides pre validation since all choices are static
@@ -27,29 +27,29 @@ class MySelectField(SelectField):
 
 
 class ManageProduct(Form):
-    title = TextField(
+    title = fields.TextField(
         'Title:',
         validators=[validators.required()]
     )
-    app_url = TextField(
+    app_url = fields.TextField(
         'App. URL:',
         validators=[validators.required()]
     )
-    url = TextField(
+    url = fields.TextField(
         'US API Endpoint:',
         validators=[validators.required()]
     )
-    uk_url = TextField(
+    uk_url = fields.TextField(
         'UK API Endpoint:',
         validators=[validators.required()]
     )
-    doc_url = TextField(
+    doc_url = fields.TextField(
         'Docs URL:',
         validators=[validators.required()]
     )
-    require_dc = BooleanField('Require DC:')
-    active = BooleanField('Active to Use:')
-    submit = SubmitField('Submit')
+    require_dc = fields.BooleanField('Require DC:')
+    active = fields.BooleanField('Active to Use:')
+    submit = fields.SubmitField('Submit')
 
 
 class CallVariables(Form):
@@ -57,7 +57,7 @@ class CallVariables(Form):
         kwargs['csrf_enabled'] = False
         super(CallVariables, self).__init__(*args, **kwargs)
 
-    variable_name = TextField(
+    variable_name = fields.TextField(
         'Variable Name:'
     )
     field_type = MySelectField(
@@ -77,29 +77,29 @@ class CallVariables(Form):
             ('SelectField', 'Select Field')
         ]
     )
-    field_display_data = TextAreaField('Select Data:')
-    description = TextField(
+    field_display_data = fields.TextAreaField('Select Data:')
+    description = fields.TextField(
         'Short Description:'
     )
-    required = BooleanField('Required:')
-    id_value = HiddenField('id_value')
+    required = fields.BooleanField('Required:')
+    id_value = fields.HiddenField('id_value')
 
 
 class ApiCall(Form):
-    title = TextField('Title:', validators=[validators.required()])
-    short_description = TextAreaField('Short Description:')
-    verb = SelectField('Verb:', validators=[validators.required()])
-    api_uri = TextField('API URI:', validators=[validators.required()])
-    doc_url = TextField('Doc URL:')
-    add_to_header = BooleanField('Add to Header?:')
-    custom_header_key = TextField('Header Key:')
-    custom_header_value = TextField('Header Value:')
-    use_data = BooleanField('Use Data?:')
-    data_object = TextAreaField('Data Object:')
-    remove_token = BooleanField('Remove Token:')
-    remove_content_type = BooleanField('Remove Content Type:')
-    required_key = BooleanField('Required Key:')
-    required_key_name = TextField('Key Name:')
+    title = fields.TextField('Title:', validators=[validators.required()])
+    short_description = fields.TextAreaField('Short Description:')
+    verb = fields.SelectField('Verb:', validators=[validators.required()])
+    api_uri = fields.TextField('API URI:', validators=[validators.required()])
+    doc_url = fields.TextField('Doc URL:')
+    add_to_header = fields.BooleanField('Add to Header?:')
+    custom_header_key = fields.TextField('Header Key:')
+    custom_header_value = fields.TextField('Header Value:')
+    use_data = fields.BooleanField('Use Data?:')
+    data_object = fields.TextAreaField('Data Object:')
+    remove_token = fields.BooleanField('Remove Token:')
+    remove_content_type = fields.BooleanField('Remove Content Type:')
+    required_key = fields.BooleanField('Required Key:')
+    required_key_name = fields.TextField('Key Name:')
     required_key_type = MySelectField(
         'Key Type:',
         choices=[
@@ -108,4 +108,4 @@ class ApiCall(Form):
             ('list', 'List')
         ]
     )
-    tested = BooleanField('Tested?:')
+    tested = fields.BooleanField('Tested?:')
