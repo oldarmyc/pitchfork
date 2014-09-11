@@ -8,10 +8,10 @@
     </style>
 {% endblock %}
 {% block body %}
-	<h3>{{ title }}</h3>
-    <div id="add_api_call">
+	<h2>
+        {{ title }}
         <a href="{{ product_url }}/add" title="Add API Call" class="btn btn-primary">Add API Call</a>
-    </div>
+    </h2>
     <h4>Setup API Calls</h4>
     {% if api_commands.count() > 0 %}
         <table class="table">
@@ -37,25 +37,25 @@
                     <td>
                         {% if api.get('variables') %}
                             {% for var in api.get('variables') %}
-                                {% if var.get('required') %}<span class="required">{{ var.get('variable_name') }}</span>{% else %}{{ var.get('variable_name') }}{% endif %}<br />
+                                <span {% if var.get('required') %}class="text-danger"><span class="fa fa-start tooltip-title" title="Required Attribute"></span{% endif %}>{{ var.get('variable_name') }}</span><br />
                             {% endfor %}
                         {% endif %}
                     </td>
                     <td style="text-align: center;">
-                        {% if api.tested %}
-                            <i class="icon-ok-circle"></i>
+                        {% if api.get('tested') %}
+                            <span class="fa fa-check-circle-o"></span>
                         {% else %}
-                            <i class="icon-ban-circle"></i>
+                            <span class="fa fa-ban"></span>
                         {% endif %}
                     </td>
-                    <td style="width: 50px;">
+                    <td>
                         {% if api.tested %}
-                            <a href="{{ product_url }}/test/unconfirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Untested"><i class="icon-ban-circle"></i></a>
+                            <a href="{{ product_url }}/test/unconfirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Untested"><span class="fa fa-ban"></span></a>
                         {% else %}
-                            <a href="{{ product_url }}/test/confirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Tested"><i class="icon-ok-circle"></i></a>
+                            <a href="{{ product_url }}/test/confirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Tested"><span class="fa fa-check-circle-o"></span></a>
                         {% endif %}
-                        <a href="{{ product_url }}/edit/{{ api.get('_id') }}" class="tooltip_show" title="Edit API Call"><i class="icon-pencil"></i></a>
-                        <a href="{{ product_url }}/delete/{{ api.get('_id') }}" class="tooltip_show" title="Delete API Call"><i class="icon-trash"></i></a>
+                        <a href="{{ product_url }}/edit/{{ api.get('_id') }}" class="tooltip_show" title="Edit API Call"><span class="fa fa-pencil"></span></a>
+                        <a href="{{ product_url }}/delete/{{ api.get('_id') }}" class="tooltip_show" title="Delete API Call"><span class="fa fa-trash-o"></span></a>
                     </td>
                 </tr>
             {% endfor %}
