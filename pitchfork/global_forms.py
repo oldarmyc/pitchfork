@@ -27,14 +27,8 @@ class MySelectField(fields.SelectField):
 
 
 class ManageProduct(Form):
-    title = fields.TextField(
-        'Title:',
-        validators=[validators.required()]
-    )
-    app_url = fields.TextField(
-        'App. URL:',
-        validators=[validators.required()]
-    )
+    title = fields.TextField('Title:', validators=[validators.required()])
+    app_url = fields.TextField('App. URL:', validators=[validators.required()])
     url = fields.TextField(
         'US API Endpoint:',
         validators=[validators.required()]
@@ -43,10 +37,7 @@ class ManageProduct(Form):
         'UK API Endpoint:',
         validators=[validators.required()]
     )
-    doc_url = fields.TextField(
-        'Docs URL:',
-        validators=[validators.required()]
-    )
+    doc_url = fields.TextField('Docs URL:', validators=[validators.required()])
     require_dc = fields.BooleanField('Require DC:')
     active = fields.BooleanField('Active to Use:')
     submit = fields.SubmitField('Submit')
@@ -57,9 +48,7 @@ class CallVariables(Form):
         kwargs['csrf_enabled'] = False
         super(CallVariables, self).__init__(*args, **kwargs)
 
-    variable_name = fields.TextField(
-        'Variable Name:'
-    )
+    variable_name = fields.TextField('Variable Name:')
     field_type = MySelectField(
         'Field Type:',
         choices=[
@@ -78,9 +67,7 @@ class CallVariables(Form):
         ]
     )
     field_display_data = fields.TextAreaField('Select Data:')
-    description = fields.TextField(
-        'Short Description:'
-    )
+    description = fields.TextField('Short Description:')
     required = fields.BooleanField('Required:')
     id_value = fields.HiddenField('id_value')
 
