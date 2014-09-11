@@ -13,10 +13,7 @@
 # limitations under the License.
 
 from flask.ext.wtf import Form
-from wtforms import TextField, SelectField, IntegerField, BooleanField,\
-    PasswordField, TextAreaField, SubmitField, HiddenField,\
-    RadioField, FormField
-from wtforms import validators
+from wtforms import fields, validators
 
 
 class MySelectField(SelectField):
