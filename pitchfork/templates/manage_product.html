@@ -20,66 +20,50 @@
 	<h3>{{ title }}</h3>
     <h4>Globals</h4>
     {% include '_form.html' %}
-    {% if product_settings %}
+    {% if product %}
         <h4>Current Settings</h4>
-        <table class="table" style="width: 70%">
-            <tr>
-                <td class='key-label'>
-                    Title
-                </td>
-                <td>
-                    {{ product_settings.get('title') }}
-                </td>
-            </tr>
-            <tr>
-                <td class='key-label'>
-                    App. URL
-                </td>
-                <td>
-                    {{ product_settings.get('app_url') }}
-                </td>
-            </tr>
-            <tr>
-                <td class='key-label'>
-                    US API Endpoint
-                </td>
-                <td>
-                    {{ product_settings.get('us_api') }}
-                </td>
-            </tr>
-            <tr>
-                <td class='key-label'>
-                    UK API Endpoint
-                </td>
-                <td>
-                    {{ product_settings.get('uk_api') }}
-                </td>
-            </tr>
-            <tr>
-                <td class='key-label'>
-                    Documentation URL
-                </td>
-                <td>
-                    {{ product_settings.get('doc_url') }}
-                </td>
-            </tr>
-            <tr>
-                <td class='key-label'>
-                    Require DC
-                </td>
-                <td>
-                    {{ product_settings.get('require_dc') }}
-                </td>
-            </tr>
-            <tr>
-                <td class='key-label'>
-                    Active
-                </td>
-                <td>
-                    {{ product_settings.get('active') }}
-                </td>
-            </tr>
-        </table>
+        <dl class="dl-horizontal">
+            <dt>Title:</dt>
+            <dd>
+                {{ product.title }}
+            </dd>
+            <dt>Product URL:</dt>
+            <dd>
+                {{ product.app_url }}
+            </dd>
+            <dt>DB Name:</dt>
+            <dd>
+                {{ product.db_name }}
+            </dd>
+            <dt>US Endpoint:</dt>
+            <dd>
+                {{ product.us_api }}
+            </dd>
+            <dt>UK Endpoint:</dt>
+            <dd>
+                {{ product.uk_api }}
+            </dd>
+            <dt>Base Doc URL:</dt>
+            <dd>
+                {{ product.doc_url }}
+            </dd>
+            <dt>Require DC:</dt>
+            <dd>
+                {% if product.require_dc %}
+                    Yes
+                {% else %}
+                    No
+                {% endif %}
+            </dd>
+            <dt>Active:</dt>
+            <dd>
+                {% if product.active %}
+                    Yes
+                {% else %}
+                    No
+                {% endif %}
+            </dd>
+        </dl>
     {% endif %}
 {% endblock %}
 {% block jquery %}
