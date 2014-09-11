@@ -29,11 +29,11 @@ class MySelectField(fields.SelectField):
 class ManageProduct(Form):
     title = fields.TextField('Title:', validators=[validators.required()])
     app_url = fields.TextField('App. URL:', validators=[validators.required()])
-    url = fields.TextField(
+    us_api = fields.TextField(
         'US API Endpoint:',
         validators=[validators.required()]
     )
-    uk_url = fields.TextField(
+    uk_api = fields.TextField(
         'UK API Endpoint:',
         validators=[validators.required()]
     )
