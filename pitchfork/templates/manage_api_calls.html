@@ -65,9 +65,8 @@
     {% endif %}
 {% endblock %}
 {% block jquery %}
-    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-tooltip.js') }}"></script>
     <script>
-        $(function () {
+        $(document).ready(function() {
             $('.tooltip_show').tooltip();
         });
     </script>
