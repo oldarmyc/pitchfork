@@ -42,17 +42,12 @@
                     </td>
                     <td style="text-align: center;">
                         {% if api.get('tested') %}
-                            <span class="fa fa-check-circle-o"></span>
+                            <a href="{{ product_url }}/unconfirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Untested"><span class="fa fa-check-circle-o"></span></a>
                         {% else %}
-                            <span class="fa fa-ban"></span>
+                            <a href="{{ product_url }}/confirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Tested"><span class="fa fa-ban"></span></a>
                         {% endif %}
                     </td>
-                    <td>
-                        {% if api.tested %}
-                            <a href="{{ product_url }}/test/unconfirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Untested"><span class="fa fa-ban"></span></a>
-                        {% else %}
-                            <a href="{{ product_url }}/test/confirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Tested"><span class="fa fa-check-circle-o"></span></a>
-                        {% endif %}
+                    <td style="width: 40px;">
                         <a href="{{ product_url }}/edit/{{ api.get('_id') }}" class="tooltip_show" title="Edit API Call"><span class="fa fa-pencil"></span></a>
                         <a href="{{ product_url }}/delete/{{ api.get('_id') }}" class="tooltip_show" title="Delete API Call"><span class="fa fa-trash-o"></span></a>
                     </td>
