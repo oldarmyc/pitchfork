@@ -50,73 +50,80 @@
     </style>
 {% endblock %}
 {% block body %}
-        <h3>{{ title }}</h3>
-    <form method="POST" action="{{ post_url }}" class="form-horizontal">
-        {{ form.hidden_tag() }}
+    <h2>
+        {{ title }}
+    </h2>
+    <form method="POST" action="{{ post_url }}" class="form-horizontal" role="form">
         {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
             {% if loop.first %}
                 {% set show_link = 1 %}
                 {% set unvar = 1 %}
             {% endif %}
             {% if show_link == 1 %}
-                <div class="control-group{% if field.errors %} error{% endif %}" id="{{ field.name }}_top">
+                <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
             {% endif %}
-                {% if not field.name|check_regex %}
-                    {{ field.label(class="control-label") }}
-                {% endif %}
+            {% if not field.name|check_regex %}
+                {{ field.label(class="col-sm-2 control-label") }}
+            {% endif %}
+            {% if field.name|check_regex %}
                 {% if show_link == 1 %}
-                    <div class="controls">
+                    {% set show_link = 99 %}
                 {% endif %}
-                    {% if field.name|check_regex %}
-                        {% if show_link == 1 %}
-                            {% set show_link = 99 %}
-                        {% endif %}
-                        <div id="sub_field_wrapper" class="variable{% if unvar == 1 %}{% set unvar = 99 %}{% else %}_0{% endif %}">
-                            {% for sub_field in field %}
-                                {% if sub_field.widget.input_type != 'hidden' %}
-                                    <div id="sub_field">
-                                        {{ sub_field.label(class="control-label") }} {{ sub_field }}
-                                        {% if sub_field.type == "TextAreaField" %}
-                                            <p style="font-size: 12px; margin: 5px 0 0 140px;" class="text-info"><strong>Note:</strong> Coma seperated list or one option per line</p>
-                                        {% endif %}
-                                        {% if error %}
-                                            {% for key, error in field.errors.iteritems() %}
-                                                {% if 'variable-%s' % key == sub_field.id %}
-                                                    <span style="color: red">{{ error[0] }}</span>
-                                                {% endif %}
-                                            {% endfor %}
-                                        {% endif %}
-                                    </div>
-                                {% else %}
-                                    {{ sub_field }}
-                                {% endif %}
-                            {% endfor %}
-                        </div>
+                <div class="col-md-12">
+                    <div id="sub_field_wrapper" class="variable{% if unvar == 1 %}{% set unvar = 99 %}{% else %}_0{% endif %}">
+                        {% for sub_field in field %}
+                            {% if sub_field.widget.input_type != 'hidden' %}
+                                <div id="sub_field">
+                                    {{ sub_field.label(class="col-sm-1 control-label") }}
+                                    {% if sub_field.type == 'TextField' or sub_field.type == 'TextAreaField'  %}
+                                        {{ sub_field(class="form-control", **{'type': 'text'})|safe }}
+                                    {% elif sub_field.type == 'BooleanField' %}
+                                        {{ sub_field(type="checkbox") }}
+                                    {% else %}
+                                        {{ sub_field(class="form-control") }}
+                                    {% endif %}
+                                    {% if sub_field.type == "TextAreaField" %}
+                                        <p style="font-size: 12px; margin: 5px 0 0 140px;" class="text-info"><strong>Note:</strong> Coma seperated list or one option per line</p>
+                                    {% endif %}
+                                    {% for error in sub_field.errors %}
+                                        <span class="form-control-feedback">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ sub_field }}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+            {% else %}
+                <div class="col-md-7">
+                    {% if field.type == 'TextField' or field.type == 'TextAreaField'  %}
+                        {{ field(class="form-control", **{'type': 'text'})|safe }}
+                    {% elif field.type == 'BooleanField' %}
+                        {{ field(type="checkbox") }}
                     {% else %}
-                        {{ field }}
-                        {% if field.name == "data_object" %}
-                            <p style="font-size: 12px;" class="text-info"><strong>Note:</strong> Ensure that the variables used in this data object are defined below</p>
-                        {% endif %}
-                        {% if error %}
-                            {% for error in field.errors %}
-                                <span style="color: red">{{ error }}</span>
-                            {% endfor %}
-                        {% endif %}
+                        {{ field(class="form-control") }}
                     {% endif %}
+                    {% if field.name == "data_object" %}
+                        <p style="font-size: 12px;" class="text-info"><strong>Note:</strong> Ensure that the variables used in this data object are defined below</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <span class="form-control-feedback">{{ error }}</span>
+                    {% endfor %}
+            {% endif %}
             {% if show_link == 1 or (show_link != 1 and loop.last) %}
                     </div>
                 </div>
             {% endif %}
         {% endfor %}
         <div id="variable_add">
-            <a id="add_variable" class="btn btn-success">+ Add Variable</a>
+            <a id="add_variable" class="btn btn-xs btn-success">+ Add Variable</a>
         </div>
-        <div class="control-group">
-            <div class="controls" id="final_submit">
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-xs-2">
                 {% for field in form if (field.widget.input_type == 'submit') %}
-                    {{ field(class="btn") }}
+                    {{ field(class="btn btn-primary") }}
                 {% endfor %}
-                <a href="{{ cancel }}" title="Cancel" class="btn btn-info">Cancel</a>
+                <a href="{{ cancel_return }}" title="Cancel" class="btn btn-default">Cancel</a>
             </div>
         </div>
     </form>
