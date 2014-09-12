@@ -1,6 +1,6 @@
 <form method="POST" action="{{ post_url }}" class="form-horizontal" role="form">
     {{ form.hidden_tag() }}
-    {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
+    {% for field in form if field.widget.input_type not in ['hidden', 'submit'] %}
         <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
             {{ field.label(class="col-sm-1 control-label") }}
             <div class="col-xs-3">

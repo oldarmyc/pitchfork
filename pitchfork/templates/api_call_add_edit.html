@@ -54,7 +54,8 @@
         {{ title }}
     </h2>
     <form method="POST" action="{{ post_url }}" class="form-horizontal" role="form">
-        {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
+        {{ form.hidden_tag() }}
+        {% for field in form if field.widget.input_type not in ['hidden', 'submit'] %}
             {% if loop.first %}
                 {% set show_link = 1 %}
                 {% set unvar = 1 %}
