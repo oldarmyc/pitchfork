@@ -2,57 +2,50 @@
 {% block title %} - {{ title }}{% endblock %}
 {% block addHeaders %}
     <style>
-        .form-horizontal .control-label {
-            width: 120px;
+        textarea.form-control {
+            width: 400px;
+            height: 120px;
         }
 
-        .form-horizontal .controls {
-            margin-left: 140px;
+        div#sub_field textarea.form-control {
+            width: 220px;
+            height: 80px;
         }
 
-        input[type=text] {
-            width: 300px;
+        div#data_object_top,
+        div#custom_header_key_top,
+        div#custom_header_value_top,
+        div#required_key_name_top,
+        div#required_key_type_top {
+            display: none;
         }
 
-        textarea {
-            width: 300px;
-            height: 100px;
+        .col-sm-2 {
+            width: 185px;
         }
 
-        td.key-label {
-            font-weight: bold;
+        .col-sm-offset-2 {
+            margin-left: 185px;
         }
 
-        div#sub_field_wrapper {
-            margin: 10px 0px 10px -158px;
-            border: 1px solid #E3E3E3;
-            border-radius: 4px 4px 4px 4px;
-            padding: 10px 18px;
-            width: 526px;
-        }
-
-        div#sub_field input[type=text] {
-            width: 200px;
+        div#sub_field .col-sm-1 {
+            width: 170px;
         }
 
         div#sub_field {
             padding: 5px 0 5px;
         }
 
-        div#sub_field .control-label {
-            padding: 4px 20px 0 0;
+        div#sub_field_wrapper {
+            margin: 15px 0;
+            border: 1px solid #E3E3E3;
+            border-radius: 4px 4px 4px 4px;
+            padding: 10px 0;
+            width: 526px;
         }
 
         div#variable_add {
-            margin: -20px 0 10px 0;
-        }
-
-        div#data_object_top, div#custom_header_key_top, div#custom_header_value_top, div#required_key_name_top, div#required_key_type_top {
-            display: none;
-        }
-
-        div#final_submit {
-            margin: 0 0 0 404px;
+            margin: -20px 0 10px;
         }
     </style>
 {% endblock %}
