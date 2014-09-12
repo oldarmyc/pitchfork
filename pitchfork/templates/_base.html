@@ -60,7 +60,7 @@
 					</ul>
 					<p class="navbar-text pull-right">
 						{% if session.get('username') %}
-							Logged in as {{ session.get('name') }} | <a class="logout" href="{{ url_for('adminblueprint.logout') }}">Log Out</a>
+							Logged in as {{ session.get('username') }} | <a class="logout" href="{{ url_for('adminblueprint.logout') }}">Log Out</a>
 						{% else %}
 							<a href="{{ url_for('adminblueprint.login') }}">Log In</a>
 						{% endif %}
