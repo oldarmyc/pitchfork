@@ -1,4 +1,4 @@
-{% extends "_fluid_base.html" %}
+{% extends "_base.html" %}
 {% block title %} - {{ title }}{% endblock %}
 {% block addHeaders %}
     <style>
@@ -8,13 +8,12 @@
     </style>
 {% endblock %}
 {% block body %}
-	<h2>
+	<h1>
         {{ title }}
         <a href="{{ product_url }}/add" title="Add API Call" class="btn btn-primary">Add API Call</a>
-    </h2>
-    <h4>Setup API Calls</h4>
+    </h1>
     {% if api_commands.count() > 0 %}
-        <table class="table">
+        <table class="table table-bordered table-condensed table-hover">
             <tr>
                 <th>Name</th>
                 <th>Verb</th>
