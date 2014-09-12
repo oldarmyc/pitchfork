@@ -28,6 +28,10 @@
             margin-left: 185px;
         }
 
+        .col-md-3 {
+            width: 500px;
+        }
+
         div#sub_field .col-sm-1 {
             width: 170px;
         }
@@ -108,7 +112,7 @@
                         <p style="font-size: 12px;" class="text-info"><strong>Note:</strong> Ensure that the variables used in this data object are defined below</p>
                     {% endif %}
                     {% for error in field.errors %}
-                        <span class="form-control-feedback">{{ error }}</span>
+                        <span class="form-control-feedback" style="width: 230px;">{{ error }}</span>
                     {% endfor %}
             {% endif %}
             {% if show_link == 1 or (show_link != 1 and loop.last) %}
