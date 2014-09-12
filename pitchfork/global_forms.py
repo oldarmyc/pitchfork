@@ -75,7 +75,11 @@ class CallVariables(Form):
 class ApiCall(Form):
     title = fields.TextField('Title:', validators=[validators.required()])
     short_description = fields.TextAreaField('Short Description:')
-    verb = fields.SelectField('Verb:', validators=[validators.required()])
+    verb = MySelectField(
+        'Verb:',
+        validators=[validators.required()],
+        choices=[('', '')]
+    )
     api_uri = fields.TextField('API URI:', validators=[validators.required()])
     doc_url = fields.TextField('Doc URL:')
     add_to_header = fields.BooleanField('Add to Header?:')
