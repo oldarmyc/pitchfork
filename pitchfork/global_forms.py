@@ -101,3 +101,26 @@ class ApiCall(Form):
         ]
     )
     tested = fields.BooleanField('Tested?:')
+    product = fields.HiddenField()
+    id = fields.HiddenField()
+
+    def validate_title(self, field):
+        temp = self.title.data.strip().lower().title()
+        found = getattr(g.db, self.product.data).find_one(
+            {'title': temp}
+        )
+        if found and self.id.data != str(found.get('_id')):
+            raise validators.ValidationError('Duplicate title found')
+
+    def validate_api_uri(self, field):
+        found = getattr(g.db, self.product.data).find_one(
+            {
+                'api_uri': self.api_uri.data.strip(),
+                'verb': self.verb.data,
+                'data_object': self.data_object.data
+            }
+        )
+        if found and self.id.data != str(found.get('_id')):
+            raise validators.ValidationError(
+                'Duplicate URI and Verb combination'
+            )
