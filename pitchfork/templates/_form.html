@@ -1,20 +1,26 @@
-<form method="POST" action="{{ post_url }}" class="form-horizontal">
+<form method="POST" action="{{ post_url }}" class="form-horizontal" role="form">
     {{ form.hidden_tag() }}
     {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
-        <div class="control-group{% if field.errors %} error{% endif %}">
-            {{ field.label(class="control-label") }}
-            <div class="controls">
-                {{ field }}
+        <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
+            {{ field.label(class="col-sm-1 control-label") }}
+            <div class="col-xs-3">
+                {% if field.type == 'TextField' or field.type == 'TextAreaField'  %}
+                    {{ field(class="form-control", **{'type': 'text'})|safe }}
+                {% elif field.type == 'BooleanField' %}
+                    {{ field(type="checkbox") }}
+                {% else %}
+                    {{ field(class="form-control") }}
+                {% endif %}
                 {% for error in field.errors %}
-                    <span style="color: #B94A48;">{{ error }}</span>
+                    <span class="form-control-feedback">{{ error }}</span>
                 {% endfor %}
             </div>
         </div>
     {% endfor %}
-    <div class="control-group">
-        <div class="controls">
+    <div class="form-group">
+        <div class="col-sm-offset-1 col-xs-2">
             {% for field in form if (field.widget.input_type == 'submit') %}
-                {{ field(class="btn") }}
+                {{ field(class="btn btn-primary") }}
             {% endfor %}
         </div>
     </div>
