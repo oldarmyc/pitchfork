@@ -58,17 +58,17 @@
             <dt>Require DC:</dt>
             <dd>
                 {% if product.require_dc %}
-                    Yes
+                    <span class="fa fa-check text-success"></span>
                 {% else %}
-                    No
+                    <span class="fa fa-minus text-danger"></span>
                 {% endif %}
             </dd>
             <dt>Active:</dt>
             <dd>
                 {% if product.active %}
-                    Yes
+                    <span class="fa fa-check text-success"></span>
                 {% else %}
-                    No
+                    <span class="fa fa-minus text-danger"></span>
                 {% endif %}
             </dd>
         </dl>
