@@ -63,7 +63,7 @@ def check_url_endpoints(us, uk):
     return True
 
 
-def gather_api_calls(product_db, testing):
+def gather_api_calls(product, testing):
     if testing:
         query = {
             '$or': [
@@ -74,7 +74,7 @@ def gather_api_calls(product_db, testing):
     else:
         query = {'tested': True}
 
-    api_calls = getattr(g.db, product_db).find(query).sort(
+    api_calls = getattr(g.db, product.get_db_name()).find(query).sort(
         [
             ('accessed', pymongo.DESCENDING),
             ('title', pymongo.ASCENDING)
