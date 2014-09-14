@@ -44,6 +44,9 @@ from global_api_functions import front_page_most_accessed, \
     search_for_calls, gather_history
 
 
+import product_views
+
+
 @app.template_filter()
 def nl2br(value):
     _newline_re = re.compile(r'(?:\r\n|\r|\n)')
