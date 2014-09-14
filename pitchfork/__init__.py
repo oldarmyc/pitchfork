@@ -24,22 +24,6 @@ import json
 
 # Start import for all blueprints
 from adminbp import bp as admin_bp
-from cloud_backup import bp as backup_bp
-from block_storage import bp as cbs_bp
-from databases import bp as db_bp
-from dns import bp as dns_bp
-from first_gen_servers import bp as fg_bp
-from load_balancers import bp as lb_bp
-from networks import bp as networks_bp
-from identity import bp as identity_bp
-from next_gen_servers import bp as ng_bp
-from monitoring import bp as mon_bp
-from queues import bp as queue_bp
-from autoscale import bp as autoscale_bp
-from images import bp as images_bp
-from big_data import bp as bigdata_bp
-from orchestration import bp as orchestration_bp
-from cloud_feeds import bp as cloudfeeds_bp
 from manage_globals import bp as manage_bp
 from reporting import bp as report_bp
 # End Blueprint import
@@ -48,22 +32,6 @@ from reporting import bp as report_bp
 app = Flask(__name__)
 app.config.from_object(config)
 app.register_blueprint(admin_bp, url_prefix='/admin')
-app.register_blueprint(backup_bp, url_prefix='/cloud_backup')
-app.register_blueprint(cbs_bp, url_prefix='/block_storage')
-app.register_blueprint(db_bp, url_prefix='/databases')
-app.register_blueprint(dns_bp, url_prefix='/dns')
-app.register_blueprint(fg_bp, url_prefix='/fg_servers')
-app.register_blueprint(lb_bp, url_prefix='/load_balancers')
-app.register_blueprint(networks_bp, url_prefix='/networks')
-app.register_blueprint(identity_bp, url_prefix='/identity')
-app.register_blueprint(ng_bp, url_prefix='/ng_servers')
-app.register_blueprint(mon_bp, url_prefix='/monitoring')
-app.register_blueprint(queue_bp, url_prefix='/queues')
-app.register_blueprint(autoscale_bp, url_prefix='/autoscale')
-app.register_blueprint(images_bp, url_prefix='/images')
-app.register_blueprint(bigdata_bp, url_prefix='/big_data')
-app.register_blueprint(orchestration_bp, url_prefix='/orchestration')
-app.register_blueprint(cloudfeeds_bp, url_prefix='/cloud_feeds')
 app.register_blueprint(manage_bp, url_prefix='/manage')
 app.register_blueprint(report_bp, url_prefix='/reporting')
 
