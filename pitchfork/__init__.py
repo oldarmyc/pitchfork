@@ -103,7 +103,6 @@ def utility_processor():
 # Set g to the db so that each blueprint can use it
 @app.before_request
 def before_request():
-    g.mongo = mongo
     g.db = db
 
 
