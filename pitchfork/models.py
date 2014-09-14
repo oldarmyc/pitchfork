@@ -23,6 +23,12 @@ class Product:
         temp = re.sub(' +', ' ', str(self.title.lower().strip()))
         self.db_name = re.sub(' ', '_', temp)
 
+    def get_db_name(self):
+        if not self.db_name:
+            self.set_db_name()
+
+        return self.db_name
+
 
 class Call:
     def __init__(self, call):
