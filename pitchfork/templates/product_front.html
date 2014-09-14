@@ -1,7 +1,5 @@
 {% extends "_base_call.html" %}
-{% block title %}
-	{{ tab_title }}
-{% endblock %}
+{% block title %} - {{ title }}{% endblock %}
 {% block addHeaders %}
 {% endblock %}
 {% block body %}
@@ -61,7 +59,7 @@
                                                     <span class="ep-label">Endpoint:</span>
                                                 </td>
                                                 <td>
-                                                    <span class="basic-values api-call-endpoint">{{ api_settings.get('us_api') }}</span>
+                                                    <span class="basic-values api-call-endpoint">{{ api_settings.us_api }}</span>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -279,11 +277,11 @@
             }
             if ( {{ restrict_dcs|lower }} ) {
                 if ( $('#data_center').val() == 'us' ) {
-                    $('span.api-call-endpoint').text("{{ api_settings.get('us_api') }}")
+                    $('span.api-call-endpoint').text("{{ api_settings.us_api }}")
                 } else if ( $('#data_center').val() == 'uk' ) {
-                    $('span.api-call-endpoint').text("{{ api_settings.get('uk_api') }}")
+                    $('span.api-call-endpoint').text("{{ api_settings.uk_api }}")
                 } else {
-                    $('span.api-call-endpoint').text("{{ api_settings.get('us_api') }}")
+                    $('span.api-call-endpoint').text("{{ api_settings.us_api }}")
                 }
             }
         });
