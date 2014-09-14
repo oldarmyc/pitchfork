@@ -31,7 +31,7 @@ class ProductsView(FlaskView):
             return redirect(url_for('index'))
 
         api_calls = global_helper.gather_api_calls(
-            found_product.db_name,
+            found_product,
             testing_calls
         )
         restrict_dcs, data_centers = global_helper.check_for_product_dcs(
