@@ -118,6 +118,9 @@ class AutoScaleTests(unittest.TestCase):
 
             response = c.get('/autoscale/manage')
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
             'Manage Settings</h3>',
             response.data,
@@ -133,6 +136,9 @@ class AutoScaleTests(unittest.TestCase):
 
             response = c.get('/autoscale/manage')
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
             'Manage Settings</h3>',
             response.data,
@@ -145,12 +151,12 @@ class AutoScaleTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
-            result = c.get('/autoscale/manage')
+            response = c.get('/autoscale/manage')
 
-        assert result._status_code == 302, \
-            'Invalid response code %s' % result._status_code
-
-        location = result.headers.get('Location')
+        assert response._status_code == 302, (
+            'Invalid response code %s' % response._status_code
+        )
+        location = response.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
             o.path,
@@ -166,14 +172,14 @@ class AutoScaleTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/autoscale/manage')
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
                 'title': 'Test',
                 'app_url': '/test',
-                'url': 'http://us.test.com',
-                'uk_url': 'http://us.test.com',
+                'us_api': 'http://us.test.com',
+                'uk_api': 'http://uk.test.com',
                 'doc_url': 'http://doc.test.com',
                 'require_dc': True,
                 'active': True
@@ -185,11 +191,9 @@ class AutoScaleTests(unittest.TestCase):
             )
 
         self.assertIn(
-            (
-                'Product variables successfully updated'
-            ),
+            'Product was successfully updated',
             response.data,
-            'Incorrect flash message after add bad data'
+            'Incorrect flash message after add data'
         )
         api_settings = pitchfork.db.api_settings.find_one()
         autoscale = api_settings.get('autoscale')
@@ -197,7 +201,7 @@ class AutoScaleTests(unittest.TestCase):
         if autoscale.get('title') == 'Test':
             updated = True
 
-        assert updated, 'Item was not updated successfully'
+        assert updated, 'Product was not updated successfully'
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_add_update_disable(self):
@@ -205,18 +209,17 @@ class AutoScaleTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/autoscale/manage')
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
                 'title': 'Test',
                 'app_url': '/test',
-                'url': 'http://us.test.com',
-                'uk_url': 'http://us.test.com',
+                'us_api': 'http://us.test.com',
+                'uk_api': 'http://us.test.com',
                 'doc_url': 'http://doc.test.com',
                 'require_dc': True
             }
-
             response = c.post(
                 '/autoscale/manage',
                 data=data,
@@ -224,11 +227,9 @@ class AutoScaleTests(unittest.TestCase):
             )
 
         self.assertIn(
-            (
-                'Product variables successfully updated'
-            ),
+            'Product was successfully updated',
             response.data,
-            'Incorrect flash message after add bad data'
+            'Incorrect flash message after data update'
         )
         api_settings = pitchfork.db.api_settings.find_one()
         autoscale = api_settings.get('autoscale')
@@ -236,7 +237,7 @@ class AutoScaleTests(unittest.TestCase):
         if autoscale.get('title') == 'Test':
             updated = True
 
-        assert updated, 'Item was not updated successfully'
+        assert updated, 'Product was not updated successfully'
         active_products = api_settings.get('active_products')
         not_active = False
         if not 'autoscale' in active_products:
@@ -253,8 +254,8 @@ class AutoScaleTests(unittest.TestCase):
             data = {
                 'title': 'Test',
                 'app_url': '/test',
-                'url': 'http://us.test.com',
-                'uk_url': 'http://us.test.com',
+                'us_api': 'http://us.test.com',
+                'uk_api': 'http://us.test.com',
                 'doc_url': 'http://doc.test.com',
                 'require_dc': True,
                 'active': True
@@ -266,12 +267,12 @@ class AutoScaleTests(unittest.TestCase):
             )
 
         self.assertIn(
-            (
-                'Form validation error, please check the form and try again'
-            ),
+            'Form was not saved successfully',
             response.data,
             'Incorrect flash message after add bad data'
         )
+        calls = pitchfork.db.autoscale.find()
+        assert calls.count() == 0, 'Call added when it should not have been'
         self.teardown_app_data()
 
     """ Product API Management Autoscale - Perms Test """
@@ -283,8 +284,11 @@ class AutoScaleTests(unittest.TestCase):
 
             response = c.get('/autoscale/manage/api')
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
-            '<h3>Manage API Calls</h3>',
+            'Autoscale - API Calls',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -295,12 +299,12 @@ class AutoScaleTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
-            result = c.get('/autoscale/manage/api')
+            response = c.get('/autoscale/manage/api')
 
-        assert result._status_code == 302, \
-            'Invalid response code %s' % result._status_code
-
-        location = result.headers.get('Location')
+        assert response._status_code == 302, (
+            'Invalid response code %s' % response._status_code
+        )
+        location = response.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
             o.path,
@@ -318,8 +322,11 @@ class AutoScaleTests(unittest.TestCase):
 
             response = c.get('/autoscale/manage/api/add')
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
-            '<h3>Add API Call</h3>',
+            'Add API Call',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -330,12 +337,12 @@ class AutoScaleTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
-            result = c.get('/autoscale/manage/api/add')
+            response = c.get('/autoscale/manage/api/add')
 
-        assert result._status_code == 302, \
-            'Invalid response code %s' % result._status_code
-
-        location = result.headers.get('Location')
+        assert response._status_code == 302, (
+            'Invalid response code %s' % response._status_code
+        )
+        location = response.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
             o.path,
@@ -350,9 +357,7 @@ class AutoScaleTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get(
-                '/autoscale/manage/api/add'
-            )
+            response = c.get('/autoscale/manage/api/add')
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
@@ -361,30 +366,29 @@ class AutoScaleTests(unittest.TestCase):
                 'verb': 'GET',
                 'api_uri': '{ddi}/groups'
             }
-            response = c.post(
-                '/autoscale/manage/api/add',
-                data=data
-            )
+            response = c.post('/autoscale/manage/api/add', data=data)
 
         self.assertIn(
-            (
-                'Duplicate title for API call already exists'
-                ', please check the name and try again'
-            ),
+            'Form validation error, please check the form and try again',
+            response.data,
+            'Could not find error alert on page'
+        )
+        self.assertIn(
+            'Duplicate title found',
             response.data,
             'Bad message when submitting duplicate title'
         )
+        calls = pitchfork.db.autoscale.find()
+        assert calls.count() == 1, 'Found to many calls in database'
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_admin_post_dupe_url(self):
-        api_id = self.setup_useable_api_call()
+        self.setup_useable_api_call()
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get(
-                '/autoscale/manage/api/add'
-            )
+            response = c.get('/autoscale/manage/api/add')
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
@@ -393,22 +397,24 @@ class AutoScaleTests(unittest.TestCase):
                 'verb': 'GET',
                 'api_uri': '{ddi}/groups'
             }
-            response = c.post(
-                '/autoscale/manage/api/add',
-                data=data
-            )
+            response = c.post('/autoscale/manage/api/add', data=data)
 
         self.assertIn(
-            (
-                'Duplicate API URI and Verb combination already exists, '
-                'please check the URI and verb and try again'
-            ),
+            'Form validation error, please check the form and try again',
+            response.data,
+            'Could not find error alert on page'
+        )
+        self.assertIn(
+            'Duplicate URI and Verb combination',
             response.data,
             'Bad message when submitting duplicate url and verb'
         )
+        calls = pitchfork.db.autoscale.find()
+        assert calls.count() == 1, 'Found to many calls in database'
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_admin_post_good(self):
+        pitchfork.db.autoscale.remove()
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
@@ -431,18 +437,50 @@ class AutoScaleTests(unittest.TestCase):
             )
 
         self.assertIn(
-            (
-                'API Call was successfully added'
-            ),
+            'API Call was added successfully',
             response.data,
             'Bad message when submitting good call'
         )
-        found_call = pitchfork.db.autoscale.find_one(
-            {
-                'title': 'Add Call'
+        found_call = pitchfork.db.autoscale.find()
+        assert found_call.count() == 1, 'Could not find added api call'
+        self.teardown_app_data()
+
+    def test_pf_autoscale_manage_api_add_admin_post_no_db(self):
+        pitchfork.db.autoscale.remove()
+        pitchfork.db.api_settings.update(
+            {}, {
+                '$set': {'autoscale.db_name': None}
             }
         )
-        assert found_call, 'Could not find added api call'
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/autoscale/manage/api/add'
+            )
+            token = self.retrieve_csrf_token(response.data)
+            data = {
+                'csrf_token': token,
+                'title': 'Add Call',
+                'doc_url': 'http://docs.rackspace.com',
+                'verb': 'GET',
+                'api_uri': '{ddi}/groups'
+            }
+            response = c.post(
+                '/autoscale/manage/api/add',
+                data=data,
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'There was an issue storing the API Call. Check '
+            'the product and ensure the db_name is specified',
+            response.data,
+            'Bad message when submitting call without DB'
+        )
+        found_call = pitchfork.db.autoscale.find()
+        assert found_call.count() == 0, 'No calls should have been found'
         self.teardown_app_data()
 
     """ Edit API Call """
@@ -453,14 +491,14 @@ class AutoScaleTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
-            result = c.get(
+            response = c.get(
                 '/autoscale/manage/api/edit/%s' % api_id
             )
 
-        assert result._status_code == 302, \
-            'Invalid response code %s' % result._status_code
-
-        location = result.headers.get('Location')
+        assert response._status_code == 302, (
+            'Invalid response code %s' % response._status_code
+        )
+        location = response.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
             o.path,
@@ -479,32 +517,47 @@ class AutoScaleTests(unittest.TestCase):
                 '/autoscale/manage/api/edit/%s' % api_id
             )
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
-            '<h3>Edit API Call',
+            'Edit API Call',
             response.data,
             'Invalid HTML found when browsing to edit'
         )
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_edit_admin_perms_with_vars(self):
-        api_id = self.setup_useable_api_call_with_variables()
+        self.setup_useable_api_call_with_variables()
+        call = pitchfork.db.autoscale.find_one()
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
             response = c.get(
-                '/autoscale/manage/api/edit/%s' % api_id
+                '/autoscale/manage/api/edit/%s' % call.get('_id')
             )
 
         self.assertIn(
-            '<h3>Edit API Call',
+            'Edit API Call',
             response.data,
             'Invalid HTML found when browsing to edit'
+        )
+        self.assertIn(
+            call.get('title'),
+            response.data,
+            'Could not find correct title in edit form'
+        )
+        self.assertIn(
+            call.get('doc_url'),
+            response.data,
+            'Could not find correct Document URL in edit form'
         )
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_edit_admin_bad_post(self):
-        api_id = self.setup_useable_api_call()
+        self.setup_useable_api_call()
+        call = pitchfork.db.autoscale.find_one()
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
@@ -518,7 +571,7 @@ class AutoScaleTests(unittest.TestCase):
                 'variables': []
             }
             response = c.post(
-                '/autoscale/manage/api/edit/%s' % api_id,
+                '/autoscale/manage/api/edit/%s' % call.get('_id'),
                 data=data,
                 follow_redirects=True
             )
@@ -529,9 +582,13 @@ class AutoScaleTests(unittest.TestCase):
             'Incorrect flash message after add bad data'
         )
         self.assertIn(
-            '<h3>Edit API Call',
+            'Edit API Call',
             response.data,
             'Invalid HTML found when browsing to edit'
+        )
+        check_call = pitchfork.db.autoscale.find_one()
+        assert call == check_call, (
+            'Call was edited when it was not supposed to'
         )
         self.teardown_app_data()
 
@@ -564,10 +621,8 @@ class AutoScaleTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after successful edit'
         )
-        self.assertIn(
-            '<h3>Manage API Calls</h3>',
-            response.data,
-            'Invalid HTML found when browsing to edit'
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
         )
         calls = pitchfork.db.autoscale.find_one(
             {
@@ -586,18 +641,17 @@ class AutoScaleTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get(
-                '/autoscale/manage/api/test/confirm/%s' % api_id,
+                '/autoscale/manage/api/confirm/%s' % api_id,
                 follow_redirects=True
             )
 
         self.assertIn(
-            'API Call has been mark as tested',
+            'API call was successfully updated',
             response.data,
             'Invalid response found after marking tested'
         )
-        api_call = pitchfork.db.autoscale.find_one()
-        tested = api_call.get('tested')
-        assert tested, 'API call was not saved as tested'
+        check_call = pitchfork.db.autoscale.find_one({'_id': ObjectId(api_id)})
+        assert check_call.get('tested'), 'API call was not saved as tested'
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_mark_untested(self):
@@ -607,18 +661,19 @@ class AutoScaleTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get(
-                '/autoscale/manage/api/test/unconfirm/%s' % api_id,
+                '/autoscale/manage/api/unconfirm/%s' % api_id,
                 follow_redirects=True
             )
 
         self.assertIn(
-            'API Call has been mark as untested',
+            'API call was successfully updated',
             response.data,
             'Invalid response found after marking untested'
         )
-        api_call = pitchfork.db.autoscale.find_one()
-        tested = api_call.get('tested')
-        assert not tested, 'API call was not saved as untested'
+        check_call = pitchfork.db.autoscale.find_one({'_id': ObjectId(api_id)})
+        assert not check_call.get('tested'), (
+            'API call was not marked as untested'
+        )
         self.teardown_app_data()
 
     """ Delete Call """
@@ -635,7 +690,7 @@ class AutoScaleTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'API call removed successfully',
+            'API call was successfully removed',
             response.data,
             'Invalid response found after deleting call'
         )
@@ -649,13 +704,14 @@ class AutoScaleTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_delete_invalid(self):
         api_id = self.setup_useable_api_call()
-        bogus_id = '528f5672192a8b3b2150c12b'
+        pitchfork.db.autoscale.remove()
+        self.setup_useable_api_call()
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
             response = c.get(
-                '/autoscale/manage/api/delete/%s' % bogus_id,
+                '/autoscale/manage/api/delete/%s' % api_id,
                 follow_redirects=True
             )
 
@@ -681,8 +737,11 @@ class AutoScaleTests(unittest.TestCase):
 
             response = c.get('/autoscale/testing')
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
-            '<h3>Cloud Auto Scaling - Testing API Calls</h3>',
+            'Autoscale - Testing API Calls',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -695,11 +754,18 @@ class AutoScaleTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get('/autoscale/testing')
+            assert response._status_code == 302, (
+                'Invalid response code %s' % response._status_code
+            )
+            response = c.get(
+                '/autoscale/testing',
+                follow_redirects=True
+            )
 
         self.assertIn(
-            '<h3>Cloud Auto Scaling - Testing API Calls</h3>',
+            'Product not found, please check the URL and try again',
             response.data,
-            'Did not find correct HTML on page'
+            'Did not find correct error message on page'
         )
         self.teardown_app_data()
 
@@ -710,9 +776,9 @@ class AutoScaleTests(unittest.TestCase):
 
             response = c.get('/autoscale/testing')
 
-        assert response._status_code == 302, \
+        assert response._status_code == 302, (
             'Invalid response code %s' % response._status_code
-
+        )
         location = response.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
@@ -731,8 +797,11 @@ class AutoScaleTests(unittest.TestCase):
 
             response = c.get('/autoscale/')
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
-            '<h3>Cloud Auto Scaling</h3>',
+            'Autoscale',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -745,8 +814,11 @@ class AutoScaleTests(unittest.TestCase):
 
             response = c.get('/autoscale/')
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
-            '<h3>Cloud Auto Scaling</h3>',
+            'Autoscale',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -759,9 +831,13 @@ class AutoScaleTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get('/autoscale/')
+            assert response._status_code == 302, (
+                'Invalid response code %s' % response._status_code
+            )
+            response = c.get('/autoscale/', follow_redirects=True)
 
         self.assertIn(
-            '<h3>Cloud Auto Scaling</h3>',
+            'Product not found, please check the URL and try again',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -774,9 +850,13 @@ class AutoScaleTests(unittest.TestCase):
                 self.setup_user_login(sess)
 
             response = c.get('/autoscale/')
+            assert response._status_code == 302, (
+                'Invalid response code %s' % response._status_code
+            )
+            response = c.get('/autoscale/', follow_redirects=True)
 
         self.assertIn(
-            '<h3>Cloud Auto Scaling</h3>',
+            'Product not found, please check the URL and try again',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -796,7 +876,7 @@ class AutoScaleTests(unittest.TestCase):
                 'api_url': '{ddi}/groups',
                 'api_token': 'test_token',
                 'api_id': str(api_id),
-                'ddi': '766030',
+                'ddi': '123456',
                 'data_center': 'dfw'
             }
             with mock.patch('requests.get') as patched_get:
@@ -818,7 +898,7 @@ class AutoScaleTests(unittest.TestCase):
                     )
                 )
                 response = c.post(
-                    '/autoscale/api_call/process',
+                    '/autoscale/api/call/process',
                     data=json.dumps(data),
                     content_type='application/json'
                 )
@@ -848,7 +928,7 @@ class AutoScaleTests(unittest.TestCase):
                 'api_url': '{ddi}/groups',
                 'api_token': 'test_token',
                 'api_id': str(api_id),
-                'ddi': '766030',
+                'ddi': '123456',
                 'data_center': 'dfw',
                 'testing': True
             }
@@ -870,9 +950,8 @@ class AutoScaleTests(unittest.TestCase):
                         '"content-type": "application/json"}'
                     )
                 )
-
                 response = c.post(
-                    '/autoscale/api_call/process',
+                    '/autoscale/api/call/process',
                     data=json.dumps(data),
                     content_type='application/json'
                 )
@@ -902,7 +981,7 @@ class AutoScaleTests(unittest.TestCase):
                 'api_url': '{ddi}/groups',
                 'api_token': 'test_token',
                 'api_id': str(api_id),
-                'ddi': '766030',
+                'ddi': '123456',
                 'data_center': 'lon',
                 'testing': True
             }
@@ -925,7 +1004,7 @@ class AutoScaleTests(unittest.TestCase):
                     )
                 )
                 response = c.post(
-                    '/autoscale/api_call/process',
+                    '/autoscale/api/call/process',
                     data=json.dumps(data),
                     content_type='application/json'
                 )
@@ -955,7 +1034,7 @@ class AutoScaleTests(unittest.TestCase):
                 'api_url': '{ddi}/groups',
                 'api_token': 'test_token',
                 'api_id': str(api_id),
-                'ddi': '766030',
+                'ddi': '123456',
                 'data_center': 'dfw'
             }
             with mock.patch('requests.get') as patched_get:
@@ -977,7 +1056,7 @@ class AutoScaleTests(unittest.TestCase):
                     )
                 )
                 response = c.post(
-                    '/autoscale/api_call/process',
+                    '/autoscale/api/call/process',
                     data=json.dumps(data),
                     content_type='application/json'
                 )
@@ -1007,7 +1086,7 @@ class AutoScaleTests(unittest.TestCase):
                 'api_url': '{ddi}/groups',
                 'api_token': 'test_token',
                 'api_id': str(api_id),
-                'ddi': '766030',
+                'ddi': '123456',
                 'data_center': 'dfw',
                 'test_var_value': 'Test Group'
             }
@@ -1029,7 +1108,7 @@ class AutoScaleTests(unittest.TestCase):
                     )
                 )
                 response = c.post(
-                    '/autoscale/api_call/process',
+                    '/autoscale/api/call/process',
                     data=json.dumps(data),
                     content_type='application/json'
                 )
