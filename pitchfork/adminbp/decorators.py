@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from functools import wraps, update_wrapper
-from flask import flash, redirect, url_for
+from flask import flash, redirect, url_for, request
 
 
 import permissions as perm
@@ -30,10 +30,15 @@ def check_perms(route):
                         'permissions to access this page',
                         'error'
                     )
+                    return redirect(url_for('index'))
                 else:
                     flash('Please login to the Application', 'error')
-                return redirect(url_for('index'))
-
+                    return redirect(
+                        url_for(
+                            'adminblueprint.login',
+                            next=request.path
+                        )
+                    )
             return fn(*args, **kwargs)
         return update_wrapper(wrapped_function, fn)
     return decorator

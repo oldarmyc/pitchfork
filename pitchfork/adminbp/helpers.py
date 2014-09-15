@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import forms
-import requests
-import json
-import datetime
-
-
 from operator import itemgetter, attrgetter
 from unicodedata import normalize
 from flask import g, current_app, session
 from bson.objectid import ObjectId
 from dateutil import parser, tz
 from datetime import timedelta
+
+
+import re
+import forms
+import requests
+import json
+import datetime
 
 
 def get_and_sort(items, *args):
@@ -105,11 +105,7 @@ def get_parent_order(parent_menu, settings, name):
 
     if not g.db.settings.find_one(
         {
-            'top_level_menu': {
-                '$elemMatch': {
-                    'slug': slug(to_add)
-                }
-            }
+            'top_level_menu.slug': slug(to_add)
         }
     ):
         g.db.settings.update(
@@ -131,11 +127,7 @@ def get_parent_order(parent_menu, settings, name):
 def generate_dynamic_form(routes, role):
     settings = g.db.settings.find_one(
         {
-            'roles': {
-                '$elemMatch': {
-                    'name': role
-                }
-            }
+            'roles.name': role
         }
     )
     current_perms = []
@@ -160,7 +152,7 @@ def generate_dynamic_form(routes, role):
                 setattr(
                     F,
                     str(route),
-                    forms.BooleanField(
+                    forms.fields.BooleanField(
                         sanitize_route(route),
                         default='y'
                     )
@@ -169,7 +161,7 @@ def generate_dynamic_form(routes, role):
                 setattr(
                     F,
                     str(route),
-                    forms.BooleanField(
+                    forms.fields.BooleanField(
                         sanitize_route(route)
                     )
                 )
@@ -177,14 +169,14 @@ def generate_dynamic_form(routes, role):
             setattr(
                 F,
                 str(route),
-                forms.BooleanField(
+                forms.fields.BooleanField(
                     sanitize_route(route)
                 )
             )
     setattr(
         F,
         'admin',
-        forms.TextField('Admin')
+        forms.fields.TextField('Admin')
     )
 
     for route in sorted(admin):
@@ -194,7 +186,7 @@ def generate_dynamic_form(routes, role):
                     setattr(
                         F,
                         str(route),
-                        forms.BooleanField(
+                        forms.fields.BooleanField(
                             sanitize_route(route),
                             default='y'
                         )
@@ -203,7 +195,7 @@ def generate_dynamic_form(routes, role):
                     setattr(
                         F,
                         str(route),
-                        forms.BooleanField(
+                        forms.fields.BooleanField(
                             sanitize_route(route)
                         )
                     )
@@ -211,14 +203,14 @@ def generate_dynamic_form(routes, role):
                 setattr(
                     F,
                     str(route),
-                    forms.BooleanField(
+                    forms.fields.BooleanField(
                         sanitize_route(route)
                     )
                 )
     setattr(
         F,
         'submit',
-        forms.SubmitField('Set Permissions')
+        forms.fields.SubmitField('Set Permissions')
     )
     return F()
 
@@ -272,9 +264,7 @@ def change_top_level_order(settings, new_position, old_position, menu_item):
 
 def check_top_level_to_remove(menu_item):
     settings = g.db.settings.find_one()
-    deleted = False
-    found = False
-
+    deleted, found = False, False
     if menu_item.get('parent') and menu_item.get('parent') != "":
         for item in settings.get('menu'):
             if item.get('parent') == menu_item.get('parent'):
@@ -296,6 +286,7 @@ def check_top_level_to_remove(menu_item):
                 }
             }
         )
+
     if deleted:
         settings = g.db.settings.find_one()
         for top_level in \
@@ -350,18 +341,14 @@ def deploy_custom_form(form_name, **args):
         pass
 
     form = g.db.forms.find_one({'name': form_name})
-
     if form:
         if not form.get('fields'):
             return F()
 
         for field in get_and_sort(form.get('fields'), 'order'):
             if field.get('active'):
-                method = getattr(forms, field.get('field_type'))
-                choices = None
-
-                default = None
-
+                method = getattr(forms.fields, field.get('field_type'))
+                choices, default = None, None
                 if field.get('default_value'):
                     default = field.get('default_value')
 

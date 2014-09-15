@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import Blueprint, current_app, g, session
+from flask import Blueprint, g, session
 
 
 bp = Blueprint(
@@ -66,11 +66,15 @@ def utility_processor():
             if menu.get('active'):
                 if menu.get('view_permissions') == "all":
                     active_menu.append(menu)
-                elif menu.get('view_permissions') == "logged_in" and \
-                        not (session.get('username') is None):
+                elif (
+                    menu.get('view_permissions') == "logged_in" and
+                    not (session.get('username') is None)
+                ):
                     active_menu.append(menu)
-                elif menu.get('view_permissions') == "administrators" and \
-                        permissions.is_admin():
+                elif (
+                    menu.get('view_permissions') == "administrators" and
+                    permissions.is_admin()
+                ):
                     active_menu.append(menu)
         return sorted(active_menu, key=itemgetter('parent_order', 'order'))
 
@@ -78,11 +82,7 @@ def utility_processor():
         parent_slug = re.sub('\s+', '_', parent_slug.lower())
         top_menu = g.db.settings.find_one(
             {
-                'top_level_menu': {
-                    '$elemMatch': {
-                        'slug': parent_slug
-                    }
-                }
+                'top_level_menu.slug': parent_slug
             }, {
                 'top_level_menu.$': 1, '_id': 0
             }

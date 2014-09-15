@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import Blueprint, Flask, request, session, redirect, \
-    url_for, render_template, flash, jsonify, g, current_app
+from flask import (Blueprint, Flask, request, session, redirect, url_for,
+    render_template, flash, jsonify, g, current_app)
 from . import bp
+from urllib import unquote
+from decorators import check_perms
+from defaults import check_and_initialize
+from bson.objectid import ObjectId
 
 
 import pymongo
@@ -22,12 +26,6 @@ import forms
 import helpers as help
 import json
 import permissions
-
-
-from urllib import unquote
-from decorators import check_perms
-from defaults import check_and_initialize
-from bson.objectid import ObjectId
 
 
 @bp.route('/settings/general', methods=['GET', 'POST'])
@@ -116,17 +114,17 @@ def manage_admins():
         flash('User has been added as an Administrator')
         return redirect(url_for('adminblueprint.manage_admins'))
     elif request.method == 'POST' and not form.validate_on_submit():
-            flash(
-                'Form validation failed. Please check the form and try again',
-                'error'
-            )
-            return render_template(
-                'admin/manage_admins.html',
-                error=error,
-                title=title,
-                form=form,
-                settings=settings
-            )
+        flash(
+            'Form validation failed. Please check the form and try again',
+            'error'
+        )
+        return render_template(
+            'admin/manage_admins.html',
+            error=error,
+            title=title,
+            form=form,
+            settings=settings
+        )
 
     else:
         return render_template(
@@ -160,7 +158,6 @@ def remove_admin(user):
 @bp.route('/settings/menu', methods=['GET', 'POST'])
 @check_perms(request)
 def menu_settings(edit_menu_name=None):
-    error = True
     settings = check_and_initialize()
     menu_list = help.get_and_sort(
         settings.get('menu'),
@@ -171,7 +168,6 @@ def menu_settings(edit_menu_name=None):
         settings.get('top_level_menu'),
         'order'
     )
-
     if edit_menu_name:
         menus = settings.get('menu')
         menu_edit = None
@@ -181,8 +177,6 @@ def menu_settings(edit_menu_name=None):
                 break
 
         if menu_edit:
-            title = "Edit Menu Settings for %s" % \
-                help.unslug(edit_menu_name)
             menu_form = help.deploy_custom_form(
                 'menu_items_form',
                 parent_menu=menu_edit.get('parent'),
@@ -190,22 +184,20 @@ def menu_settings(edit_menu_name=None):
                 menu_item_url=menu_edit.get('url'),
                 menu_permissions=menu_edit.get('view_permissions'),
                 menu_item_status=menu_edit.get('active'),
+                menu_item_divider=menu_edit.get('divider'),
                 db_name=menu_edit.get('name'),
                 action='edit'
             )
         else:
-            title = "Application Menu Settings"
             menu_form = help.deploy_custom_form('menu_items_form')
             edit_menu_name = None
     else:
-        title = "Application Menu Settings"
         menu_form = help.deploy_custom_form('menu_items_form')
 
     parent_menus = help.generate_parent_menu(settings.get('menu'))
     menu_form.parent_menu.choices = [
         (parent, parent) for parent in parent_menus
     ]
-
     active_roles = help.generate_active_roles(settings.get('roles'))
     menu_form.menu_permissions.choices = [
         (help.slug(role), role) for role in active_roles
@@ -227,11 +219,9 @@ def menu_settings(edit_menu_name=None):
                 )
                 return render_template(
                     'admin/manage_menu.html',
-                    title=title,
                     menu_form=menu_form,
                     menu_list=menu_list,
-                    top_level_menu=top_level_menu,
-                    error=error
+                    top_level_menu=top_level_menu
                 )
 
         existing_url = g.db.settings.find_one(
@@ -249,11 +239,9 @@ def menu_settings(edit_menu_name=None):
                 )
                 return render_template(
                     'admin/manage_menu.html',
-                    title=title,
                     menu_form=menu_form,
                     menu_list=menu_list,
-                    top_level_menu=top_level_menu,
-                    error=error
+                    top_level_menu=top_level_menu
                 )
 
         if request.form.get('parent_menu') == "Add New Parent":
@@ -273,11 +261,9 @@ def menu_settings(edit_menu_name=None):
                     )
                     return render_template(
                         'admin/manage_menu.html',
-                        title=title,
                         menu_form=menu_form,
                         menu_list=menu_list,
-                        top_level_menu=top_level_menu,
-                        error=error
+                        top_level_menu=top_level_menu
                     )
                 parent_menu = help.normalize(request.form.get('new_parent'))
             else:
@@ -287,19 +273,15 @@ def menu_settings(edit_menu_name=None):
                 )
                 return render_template(
                     'admin/manage_menu.html',
-                    title=title,
                     menu_form=menu_form,
                     menu_list=menu_list,
-                    top_level_menu=top_level_menu,
-                    error=error
+                    top_level_menu=top_level_menu
                 )
         else:
             parent_menu = help.normalize(request.form.get('parent_menu'))
 
-        status = False
-        if request.form.get('menu_item_status'):
-            status = True
-
+        status = bool(request.form.get('menu_item_status'))
+        divider = bool(request.form.get('menu_item_divider'))
         if edit_menu_name:
             g.db.settings.update(
                 {
@@ -315,6 +297,7 @@ def menu_settings(edit_menu_name=None):
                             'menu_permissions'
                         ),
                         'menu.$.active': status,
+                        'menu.$.divider': divider,
                         'menu.$.parent': help.slug(parent_menu),
                         'menu.$.parent_order': help.get_parent_order(
                             parent_menu,
@@ -334,7 +317,7 @@ def menu_settings(edit_menu_name=None):
                 )
             ):
                 help.check_top_level_to_remove(menu_edit)
-            flash('Menu Item was edited successfully')
+            flash('Menu Item was edited successfully', 'success')
         else:
             g.db.settings.update(
                 {
@@ -355,6 +338,7 @@ def menu_settings(edit_menu_name=None):
                             'order': help.get_next_order_number(
                                 menu_list, parent_menu
                             ),
+                            'divider': divider,
                             'parent_order': help.get_parent_order(
                                 parent_menu,
                                 settings,
@@ -364,7 +348,7 @@ def menu_settings(edit_menu_name=None):
                     }
                 }
             )
-            flash('Menu Item successfully Added')
+            flash('Menu Item successfully Added', 'success')
 
         return redirect(url_for('adminblueprint.menu_settings'))
     elif request.method == 'POST' and not (menu_form.validate_on_submit()):
@@ -374,11 +358,9 @@ def menu_settings(edit_menu_name=None):
         )
         return render_template(
             'admin/manage_menu.html',
-            title=title,
             menu_form=menu_form,
             menu_list=menu_list,
-            top_level_menu=top_level_menu,
-            error=error
+            top_level_menu=top_level_menu
         )
     else:
         if edit_menu_name:
@@ -390,7 +372,6 @@ def menu_settings(edit_menu_name=None):
         else:
             return render_template(
                 'admin/manage_menu.html',
-                title=title,
                 menu_form=menu_form,
                 menu_list=menu_list,
                 top_level_menu=top_level_menu
@@ -611,7 +592,7 @@ def remove_menu_item(menu_item):
             }
         )
         help.check_top_level_to_remove(current_menu)
-        flash('Menu Item %s was successfully removed' % menu_item)
+        flash('Menu Item %s was successfully removed' % menu_item, 'success')
     return redirect(url_for('adminblueprint.menu_settings'))
 
 
@@ -638,7 +619,7 @@ def toggle_menu_item(task, menu_item):
                 }
             }
         )
-    flash('Menu Item %s status was changed' % menu_item)
+    flash('Menu Item %s status was changed' % menu_item, 'success')
     return redirect(url_for('adminblueprint.menu_settings'))
 
 
@@ -646,10 +627,7 @@ def toggle_menu_item(task, menu_item):
 @check_perms(request)
 def manage_roles(edit_role_name=None):
     settings = check_and_initialize()
-    error = True
-    title = "Manage Application Roles"
     form = help.deploy_custom_form('manage_roles')
-
     if request.method == 'POST' and form.validate_on_submit():
         role_name = help.slug(request.form.get('display_name'))
         existing_role = g.db.settings.find_one(
@@ -665,10 +643,8 @@ def manage_roles(edit_role_name=None):
             form.display_name.errors.append('Duplicate role')
             return render_template(
                 'admin/manage_roles.html',
-                title=title,
                 form=form,
-                roles=settings.get('roles'),
-                error=error
+                roles=settings.get('roles')
             )
         else:
             g.db.settings.update(
@@ -686,8 +662,8 @@ def manage_roles(edit_role_name=None):
                     }
                 }
             )
-            flash('Role successfully Added')
-        return redirect(url_for('adminblueprint.manage_roles'))
+            flash('Role successfully Added', 'success')
+            return redirect(url_for('adminblueprint.manage_roles'))
     elif request.method == 'POST' and not (form.validate_on_submit()):
         flash(
             'Form validation failed. Please check the form and try again',
@@ -695,16 +671,13 @@ def manage_roles(edit_role_name=None):
         )
         return render_template(
             'admin/manage_roles.html',
-            title=title,
             form=form,
-            roles=settings.get('roles'),
-            error=error
+            roles=settings.get('roles')
         )
     else:
         return render_template(
             'admin/manage_roles.html',
             form=form,
-            title=title,
             roles=settings.get('roles')
         )
 
@@ -732,7 +705,7 @@ def toggle_role(task, role_name):
                 }
             }
         )
-    flash('Role %s status was changed' % role_name)
+    flash('Role %s status was changed' % role_name, 'success')
     return redirect(url_for('adminblueprint.manage_roles'))
 
 
@@ -740,31 +713,31 @@ def toggle_role(task, role_name):
 @check_perms(request)
 def remove_role(role_name):
     settings = g.db.settings.find_one()
-    g.db.settings.update(
-        {
-            '_id': settings.get('_id')
-        }, {
-            '$pull': {
-                'roles': {
-                    'name': role_name
+    if settings:
+        g.db.settings.update(
+            {
+                '_id': settings.get('_id')
+            }, {
+                '$pull': {
+                    'roles': {
+                        'name': role_name
+                    }
                 }
             }
-        }
-    )
-    flash('Role has been removed')
+        )
+        flash('Role has been removed', 'success')
+    else:
+        flash('Role was not found so no action taken', 'error')
     return redirect(url_for('adminblueprint.manage_roles'))
 
 
 @bp.route('/settings/permissions/<role>', methods=['GET', 'POST'])
 @check_perms(request)
 def permissions_define(role):
-    error = None
-    title = "Manage Permissions for: %s" % help.unslug(role)
     form = forms.ManagePermissions()
     url_root = request.url_root[:-1]
     url_routes = current_app.url_map.iter_rules()
     form = help.generate_dynamic_form(url_routes, role)
-
     if request.method == 'POST' and form.validate_on_submit():
         set_perms = help.evaluate_permissions(request.form.iterlists())
         g.db.settings.update(
@@ -785,7 +758,10 @@ def permissions_define(role):
                 }
             }
         )
-        flash('Permissions have been updated for %s role' % help.unslug(role))
+        flash(
+            'Permissions have been updated for %s' % help.unslug(role),
+            'success'
+        )
         return redirect(url_for('adminblueprint.manage_roles'))
     elif request.method == 'POST' and not (form.validate_on_submit()):
         flash(
@@ -794,15 +770,14 @@ def permissions_define(role):
         )
         return render_template(
             'admin/manage_permissions.html',
-            title=title,
             form=form,
-            error=error
+            role=role
         )
     else:
         return render_template(
             'admin/manage_permissions.html',
-            title=title,
-            form=form
+            form=form,
+            role=role
         )
 
 
@@ -815,19 +790,13 @@ def permissions_define(role):
 @bp.route('/forms/fields/<form_id>', methods=['GET', 'POST'])
 @check_perms(request)
 def manage_form_fields(form_id, field_name=None):
-    error = True
     custom_form = g.db.forms.find_one({'_id': ObjectId(form_id)})
     sorted_fields = help.get_and_sort(custom_form.get('fields'), 'order')
-    title = "Manage Fields for %s" % custom_form.get('display_name').title()
     if field_name:
         fields = g.db.forms.find_one(
             {
                 '_id': ObjectId(form_id),
-                'fields': {
-                    '$elemMatch': {
-                        'name': field_name
-                    }
-                }
+                'fields.name': field_name
             }
         ).get('fields')
 
@@ -858,17 +827,12 @@ def manage_form_fields(form_id, field_name=None):
     if request.method == 'POST' and form.validate_on_submit():
         sani_name = help.slug(request.form.get('name'))
         active, required, default = False, False, False
-
         if field_name:
             if not sani_name == field_name:
                 if g.db.forms.find(
                     {
                         '_id': ObjectId(form_id),
-                        'fields': {
-                            '$elemMatch': {
-                                'name': sani_name
-                            }
-                        }
+                        'fields.name': sani_name
                     }
                 ).count() > 0:
                     flash(
@@ -879,10 +843,9 @@ def manage_form_fields(form_id, field_name=None):
                     return render_template(
                         'admin/manage_form_fields.html',
                         form=form,
-                        title=title,
                         fields=sorted_fields,
                         form_id=form_id,
-                        error=error
+                        custom_form=custom_form
                     )
         else:
             if g.db.forms.find(
@@ -899,10 +862,9 @@ def manage_form_fields(form_id, field_name=None):
                 return render_template(
                     'admin/manage_form_fields.html',
                     form=form,
-                    title=title,
                     fields=sorted_fields,
                     form_id=form_id,
-                    error=error
+                    custom_form=custom_form
                 )
 
         if field_name:
@@ -924,16 +886,14 @@ def manage_form_fields(form_id, field_name=None):
                             'default_value'
                         ),
                         'fields.$.style_id': request.form.get('style_id'),
-                        'fields.$.required': bool(
-                            request.form.get('required')
-                        ),
+                        'fields.$.required': bool(request.form.get('required')),
                         'fields.$.active': bool(request.form.get('active')),
                         'fields.$.order': int(request.form.get('order')),
                         'fields.$.description': request.form.get('description')
                     }
                 }
             )
-            flash('Field successfully updated')
+            flash('Field successfully updated', 'success')
             return redirect(
                 url_for(
                     'adminblueprint.manage_form_fields',
@@ -962,7 +922,7 @@ def manage_form_fields(form_id, field_name=None):
                     }
                 }
             )
-            flash('Field successfully added to form')
+            flash('Field successfully added to form', 'success')
             return redirect(
                 url_for(
                     'adminblueprint.manage_form_fields',
@@ -977,10 +937,9 @@ def manage_form_fields(form_id, field_name=None):
         return render_template(
             'admin/manage_form_fields.html',
             form=form,
-            title=title,
             fields=sorted_fields,
             form_id=form_id,
-            error=error
+            custom_form=custom_form
         )
     else:
         if form_id and field_name:
@@ -1007,9 +966,9 @@ def manage_form_fields(form_id, field_name=None):
             return render_template(
                 'admin/manage_form_fields.html',
                 form=form,
-                title=title,
                 fields=sorted_fields,
-                form_id=form_id
+                form_id=form_id,
+                custom_form=custom_form
             )
 
 
@@ -1121,7 +1080,7 @@ def remove_custom_field_from_form(form_id, field_name):
                 }
             }
         )
-        flash('Custom field was removed successfully')
+        flash('Custom field was removed successfully', 'error')
         return redirect(
             url_for(
                 'adminblueprint.manage_form_fields',
@@ -1163,7 +1122,7 @@ def toggle_custom_fields(method, form_id, field_name):
                 }
             }
         )
-    flash('Successfully %sd Custom Field' % method)
+    flash('Successfully %sd Custom Field' % method, 'success')
     return redirect(
         url_for(
             'adminblueprint.manage_form_fields',
@@ -1176,7 +1135,7 @@ def toggle_custom_fields(method, form_id, field_name):
 @bp.route('/forms', methods=['GET', 'POST'])
 @check_perms(request)
 def manage_forms(form_id=None):
-    error, edit_form = True, None
+    edit_form = None
     all_forms = g.db.forms.find()
     if form_id:
         edit_form = g.db.forms.find_one({'_id': ObjectId(form_id)})
@@ -1193,8 +1152,11 @@ def manage_forms(form_id=None):
         sani_name = help.slug(request.form.get('name'))
         active, system_form = False, False
 
-        active = bool(request.form.get('active'))
-        system_form = bool(request.form.get('system_form'))
+        if request.form.get('active') == 'y':
+                active = True
+
+        if request.form.get('system_form') == 'y':
+            system_form = True
 
         if edit_form:
             if not edit_form.get('name') == sani_name:
@@ -1207,8 +1169,7 @@ def manage_forms(form_id=None):
                     return render_template(
                         'admin/manage_forms.html',
                         form=form,
-                        all_forms=all_forms,
-                        error=error
+                        all_forms=all_forms
                     )
             if not edit_form.get('submission_url') == \
                     request.form.get('submission_url'):
@@ -1227,8 +1188,7 @@ def manage_forms(form_id=None):
                     return render_template(
                         'admin/manage_forms.html',
                         form=form,
-                        all_forms=all_forms,
-                        error=error
+                        all_forms=all_forms
                     )
 
             g.db.forms.update(
@@ -1254,8 +1214,7 @@ def manage_forms(form_id=None):
                 return render_template(
                     'admin/manage_forms.html',
                     form=form,
-                    all_forms=all_forms,
-                    error=error
+                    all_forms=all_forms
                 )
             elif g.db.forms.find_one(
                     {
@@ -1271,8 +1230,7 @@ def manage_forms(form_id=None):
                 return render_template(
                     'admin/manage_forms.html',
                     form=form,
-                    all_forms=all_forms,
-                    error=error
+                    all_forms=all_forms
                 )
 
             g.db.forms.insert(
@@ -1285,10 +1243,10 @@ def manage_forms(form_id=None):
                 }
             )
         if edit_form:
-            flash('Successfully updated Custom Form')
+            flash('Successfully updated Custom Form', 'success')
             return redirect(url_for('adminblueprint.manage_forms'))
         else:
-            flash('Successfully added Custom Form')
+            flash('Successfully added Custom Form', 'success')
             return redirect(url_for('adminblueprint.manage_forms'))
     elif request.method == 'POST' and not form.validate_on_submit():
         flash(
@@ -1298,8 +1256,7 @@ def manage_forms(form_id=None):
         return render_template(
             'admin/manage_forms.html',
             form=form,
-            all_forms=all_forms,
-            error=error
+            all_forms=all_forms
         )
     else:
         if form_id:
@@ -1320,12 +1277,16 @@ def manage_forms(form_id=None):
 @check_perms(request)
 def remove_custom_form(form_id):
     form = g.db.forms.find_one({'_id': ObjectId(form_id)})
-    if not form.get('system_form'):
-        g.db.forms.remove({'_id': ObjectId(form_id)})
-        flash('Successfully removed Custom Form')
-        return redirect(url_for('adminblueprint.manage_forms'))
+    if form:
+        if not form.get('system_form'):
+            g.db.forms.remove({'_id': ObjectId(form_id)})
+            flash('Successfully removed Custom Form', 'success')
+            return redirect(url_for('adminblueprint.manage_forms'))
+        else:
+            flash('System form cannot be removed', 'error')
+            return redirect(url_for('adminblueprint.manage_forms'))
     else:
-        flash('System form cannot be removed', 'error')
+        flash('Form not found so no action taken', 'error')
         return redirect(url_for('adminblueprint.manage_forms'))
 
 
@@ -1352,7 +1313,7 @@ def toggle_custom_forms(method, form_id):
                 }
             }
         )
-    flash('Successfully %sd Custom Form' % method)
+    flash('Successfully %sd Custom Form' % method, 'success')
     return redirect(url_for('adminblueprint.manage_forms'))
 
 
