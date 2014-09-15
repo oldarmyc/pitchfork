@@ -2931,7 +2931,7 @@ class PitchforkTests(unittest.TestCase):
             response = c.get('/history')
 
         self.assertIn(
-            '<h3>My API History</h3>',
+            'API Call History',
             response.data,
             'Did not find correct HTML on page'
         )
