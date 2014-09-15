@@ -4,102 +4,87 @@
 </div>
 <div class="modal-body">
     <h4>
-        Work Information
-        {% if check_work_permissions(item.get('_id')) or check_if_admin %}
-            <a href="/modify/work/{{ item.get('_id') }}" class="btn btn-default">Modify Work</a>
-        {% endif %}
+        Call Information
     </h4>
     <dl class="dl-horizontal modify-dl">
-        <dt>Ticket Number:</dt>
+        <dt>DDI:</dt>
         <dd>
-            <a href="https://core.rackspace.com/py/ticket/view.pt?ref_no={{ item.get('ticket_number') }}" target="_blank" title="View Ticket" class="tooltip-title">{{ item.get('ticket_number') }}</a>
+            {{ item.get('ddi') }}
         </dd>
-        <dt>Account:</dt>
+        <dt>Timestamp:</dt>
         <dd>
-            <a href="https://core.rackspace.com/py/core/#/account/{{ item.get('account_number') }}" target="_blank" title="View Account" class="tooltip-title">{{ item.get('account_number') }}</a> - {{ item.get('account_segment') }} : {{ item.get('support_team') }}
+            {{ item.get('completed_at').strftime('%m-%d-%Y @ %H:%M %p UTC') }}
         </dd>
-        <dt>Account Name:</dt>
+        <dt>Cloud Product:</dt>
         <dd>
-            {{ item.get('account_name') }}
+            {{ item.get('product') }}
         </dd>
-        <dt>Account Manager:</dt>
+        <dt>Title:</dt>
         <dd>
-            {{ item.get('account_manager_name') }}
+            {{ item.get('details').get('title') }}
         </dd>
-        <dt>Hours Remaining:</dt>
+        <dt>Description:</dt>
         <dd>
-            {{ display_remaining_hours(item.get('account_number')) }}
+            {{ item.get('details').get('description') }}
         </dd>
-        <dt>Work Type:</dt>
+        <dt>Verb:</dt>
         <dd>
-            {{ get_item_name(item.get('category'), 'categories') }} - {{ get_item_name(item.get('category_type'), 'category_types') }}
+            {{ item.get('request').get('verb') }}
         </dd>
-        <dt>Task Performed:</dt>
+        <dt>Response Code:</dt>
         <dd>
-            {{ get_item_name(item.get('category_type_task'), 'category_type_tasks') }}
+            {{ item.get('response').get('code') }}
         </dd>
-        <dt>Work Logged At:</dt>
+        <dt>Documentation:</dt>
         <dd>
-            <span class="alter-time">{{ item.get('created_at').strftime('%Y/%m/%d %R %Z') }}</span>
-        </dd>
-        <dt>Work Logged By:</dt>
-        <dd>
-            {{ item.get('user_logged_name') }}
+            <a href="{{ item.get('details').get('doc_url') }}" title="{{ item.get('details').get('title') }} Documentation" target="_blank">API Documentation</a>
         </dd>
     </dl>
-    <div id="servers">
-        <dl class="dl-horizontal modify-dl">
-            <dt>Servers:</dt>
-            {% for device in item.get('servers') %}
-                <dd class="ticket-devices">
-                    <a href="https://core.rackspace.com/py/core/#/device/{{ device.get('device_id') }}" title="View Device" class="tooltip-title" target="_blank">{{ device.get('device_id') }}</a> : {{ device.get('device_name') }}
-                </dd>
-            {% endfor %}
-        </dl>
-    </div>
-    {% if item.get('waive_billable') %}
-        <dl class="dl-horizontal modify-dl">
-            <dt>Billing Waived:</dt>
-            <dd>
-                <span class="fa fa-usd text-danger"></span>
-            </dd>
-            <dt>Waived By:</dt>
-            <dd>
-                {{ item.get('waived_by_name') }}
-            </dd>
-            <dt>Waived At:</dt>
-            <dd>
-                <span class="alter-time">{{ item.get('waived_at').strftime('%Y/%m/%d %R %Z') }}</span>
-            </dd>
-        </dl>
-        <div id="waive_reason">
-            <dl>
-                <dt>Waived Reason:</dt>
-                <dd>
-                    {{ item.get('waive_reason') }}
-                </dd>
-            </dl>
-        </div>
-    {% endif %}
-
-    <h4>Work Logs</h4>
-    <div id="notes">
-        <dl>
-            <dt>Work Notes:</dt>
-            <dd>{{ normalize_freeflow(item.get('work_notes'))|safe }}</dd>
-        </dl>
-    </div>
-    <div id="logged_events">
-        <dl>
-            <dt>Outage Log</dt>
-            {% if item.get('log') %}
-                {% for item in item.get('log') %}
-                    <dd>{{ item }}</dd>
-                {% endfor %}
-            {% else %}
-                <dd>No logged events</dd>
+    <div id="request_details">
+        {% if item.get('request') %}
+            {% if item.get('request').get('url') %}
+                <div id="api_uri">
+                    <h5>Request URL</h5>
+                    <div class="code-block">
+                        {{ item.get('request').get('url') }}
+                    </div>
+                </div>
             {% endif %}
-        </dl>
+            {% if item.get('request').get('headers') %}
+                <div id="api_headers">
+                    <h5>Request Headers</h5>
+                    <div class="code-block">
+                        <pre>{{ item.get('request').get('headers')|pretty_print_json }}</pre>
+                    </div>
+                </div>
+            {% endif %}
+            {% if item.get('request').get('data') %}
+                <h5>Request Data Object</h5>
+                <div class="code-block">
+                    <pre>{{ item.get('request').get('data')|pretty_print_json }}</pre>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div id="response_details">
+        {% if item.get('response') %}
+            {% if item.get('response').get('headers') %}
+                <div id="api_response_headers">
+                    <h5>Response Headers</h5>
+                    <div class="code-block">
+                        <pre>{{ item.get('response').get('headers')|pretty_print_json }}</pre>
+                    </div>
+                </div>
+            {% endif %}
+            {% if item.get('response').get('body') %}
+                <div id="api_response_body">
+                    <h5>Response Body</h5>
+                    <div class="code-block">
+                        <pre>{{ item.get('response').get('body')|pretty_print_json }}</pre>
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
     </div>
 </div>
 <div class="modal-footer">
