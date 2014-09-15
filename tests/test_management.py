@@ -2973,7 +2973,7 @@ class PitchforkTests(unittest.TestCase):
             'Invalid response code %s' % response._status_code
         )
         self.assertIn(
-            '<h3>Available Data Centers</h3>',
+            'Manage Data Centers',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -3001,6 +3001,38 @@ class PitchforkTests(unittest.TestCase):
     """ Functional Tests """
 
     def test_pf_manage_dcs_add(self):
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get('/manage/dcs')
+            token = self.retrieve_csrf_token(response.data)
+            data = {
+                'csrf_token': token,
+                'name': 'Test',
+                'abbreviation': 'TEST'
+            }
+            response = c.post(
+                '/manage/dcs',
+                data=data,
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'DC successfully added to system',
+            response.data,
+            'Incorrect flash message after add'
+        )
+        found_add = pitchfork.db.api_settings.find_one(
+            {
+                'dcs.name': 'Test'
+            }
+        )
+        assert found_add, 'DC not found after add'
+        self.teardown_app_data()
+
+    def test_pf_manage_dcs_add_no_dcs(self):
+        pitchfork.db.api_settings.update({}, {'$unset': {'dcs': 1}})
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
@@ -3107,7 +3139,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Data center was successfully removed',
+            'Dallas was deleted successfully',
             response.data,
             'Incorrect flash message after remove'
         )
@@ -3138,7 +3170,7 @@ class PitchforkTests(unittest.TestCase):
             'Invalid response code %s' % response._status_code
         )
         self.assertIn(
-            '<h3>Available API Verbs</h3>',
+            'Manage API Verbs',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -3272,7 +3304,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Verb GET was removed successfully',
+            'Get was deleted successfully',
             response.data,
             'Incorrect flash message after remove'
         )
@@ -3301,7 +3333,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Verb GET was deactivated successfully',
+            'Get was deactivated successfully',
             response.data,
             'Incorrect flash message after deactivate'
         )
@@ -3336,7 +3368,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Verb GET was activated successfully',
+            'Get was activated successfully',
             response.data,
             'Incorrect flash message after activate'
         )
@@ -3349,6 +3381,93 @@ class PitchforkTests(unittest.TestCase):
                     activated = True
 
         assert activated, 'Verb was not activated'
+        self.teardown_app_data()
+
+    def test_pf_bad_key_for_actions(self):
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/manage/BAD_KEY/delete/GET',
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Invalid data key given so no action taken',
+            response.data,
+            'Incorrect flash message after bad key'
+        )
+        api_settings = pitchfork.db.api_settings.find_one()
+        verbs = api_settings.get('verbs')
+        count = 0
+        for verb in verbs:
+            if verb.get('name') == 'GET':
+                count += 1
+
+        self.assertEquals(
+            count,
+            1,
+            'Incorrect count after bad key, found %d instead of 1' % count
+        )
+        self.teardown_app_data()
+
+    def test_pf_bad_action_for_actions(self):
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/manage/verbs/BAD_ACTION/GET',
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Invalid action given so no action taken',
+            response.data,
+            'Incorrect flash message after bad action'
+        )
+        api_settings = pitchfork.db.api_settings.find_one()
+        verbs = api_settings.get('verbs')
+        count = 0
+        for verb in verbs:
+            if verb.get('name') == 'GET':
+                count += 1
+
+        self.assertEquals(
+            count,
+            1,
+            'Incorrect count after bad key, found %d instead of 1' % count
+        )
+        self.teardown_app_data()
+
+    def test_pf_bad_dat_element_for_actions(self):
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/manage/verbs/delete/BAD_DATA',
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Bad_Data was not found so no action taken',
+            response.data,
+            'Incorrect flash message after bad data'
+        )
+        api_settings = pitchfork.db.api_settings.find_one()
+        verbs = api_settings.get('verbs')
+        count = 0
+        for verb in verbs:
+            if verb.get('name') == 'GET':
+                count += 1
+
+        self.assertEquals(
+            count,
+            1,
+            'Incorrect count after bad key, found %d instead of 1' % count
+        )
         self.teardown_app_data()
 
 if __name__ == '__main__':
