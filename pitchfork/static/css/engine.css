@@ -1,0 +1,76 @@
+div#reporting_fields {
+    display: inline-block;
+}
+
+div#single_field {
+    float: left;
+    margin: 5px 10px;
+}
+
+div#reporting_fields span.field-label {
+    font-style: italic;
+    margin-right: 0px;
+}
+
+div#reporting_fields table tr td {
+    padding: 5px 0px 5px 10px;
+}
+
+div#submit_form {
+    margin: 10px 0;
+}
+
+.form-inline .form-control {
+    width: 165px;
+}
+
+span.reporting-title {
+    margin-bottom: 0px;
+    font-size: 18px;
+    line-height: 40px;
+}
+
+div#spinner_div {
+    padding: 30px;
+}
+
+div#spinner_div img {
+    height: 65px;
+    width: 65px;
+}
+
+span.loading-text {
+    font-size: 16px;
+    margin: 0 30px 0 30px;
+}
+
+div#view_graph_form {
+    position: relative;
+    margin: -42px 0 15px 285px;
+}
+
+div#view_graph_form select {
+    margin: 0;
+}
+
+div#graph_wrapper a {
+    float: right;
+    margin: 26px 0 0 0;
+}
+
+label {
+    font-weight: normal;
+    margin-bottom: 0px;
+}
+
+input[type="checkbox"] {
+    margin-top: 0px;
+}
+
+.center {
+    text-align: center;
+}
+
+span.tooltip-title {
+    cursor: default;
+}
