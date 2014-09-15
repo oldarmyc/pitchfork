@@ -27,7 +27,33 @@
 {% block body %}
 	<h3>{{ title }}</h3>
     <h4>Globals</h4>
-    {% include '_form.html' %}
+    <form method="POST" action="{{ post_url }}" class="form-horizontal" role="form">
+        {{ form.hidden_tag() }}
+        {% for field in form if field.widget.input_type not in ['hidden', 'submit'] %}
+            <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
+                {{ field.label(class="col-sm-1 control-label") }}
+                <div class="col-xs-3">
+                    {% if field.type == 'TextField' or field.type == 'TextAreaField'  %}
+                        {{ field(class="form-control", **{'type': 'text'})|safe }}
+                    {% elif field.type == 'BooleanField' %}
+                        {{ field(type="checkbox") }}
+                    {% else %}
+                        {{ field(class="form-control") }}
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <span class="form-control-feedback">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="form-group">
+            <div class="col-sm-offset-1 col-xs-2">
+                {% for field in form if (field.widget.input_type == 'submit') %}
+                    {{ field(class="btn btn-primary") }}
+                {% endfor %}
+            </div>
+        </div>
+    </form>
     {% if product %}
         <h4>Current Settings</h4>
         <dl class="dl-horizontal">
