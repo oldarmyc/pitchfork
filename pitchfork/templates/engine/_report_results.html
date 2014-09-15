@@ -37,8 +37,7 @@
                     <th>Call Run</th>
                     <th>Verb</th>
                     <th>Resp. Code</th>
-                    <th>Details</th>
-                    <th>API Docs</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -68,11 +67,9 @@
                         <td class="cell-center">
                             {{ item.get('response').get('code') }}
                         </td>
-                        <td class="cell-center">
-                            <a onClick="toggle_modal('{{ item.get('_id') }}')" class="call-details-link" title="{{ item.get('details').get('title') }} Full Details">Details</a>
-                        </td>
-                        <td class="cell-center">
-                            <a href="{{ item.get('details').get('doc_url') }}" title="{{ item.get('details').get('title') }} Documentation" target="_blank">Docs</a>
+                        <td style="text-align: center;">
+                            <a href="/engine/view/{{ item.get('_id') }}" data-toggle="modal" data-target="#view_work_details" title="{{ item.get('details').get('title') }} Full Details"><span class="fa fa-info-circle tooltip-title" title="View Details"></span></a>
+                            <a href="{{ item.get('details').get('doc_url') }}" title="{{ item.get('details').get('title') }} Documentation" target="_blank"><span class="fa fa-file-text-o tooltip-title" title="View documentation"></span></a>
                         </td>
                     </tr>
                 {% endfor %}
@@ -100,11 +97,11 @@
     $(document).ready(function() {
         $('.tooltip-title').tooltip();
         $('#view_list').dataTable({
-            aaSorting: [[7, 'asc']],
+            aaSorting: [[4, 'asc']],
             'aoColumnDefs': [
                 {
                     'bSortable': false,
-                    'aTargets': [ 9 ]
+                    'aTargets': [ 8 ]
                 }
             ],
             'bFilter': false,
