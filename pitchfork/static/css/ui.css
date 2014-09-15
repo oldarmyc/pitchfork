@@ -1,0 +1,44 @@
+div.code-block {
+    font-family: Monaco;
+    background-color: #e3e3e3;
+    border: 1px solid #333;
+    border-radius: 4px 4px 4px 4px;
+    display: block;
+    font-size: 13px;
+    line-height: 20px;
+    margin: 0 0 10px;
+    padding: 10px;
+}
+
+pre {
+    background-color: #e3e3e3;
+    border: none;
+    margin-bottom: 0;
+    padding: 10px;
+}
+
+ul.left-nav li a {
+    padding: 1px 15px;
+}
+
+ul.left-nav li a:hover {
+    color: #FFF;
+    background-color: #428bca
+}
+
+li.navbar-header {
+    color: #777;
+    font-size: 18px;
+    line-height: 20px;
+}
+
+a.scrollup {
+    background: url('/static/images/icon_gototop.png') no-repeat scroll 0 0 transparent;
+    bottom: 80px;
+    display: none;
+    height: 40px;
+    position: fixed;
+    right: 20px;
+    text-indent: -9999px;
+    width: 40px;
+}
