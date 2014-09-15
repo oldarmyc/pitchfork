@@ -13,21 +13,19 @@
 # limitations under the License.
 
 from flask.ext.wtf import Form
-from wtforms import TextField, SelectField, IntegerField, BooleanField,\
-    PasswordField, TextAreaField, SubmitField, HiddenField, RadioField
-from wtforms import validators
+from wtforms import fields, validators
 
 
 class VerbSet(Form):
-    name = TextField('Verb:', validators=[validators.required()])
-    active = BooleanField('Active:')
-    submit = SubmitField('Submit')
+    name = fields.TextField('Verb:', validators=[validators.required()])
+    active = fields.BooleanField('Active:')
+    submit = fields.SubmitField('Submit')
 
 
 class DCSet(Form):
-    name = TextField('Name:', validators=[validators.required()])
-    abbreviation = TextField(
+    name = fields.TextField('Name:', validators=[validators.required()])
+    abbreviation = fields.TextField(
         'Abbreviation:',
         validators=[validators.required()]
     )
-    submit = SubmitField('Submit')
+    submit = fields.SubmitField('Submit')
