@@ -49,14 +49,16 @@ import product_views
 
 @app.template_filter()
 def nl2br(value):
-    _newline_re = re.compile(r'(?:\r\n|\r|\n)')
-    return _newline_re.sub('<br>', value)
+    if value:
+        _newline_re = re.compile(r'(?:\r\n|\r|\n)')
+        return _newline_re.sub('<br>', value)
 
 
 @app.template_filter()
 def tab2spaces(value):
-    text = re.sub('\t', '&nbsp;' * 4, value)
-    return text
+    if value:
+        text = re.sub('\t', '&nbsp;' * 4, value)
+        return text
 
 
 @app.template_filter()
