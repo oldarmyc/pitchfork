@@ -248,8 +248,17 @@ class ProductsView(FlaskView):
                 )
                 flash('API Call was successfully updated', 'success')
             else:
-                getattr(g.db, found_product.db_name).insert(api_call.__dict__)
-                flash('API Call was added successfully', 'success')
+                try:
+                    getattr(g.db, found_product.db_name).insert(
+                        api_call.__dict__
+                    )
+                    flash('API Call was added successfully', 'success')
+                except:
+                    flash(
+                        'There was an issue storing the API Call. Check '
+                        'the product and ensure the db_name is specified',
+                        'error'
+                    )
 
             return redirect('/%s/manage/api' % product)
         else:
@@ -311,88 +320,6 @@ class ProductsView(FlaskView):
 
         flash(message, 'error')
         return redirect('/%s/manage/api' % product)
-
-    @route('/<product>/manage/api/add', methods=['GET', 'POST'])
-    @route('/<product>/manage/api/edit/<api_id>', methods=['GET', 'POST'])
-    def manage_add_edit_call(self, product, api_id=None):
-        edit, count, title = False, 1, 'Add API Call'
-        api_settings = g.db.api_settings.find_one()
-        found_product = self.retrieve_product(product)
-        if type(found_product) is str:
-            flash('Product not found, please check the URL and try again')
-            return redirect(url_for('index'))
-
-        if api_id:
-            found_call = self.retrieve_api_call(found_product, api_id)
-            if not found_call:
-                flash('API Call was not found', 'error')
-                return redirect('/%s/manage/api' % product)
-
-            title = 'Edit API Call'
-            edit = True
-            post_url = "/%s/manage/api/edit/%s" % (product, api_id)
-            form = global_helper.generate_edit_call_form(
-                found_product,
-                found_call,
-                api_id
-            )
-        else:
-            post_url = "/%s/manage/api/add" % product
-            form = global_helper.add_fields_to_form(count)
-            for i in range(count):
-                temp = getattr(form, 'variable_%i' % i)
-                temp.form.id_value.data = i
-
-        form.verb.choices = [
-            (verb.get('name'), verb.get('name'))
-            for verb in api_settings.get('verbs')
-        ]
-        form.product.data = product
-        if request.method == 'POST' and form.validate_on_submit():
-            api_call = Call(request.form.to_dict())
-            api_call.variables = global_helper.get_vars_for_call(
-                list(request.form.iterlists())
-            )
-            if api_id:
-                getattr(g.db, found_product.db_name).update(
-                    {
-                        '_id': ObjectId(api_id)
-                    }, {
-                        '$set': api_call.__dict__
-                    }
-                )
-                flash('API Call was successfully updated', 'success')
-            else:
-                try:
-                    getattr(g.db, found_product.db_name).insert(
-                        api_call.__dict__
-                    )
-                    flash('API Call was added successfully', 'success')
-                except:
-                    flash(
-                        'There was an issue storing the API Call. Check '
-                        'the product and ensure the db_name is specified',
-                        'error'
-                    )
-
-            return redirect('/%s/manage/api' % product)
-        else:
-            if request.method == 'POST':
-                flash(
-                    'Form validation error, please check the '
-                    'form and try again',
-                    'error'
-                )
-
-            return render_template(
-                'api_call_add_edit.html',
-                title=title,
-                form=form,
-                count=count,
-                edit=edit,
-                post_url=post_url,
-                cancel_return='/%s/manage/api' % product,
-            )
 
     def retrieve_product(self, product):
         temp_product = g.db.api_settings.find_one()
