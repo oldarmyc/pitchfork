@@ -79,6 +79,16 @@ def check_regex(value):
         return False
 
 
+@app.template_filter()
+def pretty_print_json(string):
+    return json.dumps(
+        string,
+        sort_keys=False,
+        indent=4,
+        separators=(',', ':')
+    )
+
+
 @app.context_processor
 def utility_processor():
     def unslug(string):
