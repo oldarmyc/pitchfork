@@ -40,8 +40,8 @@ app.register_blueprint(report_bp, url_prefix='/reporting')
 mongo, db = HapPyMongo(config)
 
 
-from global_api_functions import front_page_most_accessed, \
-    search_for_calls, gather_history
+from global_helper import (front_page_most_accessed, search_for_calls,
+    gather_history)
 
 
 import product_views
@@ -114,7 +114,6 @@ def index():
         active_products = api_settings.get('active_products')
 
     most_accessed = front_page_most_accessed(active_products)
-
     if api_settings:
         data_centers = api_settings.get('dcs')
 
@@ -141,7 +140,6 @@ def search():
 def history():
     active_products = None
     api_settings = g.db.api_settings.find_one()
-
     if api_settings:
         active_products = api_settings.get('active_products')
 
@@ -152,7 +150,3 @@ def history():
         api_settings=api_settings,
         active_products=active_products
     )
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
