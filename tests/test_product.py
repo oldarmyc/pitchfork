@@ -14,7 +14,7 @@ from uuid import uuid4
 from bson.objectid import ObjectId
 
 
-class AutoScaleTests(unittest.TestCase):
+class ProductTests(unittest.TestCase):
     def setUp(self):
         pitchfork.app.config['TESTING'] = True
         if not re.search('_test', pitchfork.app.config['MONGO_DATABASE']):
