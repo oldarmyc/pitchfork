@@ -1,66 +1,87 @@
-{% extends "admin/_admin_base.html" %}
+{% extends "_base.html" %}
 {% block title %} - Manage Form Fields{% endblock %}
 {% block addHeaders %}
 {% endblock %}
 {% block body %}
-    <h2>{{ title }}</h2>
-    <div id="manage_buttons">
-        <a class="btn btn-primary add-field-button" data-toggle="modal" data-target="#add_custom_fields_form">Add New Field</a>
-        <a href="/admin/forms" title="Back to Forms" class="btn btn-info">Manage Forms</a>
+    <div class="page-header">
+        <h1>
+            Manage fields for '{{ custom_form.get('display_name') }}'
+            <a class="btn btn-primary add-field-button" data-toggle="modal" data-target="#add_custom_fields_form">Add New Field</a>
+            <a href="/admin/forms" title="Back to Forms" class="btn btn-info">Manage Forms</a>
+        </h1>
     </div>
     <div id="custom_form_fields">
         {% include 'admin/_form_fields.html' %}
     </div>
 
-    <div id="add_custom_fields_form" class="modal hide">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            <h4>Add Custom Field</h4>
-        </div>
-        <div class="modal-body">
-            <form method="POST" action="" class="form-horizontal" id="fields_add_form">
-                {{ form.hidden_tag() }}
-                {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
-                    <div class="control-group{% if field.errors %} error{% endif %}" id="{{ field.name }}_top">
-                        {{ field.label(class="control-label") }}
-                        <div class="controls">
-                            {{ field }}
-                            {% if field.name == "field_choices" %}
-                                <p style="font-size: 12px;" class="text-info"><strong>Note:</strong> Coma seperated list or one option per line<br />If no choices are given you will have to dynamically<br />insert them when called</p>
-                            {% endif %}
-                            <span class="{{ field.name }}" style="display: none; color: #B94A48;">Field Required</span>
-                        </div>
-                    </div>
-                {% endfor %}
-            </form>
-        </div>
-        <div class="modal-footer">
-            <input class="btn btn-primary" id="add_field_submit" name="submit" type="submit" form="fields_add_form" value="Submit">
-            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <div id="add_custom_fields_form" class="modal fade" aria-labelledby="AddForm" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4>Add Custom Field</h4>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="" class="form-horizontal" id="fields_add_form">
+                        {{ form.hidden_tag() }}
+                        {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
+                            <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
+                                {{ field.label(class="col-sm-3 control-label") }}
+                                <div class="col-xs-7">
+                                    {% if field.type == 'TextField' or field.type == 'TextAreaField'  %}
+                                        {{ field(class="form-control", **{'type': 'text'})|safe }}
+                                    {% elif field.type == 'BooleanField' %}
+                                        {{ field(type="checkbox") }}
+                                    {% elif field.type == 'SelectField' %}
+                                        {{ field(class="form-control") }}
+                                    {% else %}
+                                        {{ field }}
+                                    {% endif %}
+                                    {% if field.name == "field_choices" %}
+                                        <p style="font-size: 12px;" class="text-info"><strong>Note:</strong> Coma seperated list or one option per line<br />If no choices are given you will have to dynamically<br />insert them when called</p>
+                                    {% endif %}
+                                    <span class="form-control-feedback {{ field.name }}-error" style="display: none; color: #B94A48; float: right; margin: -28px 0 0 0;">Field Required</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <input class="btn btn-primary" id="add_field_submit" name="submit" type="submit" form="fields_add_form" value="Submit">
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="edit_custom_fields_form" class="modal hide">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            <h4>Edit Custom Field</h4>
-        </div>
-        <div class="modal-body">
-        </div>
-        <div class="modal-footer">
-            <input class="btn btn-primary" id="edit_field_submit" name="submit" type="submit" form="fields_edit_form" value="Submit">
-            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <div id="edit_custom_fields_form" class="modal fade" aria-labelledby="EditForm" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4>Edit Custom Field</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="edit_field_submit" name="submit" type="submit" form="fields_edit_form">Submit</button>
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
-
 
 {% endblock %}
 {% block jquery %}
-    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-tooltip.js') }}"></script>
-    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-modal.js') }}"></script>
     <script>
         $(document).ready(function() {
             $('.tooltip-title').tooltip();
+            var selectVal = $('#field_type :selected').val();
+            if (selectVal == 'SelectField' || selectVal == 'RadioField' || selectVal == 'SelectMultipleField') {
+                $('#field_choices_top').show();
+            } else {
+                $('#field_choices_top').hide();
+            }
         });
 
         function data_tooltip() {
@@ -70,7 +91,7 @@
         }
 
         function replace_html(url_path, div_id, response_message) {
-            var message = '<div class="alert"><button type="button" class="close" data-dismiss="alert">&times;</button><p>' + response_message + '</p></div';
+            var message = '<div class="alert alert-info"><button type="button" class="close" data-dismiss="alert">&times;</button><p>' + response_message + '</p></div';
             $.get(url_path, function(result) {
                 $(div_id).html(result);
                 $('#generated_messages').html(message);
@@ -117,12 +138,12 @@
 
         function validate_field(field_name, error, span) {
             if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0) {
-                $('#' + error).removeClass('error');
+                $('#' + error).removeClass('has-error');
                 $('span.' + span).hide();
                 return true;
             }
             else {
-                $('#' + error).addClass('error');
+                $('#' + error).addClass('has-error');
                 $('span.' + span).show();
                 return false;
             }
@@ -131,9 +152,9 @@
         $('#add_field_submit').click(function() {
             console.log('Got to click')
             $("#fields_add_form").unbind('submit').bind('submit', function(e){
-                var label = validate_field('label', 'label_top', 'label')
-                var name = validate_field('name', 'name_top', 'name')
-                var field_type = validate_field('field_type', 'field_type_top', 'field_type')
+                var label = validate_field('label', 'label_top', 'label-error')
+                var name = validate_field('name', 'name_top', 'name-error')
+                var field_type = validate_field('field_type', 'field_type_top', 'field_type-error')
                 if ( label & name & field_type ) {
                     return true;
                 }
@@ -143,22 +164,8 @@
             });
         });
 
-        $('#edit_field_submit').click(function() {
-            $("#fields_edit_form").unbind('submit').bind('submit', function(e){
-                var label = validate_field('fields_edit_form #label', 'edit_label_top', 'edit_label')
-                var name = validate_field('fields_edit_form #name', 'edit_name_top', 'edit_name')
-                var field_type = validate_field('fields_edit_form #field_type', 'edit_field_type_top', 'edit_field_type')
-                if ( label & name & field_type ) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
-            });
-        });
-        
-        $('body').on('hidden', '.modal', function () {
-            $(this).removeData('modal');
+        $('body').on('hidden.bs.modal', '.modal', function () {
+            $(this).removeData();
         });
 
         $('#field_type').change(function() {
@@ -188,6 +195,6 @@
                 $('#edit_default_value_top').show();
             } else { $('#edit_default_value_top').hide(); }
         })
-        
+
     </script>
 {% endblock %}
