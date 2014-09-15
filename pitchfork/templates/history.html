@@ -1,4 +1,4 @@
-{% extends "_fluid_base.html" %}
+{% extends "_base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block addHeaders %}
     <style>
@@ -8,7 +8,7 @@
             padding: 10px 18px;
             margin-bottom: 25px;
             display: inline-block;
-            width: 1000px;
+            width: 100%;
         }
 
         div#basic_api_info {
@@ -16,48 +16,25 @@
             margin: 5px 0;
         }
 
-        div#basic_api_info table tr td {
-            padding-left: 0;
-        }
-
-        span.ep-label {
-            font-weight: bold;
-            padding-right: 15px;
-        }
-
-        div.code-block {
-            font-family: Monaco;
-            background-color: #e3e3e3;
-            border: 1px solid #333;
-            border-radius: 4px 4px 4px 4px;
-            display: block;
-            font-size: 13px;
-            line-height: 20px;
-            margin: 0 0 10px;
-            padding: 10px;
-        }
-
-        pre {
-            background-color: #e3e3e3;
-            border: none;
-            margin-bottom: 0;
-            padding: 10px;
-        }
-
         div#show_details {
             float: right;
-            margin: -46px 0px 0 0;
+            margin: -46px 100px 0 0;
+        }
+
+        .well {
+            background-color: #FFF;
         }
     </style>
+    <link href="{{ url_for('static', filename='css/ui.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
 {% endblock %}
 {% block body %}
-    <div class="row-fluid">
-        <div class="span3">
-            <div class="well sidebar-nav">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="well">
                 {% if active_products %}
-                    <ul class="nav nav-list">
-                        <li class="nav-header">Cloud Products</li>
+                    <ul class="nav nav-pills nav-stacked left-nav">
+                        <li class="navbar-header">Cloud Products</li>
                         {% for product in active_products %}
                             {% set setting = api_settings.get(product) %}
                             <li>
@@ -68,81 +45,56 @@
                 {% endif %}
             </div>
         </div>
-        <div class="span9">
-            <h3>My API History</h3>
+        <div class="col-md-10">
+            <h3>API Call History</h3>
             <div id="history_wrapper">
                 {% for item in history %}
-                    <div id="history_item" class="{{ loop.cycle('bg-odd', 'bg-even') }}">
+                    <div id="history_item">
                         <div id="basic_api_info">
-                            <table>
-                                <tr>
-                                    <td>
-                                        <span class="ep-label">DDI:</span>
-                                    </td>
-                                    <td>
-                                        {{ item.get('ddi') }}
-                                    </td>
+                            <dl class="dl-horizontal">
+                                <dt>DDI:</dt>
+                                <dd>
+                                    {{ item.get('ddi') }}
+                                </dd>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <span class="ep-label">Timestamp:</span>
-                                    </td>
-                                    <td>
-                                        {{ item.get('completed_at').strftime('%m-%d-%Y @ %H:%M %p UTC') }}
-                                    </td>
+                                <dt>Timestamp:</dt>
+                                <dd>
+                                    {{ item.get('completed_at').strftime('%m-%d-%Y @ %H:%M %p UTC') }}
+                                </dd>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <span class="ep-label">Cloud Product:</span>
-                                    </td>
-                                    <td>
-                                        {{ item.get('product') }}
-                                    </td>
+                                <dt>Cloud Product:</dt>
+                                <dd>
+                                    {{ item.get('product') }}
+                                </dd>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <span class="ep-label">Title:</span>
-                                    </td>
-                                    <td>
-                                        {{ item.get('details').get('title') }}
-                                    </td>
+                                <dt>Title:</dt>
+                                <dd>
+                                    {{ item.get('details').get('title') }}
+                                </dd>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <span class="ep-label">Description:</span>
-                                    </td>
-                                    <td>
-                                        {{ item.get('details').get('description') }}
-                                    </td>
+                                <dt>Description:</dt>
+                                <dd>
+                                    {{ item.get('details').get('description') }}
+                                </dd>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <span class="ep-label">Verb:</span>
-                                    </td>
-                                    <td>
-                                        {{ item.get('request').get('verb') }}
-                                    </td>
+                                <dt>Verb:</dt>
+                                <dd>
+                                    {{ item.get('request').get('verb') }}
+                                </dd>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <span class="ep-label">Response Code:</span>
-                                    </td>
-                                    <td>
-                                        {{ item.get('response').get('code') }}
-                                    </td>
+                                <dt>Response Code:</dt>
+                                <dd>
+                                    {{ item.get('response').get('code') }}
+                                </dd>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <span class="ep-label">Documentation:</span>
-                                    </td>
-                                    <td>
-                                        <a href="{{ item.get('details').get('doc_url') }}" title="{{ item.get('details').get('title') }} Documentation" target="_blank">API Documentation</a>
-                                    </td>
-                                </tr>
-                            </table>
+                                <dt>Documentation:</dt>
+                                <dd>
+                                    <a href="{{ item.get('details').get('doc_url') }}" class="tooltip-title" title="{{ item.get('details').get('title') }} Documentation" target="_blank">API Documentation</a>
+                                </dd>
+                            </dl>
                         </div>
                         <div id="show_details">
-                            <a onclick="toggle_div('details_wrapper_{{ loop.index }}', {{ loop.index }})" title="Show all details for request" class="btn btn-info toggle-element-{{ loop.index }}">Show All Details</a>
+                            <a onclick="toggle_div('details_wrapper_{{ loop.index }}', {{ loop.index }})" title="Show all details for request" class="btn btn-info toggle-element-{{ loop.index }}">Call Details</a>
                         </div>
                         <div id="details_wrapper_{{ loop.index }}" style="display: none;">
                             <div id="request_details">
@@ -197,16 +149,33 @@
             </div>
         </div>
     </div>
+    <a class="scrollup tooltip-title" title="Scroll to Top">Scroll</a>
 {% endblock %}
 {% block jquery %}
     <script>
+        $(document).ready(function() {
+            $('.tooltip-title').tooltip();
+            $(window).scroll(function(){
+                if ( $(this).scrollTop() > 100 ) {
+                    $('.scrollup').fadeIn();
+                } else {
+                    $('.scrollup').fadeOut();
+                }
+            });
+        })
+
+        $('.scrollup').click(function(){
+            $('html, body').animate({ scrollTop: 0 }, 600);
+            return false;
+        });
+
         function toggle_div(div_id, index) {
             $('#' + div_id).toggle('slow', function() {
                 if ( $('#' + div_id).is(':hidden') ) {
-                    $('.toggle-element-' + index).html('Show All Details');
+                    $('.toggle-element-' + index).html('Call Details');
                 }
                 else {
-                    $('.toggle-element-' + index).html('Hide All Details');
+                    $('.toggle-element-' + index).html('Hide Details');
                 }
             });
         }
