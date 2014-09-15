@@ -1,0 +1,113 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h4>View Work Details</h4>
+</div>
+<div class="modal-body">
+    <h4>
+        Work Information
+        {% if check_work_permissions(item.get('_id')) or check_if_admin %}
+            <a href="/modify/work/{{ item.get('_id') }}" class="btn btn-default">Modify Work</a>
+        {% endif %}
+    </h4>
+    <dl class="dl-horizontal modify-dl">
+        <dt>Ticket Number:</dt>
+        <dd>
+            <a href="https://core.rackspace.com/py/ticket/view.pt?ref_no={{ item.get('ticket_number') }}" target="_blank" title="View Ticket" class="tooltip-title">{{ item.get('ticket_number') }}</a>
+        </dd>
+        <dt>Account:</dt>
+        <dd>
+            <a href="https://core.rackspace.com/py/core/#/account/{{ item.get('account_number') }}" target="_blank" title="View Account" class="tooltip-title">{{ item.get('account_number') }}</a> - {{ item.get('account_segment') }} : {{ item.get('support_team') }}
+        </dd>
+        <dt>Account Name:</dt>
+        <dd>
+            {{ item.get('account_name') }}
+        </dd>
+        <dt>Account Manager:</dt>
+        <dd>
+            {{ item.get('account_manager_name') }}
+        </dd>
+        <dt>Hours Remaining:</dt>
+        <dd>
+            {{ display_remaining_hours(item.get('account_number')) }}
+        </dd>
+        <dt>Work Type:</dt>
+        <dd>
+            {{ get_item_name(item.get('category'), 'categories') }} - {{ get_item_name(item.get('category_type'), 'category_types') }}
+        </dd>
+        <dt>Task Performed:</dt>
+        <dd>
+            {{ get_item_name(item.get('category_type_task'), 'category_type_tasks') }}
+        </dd>
+        <dt>Work Logged At:</dt>
+        <dd>
+            <span class="alter-time">{{ item.get('created_at').strftime('%Y/%m/%d %R %Z') }}</span>
+        </dd>
+        <dt>Work Logged By:</dt>
+        <dd>
+            {{ item.get('user_logged_name') }}
+        </dd>
+    </dl>
+    <div id="servers">
+        <dl class="dl-horizontal modify-dl">
+            <dt>Servers:</dt>
+            {% for device in item.get('servers') %}
+                <dd class="ticket-devices">
+                    <a href="https://core.rackspace.com/py/core/#/device/{{ device.get('device_id') }}" title="View Device" class="tooltip-title" target="_blank">{{ device.get('device_id') }}</a> : {{ device.get('device_name') }}
+                </dd>
+            {% endfor %}
+        </dl>
+    </div>
+    {% if item.get('waive_billable') %}
+        <dl class="dl-horizontal modify-dl">
+            <dt>Billing Waived:</dt>
+            <dd>
+                <span class="fa fa-usd text-danger"></span>
+            </dd>
+            <dt>Waived By:</dt>
+            <dd>
+                {{ item.get('waived_by_name') }}
+            </dd>
+            <dt>Waived At:</dt>
+            <dd>
+                <span class="alter-time">{{ item.get('waived_at').strftime('%Y/%m/%d %R %Z') }}</span>
+            </dd>
+        </dl>
+        <div id="waive_reason">
+            <dl>
+                <dt>Waived Reason:</dt>
+                <dd>
+                    {{ item.get('waive_reason') }}
+                </dd>
+            </dl>
+        </div>
+    {% endif %}
+
+    <h4>Work Logs</h4>
+    <div id="notes">
+        <dl>
+            <dt>Work Notes:</dt>
+            <dd>{{ normalize_freeflow(item.get('work_notes'))|safe }}</dd>
+        </dl>
+    </div>
+    <div id="logged_events">
+        <dl>
+            <dt>Outage Log</dt>
+            {% if item.get('log') %}
+                {% for item in item.get('log') %}
+                    <dd>{{ item }}</dd>
+                {% endfor %}
+            {% else %}
+                <dd>No logged events</dd>
+            {% endif %}
+        </dl>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('.tooltip-title').tooltip();
+    })
+</script>

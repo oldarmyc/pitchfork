@@ -1,0 +1,362 @@
+<div id="results_query">
+    {% if results %}
+        <h3>{{ title }} - ({{ results.count() }})</h3>
+        {% if graph_keys %}
+            <div id="view_graph_form">
+                <form id="graph_form" class="form-inline">
+                    <div class="form-group">
+                        <select id="to_graph" class="form-control" name="graph_key">
+                            {% for key in graph_keys %}
+                                <option value="{{ key }}">{{ unslug(graph_labels[loop.index - 1])|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" id="graph_form_submit" class="btn btn-primary">Generate Graph</button>
+                        <button type="submit" id="csv_form_submit" class="btn btn-info" form="graph_form">Generate CSV File</button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+
+        <div id="graph_wrapper" style="display: none; margin: 10px 0 20px;">
+            <div style="margin: 0 auto; width: 870px;">
+                <a onClick="hide_the_div('graph_wrapper')" class="btn btn-danger" title="Hide Graph">Hide Graph</a>
+                <div id="graph_details"></div>
+            </div>
+        </div>
+
+        <table class="table table-condensed table-bordered table-hover" id="view_list">
+            <thead>
+                <tr>
+                    <th class="header-left">Name</th>
+                    <th class="header-center">DDI</th>
+                    <th class="header-center">DC</th>
+                    <th>Product</th>
+                    <th>Completed</th>
+                    <th>Call Run</th>
+                    <th class="header-center">Verb</th>
+                    <th class="header-center">Resp. Code</th>
+                    <th class="header-center">Details</th>
+                    <th class="header-center">API Docs</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in results %}
+                    <tr class="{{ loop.cycle('bg-odd', 'bg-even') }}">
+                        <td>
+                            {{ item.get('username') }}
+                        </td>
+                        <td class="cell-center">
+                            {{ item.get('ddi') }}
+                        </td>
+                        <td class="cell-center">
+                            {{ item.get('data_center')|upper }}
+                        </td>
+                        <td>
+                            {{ item.get('product') }}
+                        </td>
+                        <td>
+                            {{ item.get('completed_at').strftime('%m-%d-%Y') }}
+                        </td>
+                        <td>
+                            {{ item.get('details').get('title') }}
+                        </td>
+                        <td class="cell-center">
+                            {{ item.get('request').get('verb') }}
+                        </td>
+                        <td class="cell-center">
+                            {{ item.get('response').get('code') }}
+                        </td>
+                        <td class="cell-center">
+                            <a onClick="toggle_modal('{{ item.get('_id') }}')" class="call-details-link" title="{{ item.get('details').get('title') }} Full Details">Details</a>
+                        </td>
+                        <td class="cell-center">
+                            <a href="{{ item.get('details').get('doc_url') }}" title="{{ item.get('details').get('title') }} Documentation" target="_blank">Docs</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>
+
+<div id="view_work_details" class="modal fade" aria-labelledby="ViewForm" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4>View Work Details</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+    $(document).ready(function() {
+        $('.tooltip-title').tooltip();
+        $('#view_list').dataTable({
+            aaSorting: [[7, 'asc']],
+            'aoColumnDefs': [
+                {
+                    'bSortable': false,
+                    'aTargets': [ 9 ]
+                }
+            ],
+            'bFilter': false,
+            'paging': false
+        });
+    });
+
+    $('body').on('hidden.bs.modal', '.modal', function () {
+        $(this).removeData();
+    });
+
+    function hide_the_div(div) {
+        $('#' + div).hide();
+    }
+
+    function alter_time_object() {
+        $('.alter-time').each(function() {
+            var temp = new Date($(this).text());
+            if (!isNaN(temp)) {
+                $(this).text($.formatDateTime("mm-dd-yy '@' g:ii a", temp));
+            }
+        });
+    }
+
+    function makeTitle(slug) {
+        var words = slug.split(/[.,_]/);
+        for(var i = 0; i < words.length; i++) {
+          var word = words[i];
+          words[i] = word.charAt(0).toUpperCase() + word.slice(1);
+        }
+        var temp = words.join(' ');
+        temp = temp.split('.');
+        return temp[0];
+    }
+
+    $('#graph_details').bind('jqplotDataClick', function (ev, seriesIndex, pointIndex, data) {
+        show_spinner_graph('graph_details');
+        var key = $('#to_graph').val();
+        var graph_data = {{ graph_data|tojson|safe }};
+        var labels = graph_data[key]['labels'];
+        var send = {};
+        send['search_on'] = labels[ (data[0] - 1) ]
+        send['key'] = key
+        var form_data = $('form').serialize();
+        $.each(form_data.split('&'), function (index, elem) {
+            var vals = elem.split('=');
+            send[vals[0].replace(/\+/g, ' ')] = vals[1].replace(/\+/g, ' ');
+        });
+        $.ajax({
+            url: '/engine/generate/trend',
+            type: 'POST',
+            data: JSON.stringify(send),
+            contentType: 'application/json',
+            success: function(return_data){
+                $('#graph_details').html('');
+                generate_trending_graph(
+                    return_data.title,
+                    return_data.points,
+                    return_data.delta,
+                    return_data.labels
+                )
+            },
+            error: function(return_data) {
+                console.log('There was an error processing the request')
+            }
+        });
+    });
+
+    $('#csv_form_submit').on('click', function() {
+        $("#graph_form").unbind('submit').bind('submit', function(e){
+            var sending = {}
+            var data = $('#reporting_form').serialize();
+            $.each(data.split('&'), function (index, elem) {
+                var vals = elem.split('=');
+                sending[vals[0].replace(/\+/g, ' ')] = vals[1].replace(/\+/g, ' ');
+            });
+            $('#graph_form input[type="hidden"]').each(function() {
+                $(this).remove();
+            });
+            var temp = null;
+            $.each(sending, function(key, value) {
+                temp = $("<input>").attr("type", "hidden").attr("name", key).val(value);
+                $('#graph_form').append($(temp));
+            });
+            $("#graph_form").attr('action', '/engine/generate/csv').attr('method', 'POST');
+        });
+    });
+
+    $('#graph_form_submit').on('click', function() {
+        $("#graph_form").unbind('submit').bind('submit', function(e){
+            e.preventDefault();
+            var key = $('#to_graph').val();
+            var data = {{ graph_data|tojson|safe }};
+            var labels = data[key]['labels'];
+            var data_points = data[key]['points'];
+            var label_angle = 0;
+            var title = makeTitle(key) + ' Graph';
+            $('#graph_details').css('width', 600).css('height', 350);
+            $('#graph_details').html('');
+            $('#graph_wrapper').show('slow');
+            $('#graph_wrapper').on('hide', function() {
+                $('#graph_details').html('');
+            });
+            generate_selected_graph(title, labels, data_points, label_angle)
+        });
+    });
+
+    function generate_selected_graph(title, labels, data_points, label_angle) {
+        var needs_tick_value = true;
+        for ( var i=0; i < data_points.length; ++i) {
+            if ( data_points[i] > 5 ) {
+                needs_tick_value = false;
+                break;
+            }
+        }
+        if (labels.length > 5) {
+            label_angle = 30;
+            $('#graph_details').css('height', 410);
+        }
+        if ( needs_tick_value ) {
+            var y_axis = {
+                min: 0,
+                tickInterval: 1,
+                rendererOptions: {
+                    forceTickAt0: true
+                }
+            }
+        } else {
+            var y_axis = {
+                min: 0,
+                rendererOptions: {
+                    forceTickAt0: true
+                }
+            }
+        }
+        $.jqplot.config.enablePlugins = true;
+        var dynamic_chart = $.jqplot('graph_details', [ data_points ], {
+            title: title,
+            series: [
+                {
+                    renderer: $.jqplot.BarRenderer,
+                    pointLabels: { show: false },
+                    rendererOptions: {
+                        barWidth: 30,
+                        highlightMouseDown: false,
+                        highlightMouseOver: true
+                    },
+                    trendline: {
+                        show: false
+                    }
+                }
+            ],
+            captureRightClick: true,
+            axes: {
+                xaxis:{
+                    renderer: $.jqplot.CategoryAxisRenderer,
+                    ticks: labels,
+                    tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+                    tickOptions: {
+                        angle: label_angle
+                    }
+                },
+                yaxis: y_axis
+            },
+            cursor:{
+                show: false
+            },
+            highlighter: {
+                sizeAdjust: 11,
+                tooltipLocation: 'n',
+                tooltipAxes: 'y',
+                tooltipFormatString: '<strong>Count: </strong>%.0f',
+                useAxesFormatters: false,
+                tooltipOffset: 3
+            }
+        });
+    }
+
+    function generate_trending_graph(title, data_points, delta, labels) {
+        var label_angle = 0
+        if ( delta < 63 ) {
+            label_angle = 30
+        }
+        var trend_line = false
+        if ( data_points.length > 2 ) {
+            trend_line = true
+        }
+
+        var needs_tick_value = true;
+        for ( var i=0; i < data_points.length; ++i) {
+            if ( data_points[i] > 5 ) {
+                needs_tick_value = false;
+            }
+        }
+        if ( needs_tick_value ) {
+            var y_axis = {
+                min: 0,
+                tickInterval: 1,
+                rendererOptions: {
+                    forceTickAt0: true
+                }
+            }
+        } else {
+            var y_axis = {
+                min: 0,
+                rendererOptions: {
+                    forceTickAt0: true
+                }
+            }
+        }
+
+        var trending_chart = $.jqplot('graph_details', [ data_points ], {
+            title: title,
+            series: [
+                {
+                    rendererOptions: {
+                        highlightMouseDown: true,
+                        highlightMouseOver: false
+                    },
+                    trendline: {
+                        show: trend_line,
+                        color: '#B94A48'
+                    },
+                    lineWidth: 2,
+                        rendererOptions: {
+                        smooth: true
+                    }
+                }
+            ],
+            captureRightClick: true,
+            axes: {
+                xaxis:{
+                    renderer: $.jqplot.CategoryAxisRenderer,
+                    ticks: labels,
+                    tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+                    tickOptions: {
+                        angle: label_angle
+                    }
+                },
+                yaxis: y_axis
+            },
+            cursor:{
+                show: false
+            },
+            highlighter: {
+                sizeAdjust: 11,
+                tooltipLocation: 'n',
+                tooltipAxes: 'y',
+                tooltipFormatString: '<strong>Count: </strong>%.0f',
+                useAxesFormatters: false,
+                tooltipOffset: 3
+            }
+        });
+    }
+</script>

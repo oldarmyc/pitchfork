@@ -1,0 +1,192 @@
+{% extends "_base.html" %}
+{% block title %} - Application Reporting{% endblock %}
+{% block addHeaders %}
+	<link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/engine.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/datepicker.min.css') }}" rel="stylesheet" media="screen">
+    <link href="{{ url_for('static', filename='css/jquery.jqplot.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='datatables/datatables-bs3.css') }}" rel="stylesheet" media="screen">
+	<style>
+		.input-group .form-control:last-child {
+			border-radius: 4px;
+		}
+
+		label {
+			font-weight: normal;
+			margin-bottom: 0px;
+		}
+
+		input[type="checkbox"] {
+			margin-top: 0px;
+		}
+
+		.form-inline .input-group > .form-control {
+			width: 165px;
+		}
+
+		.modal-dialog {
+			width: 700px;
+		}
+	</style>
+{% endblock %}
+{% block body %}
+	<h1>Application Reporting</h1>
+    <div id="report_form">
+        <form method="POST" id="reporting_form" action="/engine/" class="form-inline">
+            {{ form.hidden_tag() }}
+            <div id="reporting_fields">
+                <span class="reporting-title">Select Report Criteria</span>
+                <table>
+                    {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
+                        {% if loop.index % 4 == 0 %}
+                                <td>
+                                    <span class="field-label">{{ field.label }}</span>
+                                </td>
+                                <td>
+									{% if field.id == 'date_time_start' or field.id == 'date_time_end' %}
+										<div class="input-group date">
+											{{ field(class="form-control", **{'type': 'text', 'data-date-format': 'YYYY-MM-DD'}) }}
+										</div>
+									{% elif field.type == 'TextField' %}
+										{{ field(class="form-control", **{'type': 'text'})|safe }}
+									{% elif field.type == 'SelectField' %}
+										{{ field(class="form-control") }}
+									{% elif field.type == 'BooleanField' %}
+										{{ field(type="checkbox") }}
+									{% endif %}
+                                </td>
+                            </tr>
+                        {% elif loop.index % 4 == 1 %}
+                            <tr>
+                                <td>
+                                    <span class="field-label">{{ field.label }}</span>
+                                </td>
+                                <td>
+                                    {% if field.id == 'date_time_start' or field.id == 'date_time_end' %}
+										<div class="input-group date">
+											{{ field(class="form-control", **{'type': 'text', 'data-date-format': 'YYYY-MM-DD'}) }}
+										</div>
+									{% elif field.type == 'TextField' %}
+										{{ field(class="form-control", **{'type': 'text'})|safe }}
+									{% elif field.type == 'SelectField' %}
+										{{ field(class="form-control") }}
+									{% elif field.type == 'BooleanField' %}
+										{{ field(type="checkbox") }}
+									{% endif %}
+                                </td>
+                        {% else %}
+                            <td>
+                                <span class="field-label">{{ field.label }}</span>
+                            </td>
+                            <td>
+                                {% if field.id == 'date_time_start' or field.id == 'date_time_end' %}
+									<div class="input-group date">
+										{{ field(class="form-control", **{'type': 'text', 'data-date-format': 'YYYY-MM-DD'}) }}
+									</div>
+								{% elif field.type == 'TextField' %}
+									{{ field(class="form-control", **{'type': 'text'})|safe }}
+								{% elif field.type == 'SelectField' %}
+									{{ field(class="form-control") }}
+								{% elif field.type == 'BooleanField' %}
+									{{ field(type="checkbox") }}
+								{% endif %}
+                            </td>
+                        {% endif %}
+                        {% if loop.index % 4 != 0 and loop.last %}
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </table>
+            </div>
+            <div style="clear: both;"></div>
+            <div id="submit_form">
+                <input class="btn btn-primary" id="generate_report" name="submit" type="submit" form="reporting_form" value="Generate Report">
+            </div>
+        </form>
+    </div>
+
+    <div id="reporting_results">
+        <div class="alert alert-block alert-info" style="width: 1000px; color: #333333;">
+            <h4 style="margin-bottom: 10px; color: #333333;">Custom Report Generator</h4>
+            <p>
+                Choose and set any options above that you wish to use to query against the data to generate a report. Once the report is generated you will be given the chance to generate a Pareto graph for the given data set found. The graphs available are for the following options:
+            </p>
+            <ul style="margin-top: 10px; list-style: none;">
+                <li>- Category</li>
+                <li>- Type</li>
+                <li>- Task</li>
+                <li>- User</li>
+            </ul>
+            <p style="margin-top: 10px;">
+                You will also have the option to click on the bars of the graph generated to view trends. The trending graph is still based on the criteria you provided above in the selection criteria, and also for the data point you selected. This gives you the ability to drill into the graph to view trends with the data based on your selection criteria.
+            </p>
+
+            <p style="margin-top: 10px; font-size: 12px;"><span style="font-weight: bold;">Note:</span> Only the top 10 data points for the given report will be shown</p>
+            <p style="font-size: 12px; margin-left: 34px;"> If no options are chosen all data is pulled into the report</p>
+        </div>
+    </div>
+
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='js/jquery.jqplot.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/jqplot.highlighter.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/jqplot.trendline.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/jqplot.barRenderer.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/jqplot.categoryAxisRenderer.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/jqplot.canvasAxisTickRenderer.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/jqplot.canvasTextRenderer.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/plugins/jqplot.cursor.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/datepicker.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='datatables/datatables.js') }}"></script>
+	<script src="{{ url_for('static', filename='datatables/datatables-bs3.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/format_date_time-min.js') }}"></script>
+	<script>
+        $(document).ready(function() {
+            $( "#date_time_start" ).datetimepicker({
+                autoclose: 'true',
+				pickTime: false
+            });
+
+            $( "#date_time_end" ).datetimepicker({
+                autoclose: 'true',
+				pickTime: false
+            });
+        });
+
+        function show_spinner_graph(div_id) {
+			$('#' + div_id).html("<div id='spinner_div'><span class='loading-text'>Please Wait Loading Data...</span><i class='fa fa-spinner fa-spin fa-2x'></i></div>");
+		}
+
+        $('#generate_report').on('click', function() {
+            $("#reporting_form").unbind('submit').bind('submit', function(e){
+				e.preventDefault();
+                show_spinner_graph('reporting_results');
+                $('.alert').alert('close');
+                var sending = {};
+                var data = $('form').serialize();
+                $.each(data.split('&'), function (index, elem) {
+                    var vals = elem.split('=');
+                    sending[vals[0].replace(/\+/g, ' ')] = vals[1].replace(/\+/g, ' ');
+                });
+                $.ajax({
+                    url: '/engine/generate',
+                    type: 'POST',
+                    data: JSON.stringify(sending),
+                    contentType: 'application/json',
+                    success: function(data){
+                        $('#reporting_results').html(data);
+                    },
+                    error: function(data){
+                        $('#generated_messages').html('<div class="alert alert-warning"><button type="button" class="close" data-dismiss="alert">&times;</button><p>There was an error generating the report...sad face :(</p></div>');
+                        $('#reporting_results').html('');
+                    },
+                });
+            });
+        });
+
+		$('body').on('hidden.bs.modal', '.modal', function () {
+			$(this).removeData();
+		});
+	</script>
+{% endblock %}

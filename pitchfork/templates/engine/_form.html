@@ -1,0 +1,29 @@
+<form method="POST" action="" class="form-horizontal" role="form">
+    {{ form.hidden_tag() }}
+    {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
+        <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
+            {{ field.label(class="col-sm-2 control-label") }}
+            <div class="col-xs-3">
+                {% if field.type == 'TextField' or field.type == 'TextAreaField'  %}
+                    {{ field(class="form-control", **{'type': 'text'})|safe }}
+                {% elif field.type == 'BooleanField' %}
+                    {{ field(type="checkbox") }}
+                {% elif field.type == 'SelectField' %}
+                    {{ field(class="form-control") }}
+                {% else %}
+                    {{ field }}
+                {% endif %}
+                {% for error in field.errors %}
+                    <span class="form-control-feedback">{{ error }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+    <div class="form-group">
+        <div class="col-sm-offset-1 col-xs-2">
+            {% for field in form if (field.widget.input_type == 'submit') %}
+                {{ field(class="btn btn-primary") }}
+            {% endfor %}
+        </div>
+    </div>
+</form>
