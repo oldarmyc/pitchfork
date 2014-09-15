@@ -25,7 +25,7 @@ import json
 # Start import for all blueprints
 from adminbp import bp as admin_bp
 from manage_globals import bp as manage_bp
-from reporting import bp as report_bp
+from engine import bp as engine_bp
 # End Blueprint import
 
 
@@ -33,7 +33,7 @@ app = Flask(__name__)
 app.config.from_object(config)
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(manage_bp, url_prefix='/manage')
-app.register_blueprint(report_bp, url_prefix='/reporting')
+app.register_blueprint(engine_bp, url_prefix='/engine')
 
 
 # Setup DB based on the app name
