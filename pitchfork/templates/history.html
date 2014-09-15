@@ -159,14 +159,14 @@
                                         <div id="api_headers">
                                             <h5>Request Headers</h5>
                                             <div class="code-block">
-                                                <pre>{{ item.get('request').get('headers')|tojson }}</pre>
+                                                <pre>{{ item.get('request').get('headers')|pretty_print_json }}</pre>
                                             </div>
                                         </div>
                                     {% endif %}
                                     {% if item.get('request').get('data') %}
                                         <h5>Request Data Object</h5>
                                         <div class="code-block">
-                                            <pre>{{ item.get('request').get('data')|tojson }}</pre>
+                                            <pre>{{ item.get('request').get('data')|pretty_print_json }}</pre>
                                         </div>
                                     {% endif %}
                                 {% endif %}
@@ -177,7 +177,7 @@
                                         <div id="api_response_headers">
                                             <h5>Response Headers</h5>
                                             <div class="code-block">
-                                                <pre>{{ item.get('response').get('headers')|tojson }}</pre>
+                                                <pre>{{ item.get('response').get('headers')|pretty_print_json }}</pre>
                                             </div>
                                         </div>
                                     {% endif %}
@@ -185,7 +185,7 @@
                                         <div id="api_response_body">
                                             <h5>Response Body</h5>
                                             <div class="code-block">
-                                                <pre>{{ item.get('response').get('body')|tojson }}</pre>
+                                                <pre>{{ item.get('response').get('body')|pretty_print_json }}</pre>
                                             </div>
                                         </div>
                                     {% endif %}
