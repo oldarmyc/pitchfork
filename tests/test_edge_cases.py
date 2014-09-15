@@ -531,6 +531,234 @@ class EdgeCasesTests(unittest.TestCase):
         assert found_call, 'Could not find added api call'
         self.teardown_app_data()
 
+    def test_process_call_with_bad_call_id(self):
+        api_id = self.setup_useable_api_call()
+        pitchfork.db.autoscale.remove()
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            data = {
+                'api_verb': 'GET',
+                'testing': False,
+                'api_url': '{ddi}/groups',
+                'api_token': 'test_token',
+                'api_id': str(api_id),
+                'ddi': '123456',
+                'data_center': 'dfw',
+                'testing': True
+            }
+            response = c.post(
+                '/autoscale/api/call/process',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        assert response._status_code == 302, (
+            'Invalid response code %s' % response._status_code
+        )
+        location = response.headers.get('Location')
+        o = urlparse.urlparse(location)
+        self.assertEqual(
+            o.path,
+            '/',
+            'Invalid redirect location %s, expected "/"' % o.path
+        )
+        self.teardown_app_data()
+
+    def test_process_call_with_bad_product(self):
+        api_id = self.setup_useable_api_call()
+        pitchfork.db.autoscale.remove()
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            data = {
+                'api_verb': 'GET',
+                'testing': False,
+                'api_url': '{ddi}/groups',
+                'api_token': 'test_token',
+                'api_id': str(api_id),
+                'ddi': '123456',
+                'data_center': 'dfw',
+                'testing': True
+            }
+            response = c.post(
+                '/BAD_PRODUCT/api/call/process',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        assert response._status_code == 302, (
+            'Invalid response code %s' % response._status_code
+        )
+        location = response.headers.get('Location')
+        o = urlparse.urlparse(location)
+        self.assertEqual(
+            o.path,
+            '/',
+            'Invalid redirect location %s, expected "/"' % o.path
+        )
+        self.teardown_app_data()
+
+    def test_process_mock_call(self):
+        api_id = self.setup_useable_api_call()
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            data = {
+                'api_verb': 'GET',
+                'api_url': '{ddi}/groups',
+                'api_id': str(api_id),
+                'ddi': '123456',
+                'data_center': 'dfw',
+                'mock': True
+            }
+            with mock.patch('requests.get') as patched_get:
+                type(patched_get.return_value).content = mock.PropertyMock(
+                    return_value='{"groups_links": [], "groups": []}'
+                )
+                type(patched_get.return_value).status_code = mock.PropertyMock(
+                    return_value=200
+                )
+                type(patched_get.return_value).headers = mock.PropertyMock(
+                    return_value=(
+                        '{"via": "1.1 Repose (Repose/2.12)",'
+                        '"x-response-id": "a10adb69-4d9f-4457-'
+                        'bda4-e2429f334895",'
+                        '"transfer-encoding": "chunked",'
+                        '"server": "Jetty(8.0.y.z-SNAPSHOT)",'
+                        '"date": "Tue, 18 Mar 2014 19:52:26 GMT",'
+                        '"content-type": "application/json"}'
+                    )
+                )
+                response = c.post(
+                    '/autoscale/api/call/process',
+                    data=json.dumps(data),
+                    content_type='application/json'
+                )
+
+        data = json.loads(response.data)
+        assert data.get('api_url'), 'API URL was not found'
+        assert data.get('request_headers'), 'No request headers received'
+        assert data.get('data_package'), 'No data package received'
+        self.teardown_app_data()
+
+    def test_manage_api_with_bad_product(self):
+        api_id = self.setup_useable_api_call()
+        pitchfork.db.autoscale.remove()
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get('/BAD_PRODUCT/manage/api',)
+
+        assert response._status_code == 302, (
+            'Invalid response code %s' % response._status_code
+        )
+        location = response.headers.get('Location')
+        o = urlparse.urlparse(location)
+        self.assertEqual(
+            o.path,
+            '/',
+            'Invalid redirect location %s, expected "/"' % o.path
+        )
+        self.teardown_app_data()
+
+    def test_manage_api_add_call_with_bad_product(self):
+        api_id = self.setup_useable_api_call()
+        pitchfork.db.autoscale.remove()
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get('/BAD_PRODUCT/manage/api/add',)
+
+        assert response._status_code == 302, (
+            'Invalid response code %s' % response._status_code
+        )
+        location = response.headers.get('Location')
+        o = urlparse.urlparse(location)
+        self.assertEqual(
+            o.path,
+            '/',
+            'Invalid redirect location %s, expected "/"' % o.path
+        )
+        self.teardown_app_data()
+
+    def test_manage_api_edit_call_with_bad_call_id(self):
+        api_id = self.setup_useable_api_call()
+        pitchfork.db.autoscale.remove()
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/autoscale/manage/api/edit/%s' % api_id,
+            )
+
+        assert response._status_code == 302, (
+            'Invalid response code %s' % response._status_code
+        )
+        location = response.headers.get('Location')
+        o = urlparse.urlparse(location)
+        self.assertEqual(
+            o.path,
+            '/autoscale/manage/api',
+            'Invalid redirect location %s, expected "/"' % o.path
+        )
+        self.teardown_app_data()
+
+    def test_manage_api_bad_action(self):
+        api_id = self.setup_useable_api_call()
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/autoscale/manage/api/BAD_ACTION/%s' % api_id,
+            )
+            assert response._status_code == 302, (
+                'Invalid response code %s' % response._status_code
+            )
+            response = c.get(
+                '/autoscale/manage/api/BAD_ACTION/%s' % api_id,
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Invalid action provided, so no action taken',
+            response.data,
+            'Found invalid message in return'
+        )
+        self.teardown_app_data()
+
+    def test_manage_api_bad_product(self):
+        api_id = self.setup_useable_api_call()
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/BAD_PRODUCT/manage/api/delete/%s' % api_id,
+            )
+            assert response._status_code == 302, (
+                'Invalid response code %s' % response._status_code
+            )
+            response = c.get(
+                '/BAD_PRODUCT/manage/api/delete/%s' % api_id,
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Product was not found, so no action taken',
+            response.data,
+            'Found invalid message in return'
+        )
+        self.teardown_app_data()
+
+
     """ End Misc Tests """
 
 if __name__ == '__main__':
