@@ -1,0 +1,74 @@
+{% extends "_base.html" %}
+{% block title %} - Manage DCs{% endblock %}
+{% block addHeaders %}
+{% endblock %}
+{% block body %}
+	<h1>Manage Data Centers</h1>
+    <h4>Setup DC</h4>
+    <form method="POST" action="" class="form-horizontal" id="add_form">
+        {{ form.hidden_tag() }}
+        {% for field in form if field.widget.input_type not in ['hidden', 'submit'] %}
+            <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
+                {{ field.label(class="col-sm-1 control-label") }}
+                <div class="col-xs-3">
+                    {% if field.type == 'TextField' %}
+                        {{ field(class="form-control", **{'type': 'text'})|safe }}
+                    {% elif field.type == 'BooleanField' %}
+                        {{ field(type="checkbox") }}
+                    {% else %}
+                        {{ field(class="form-control") }}
+                    {% endif %}
+                    <span class="form-control-feedback {{ field.name }}" style="display: none; color: #B94A48; float: right; margin: -28px 0 0 0;">Field Required</span>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="form-group">
+            <div class="col-sm-offset-1 col-xs-2">
+                {% for field in form if (field.widget.input_type == 'submit') %}
+                    {{ field(class="btn btn-primary") }}
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+    <h4>Current Data Centers</h4>
+    {% if api_settings %}
+        {% if api_settings.get('dcs') %}
+            <table class="table table-hover table-condensed" style="width: 600px">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th style="text-align: center;">Abbreviation</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dc in api_settings.get('dcs') %}
+                        <tr>
+                            <td>
+                                {{ dc.get('name') }}
+                            </td>
+                            <td style="text-align: center;">
+                                {{ dc.get('abbreviation') }}
+                            </td>
+                            <td>
+                               <a href="/manage/dcs/delete/{{ dc.get('name') }}" class="tooltip-title" title="Delete DC"><span class="fa fa-trash-o"></span></a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>There are currently no DCs setup in the system</p>
+        {% endif %}
+    {% else %}
+        <p>There are currently no DCs setup in the system</p>
+    {% endif %}
+
+{% endblock %}
+{% block jquery %}
+    <script>
+        $(document).ready(function() {
+            $('.tooltip-title').tooltip();
+        });
+    </script>
+{% endblock %}
