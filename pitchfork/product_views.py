@@ -162,7 +162,7 @@ class ProductsView(FlaskView):
                 flash('Form was not saved successfully', 'error')
 
             return render_template(
-                'manage_product.html',
+                'manage/manage_product.html',
                 title=title,
                 form=form,
                 product=product_data,
@@ -191,7 +191,7 @@ class ProductsView(FlaskView):
             api_commands = []
 
         return render_template(
-            'manage_api_calls.html',
+            'manage/manage_api_calls.html',
             title="%s - API Calls" % found_product.title,
             api_commands=api_commands,
             product_url=product_url
@@ -270,7 +270,7 @@ class ProductsView(FlaskView):
                 )
 
             return render_template(
-                'api_call_add_edit.html',
+                'manage/manage_call_add_edit.html',
                 title=title,
                 form=form,
                 count=count,
