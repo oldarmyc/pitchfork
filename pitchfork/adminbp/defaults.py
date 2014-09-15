@@ -671,6 +671,7 @@ def check_and_initialize():
                 'autoscale': {
                     'app_url': '/autoscale',
                     'title': 'Autoscale',
+                    'db_name': 'autoscale',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.autoscale.api.'
@@ -689,6 +690,7 @@ def check_and_initialize():
                 'big_data': {
                     'app_url': '/big_data',
                     'title': 'Big Data',
+                    'db_name': 'big_data',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.bigdata.api.'
@@ -707,6 +709,7 @@ def check_and_initialize():
                 'cbs': {
                     'app_url': '/block_storage',
                     'title': 'Block Storage',
+                    'db_name': 'cbs',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.blockstorage.api.'
@@ -725,6 +728,7 @@ def check_and_initialize():
                 'cloud_backup': {
                     'app_url': '/cloud_backup',
                     'title': 'Backup',
+                    'db_name': 'cloud_backup',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.backup.api.'
@@ -743,6 +747,7 @@ def check_and_initialize():
                 'cloud_db': {
                     'app_url': '/databases',
                     'title': 'Databases',
+                    'db_name': 'cloud_db',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.databases.api.'
@@ -761,6 +766,7 @@ def check_and_initialize():
                 'cloud_dns': {
                     'app_url': '/dns',
                     'title': 'DNS',
+                    'db_name': 'cloud_dns',
                     'require_dc': True,
                     'us_api': (
                         'https://dns.api.rackspacecloud.com/v1.0/{ddi}'
@@ -777,6 +783,7 @@ def check_and_initialize():
                 'cloud_identity': {
                     'app_url': '/identity',
                     'title': 'Identity',
+                    'db_name': 'cloud_identity',
                     'require_dc': True,
                     'us_api': (
                         'https://identity.api.rackspacecloud.com/v2.0'
@@ -793,6 +800,7 @@ def check_and_initialize():
                 'cloud_feeds': {
                     'app_url': '/cloud_feeds',
                     'title': 'Cloud Feeds',
+                    'db_name': 'cloud_feeds',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.feeds.api.rackspacecloud.com'
@@ -809,6 +817,7 @@ def check_and_initialize():
                 'cloud_networks': {
                     'app_url': '/networks',
                     'title': 'Networks',
+                    'db_name': 'cloud_networks',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.servers.api.'
@@ -827,6 +836,7 @@ def check_and_initialize():
                 'fg_servers': {
                     'app_url': '/fg_servers',
                     'title': 'First Gen Servers',
+                    'db_name': 'fg_servers',
                     'require_dc': True,
                     'us_api': (
                         'https://servers.api.rackspacecloud.com/v1.0/{ddi}'
@@ -843,6 +853,7 @@ def check_and_initialize():
                 'images': {
                     'app_url': '/images',
                     'title': 'Images',
+                    'db_name': 'images',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.images.api.'
@@ -861,6 +872,7 @@ def check_and_initialize():
                 'load_balancers': {
                     'app_url': '/load_balancers',
                     'title': 'Load Balancers',
+                    'db_name': 'load_balancers',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.loadbalancers.api.'
@@ -879,6 +891,7 @@ def check_and_initialize():
                 'monitoring': {
                     'app_url': '/monitoring',
                     'title': 'Monitoring',
+                    'db_name': 'monitoring',
                     'us_api': (
                         'https://monitoring.api.rackspacecloud.com/v1.0/{ddi}'
                     ),
@@ -894,6 +907,7 @@ def check_and_initialize():
                 'ng_servers': {
                     'app_url': '/ng_servers',
                     'title': 'Next Gen Servers',
+                    'db_name': 'ng_servers',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.servers.api.'
@@ -912,6 +926,7 @@ def check_and_initialize():
                 'orchestration': {
                     'app_url': '/orchestration',
                     'title': 'Orchestration',
+                    'db_name': 'orchestration',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.orchestration.api.'
@@ -930,6 +945,7 @@ def check_and_initialize():
                 'queues': {
                     'app_url': '/queues',
                     'title': 'Queues',
+                    'db_name': 'queues',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.queues.api.'
@@ -1033,7 +1049,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1076,7 +1091,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1119,7 +1133,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1152,7 +1165,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1220,7 +1232,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1291,7 +1302,7 @@ def check_and_initialize():
                         'required': True,
                         'active': True,
                         'order': 6,
-                        'label': 'View Permissions:'
+                        'label': 'Permissions:'
                     }, {
                         'default_value': '',
                         'field_type': 'BooleanField',
@@ -1305,6 +1316,17 @@ def check_and_initialize():
                         'label': 'Active?:'
                     }, {
                         'default_value': '',
+                        'field_type': 'BooleanField',
+                        'field_choices': '',
+                        'name': 'menu_item_divider',
+                        'default': False,
+                        'style_id': '',
+                        'required': False,
+                        'active': True,
+                        'order': 8,
+                        'label': 'Add Divider?:'
+                    }, {
+                        'default_value': '',
                         'field_type': 'SubmitField',
                         'field_choices': '',
                         'name': 'menu',
@@ -1312,7 +1334,7 @@ def check_and_initialize():
                         'style_id': '',
                         'required': False,
                         'active': True,
-                        'order': 8,
+                        'order': 9,
                         'label': 'Submit'
                     }
                 ],
