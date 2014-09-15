@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import Blueprint, current_app, render_template, g
-from pitchfork.adminbp.decorators import check_perms
+from flask import Blueprint
 
 
 bp = Blueprint(
@@ -25,5 +24,4 @@ bp = Blueprint(
 )
 
 
-import pymongo
-import api_globals
+import views
