@@ -5,7 +5,8 @@ $('.scrollup').click(function(){
 
 $('.toc').click(function(e) {
     e.preventDefault();
-    $('html, body').animate( { scrollTop: ( $( $(this).attr('href') ).offset().top - 60 ) }, 600);
+    var target = $(this).attr('href');
+    $('html, body').animate({ scrollTop: $(target).offset().top - 60}, 600);
 });
 
 $('.testing-button').on('click', function() {
@@ -56,13 +57,13 @@ $('#data_center').on('change', function () {
     }
     $('.code-block').text('None');
     $('.code-blocks-wrapper').hide();
-    if ( global_count > 1 ) {
+    if (global_count > 1) {
         display_message('Responses have been cleared as the data does not apply to the new data center', 'info');
     }
     else {
         global_count += 1;
     }
-    if (require_dc) {
+    if (require_dc === 'true') {
         if ( $('#data_center').val() == 'us' ) {
             $('span.api-call-endpoint').text("{{ api_settings.us_api }}")
         } else if ( $('#data_center').val() == 'uk' ) {
@@ -119,3 +120,154 @@ function formatXml(xml) {
     });
     return escapeHTML(formatted);
 }
+
+function send_api_call(send_to, data) {
+    return $.ajax({
+        url: send_to,
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: "application/json"
+    });
+}
+
+function process_display_api_call(send_to, data, form_submit, form_value) {
+    send_api_call(send_to, data).done(success_process).fail(error_process);
+
+    function success_process(result) {
+        $('#loading_div_' + form_submit).hide();
+        if (!$('#api_results_wrapper_' + form_submit).is(':visible')) {
+            $('#api_results_wrapper_' + form_submit).toggle('slow');
+        }
+        $('#api_url_' + form_submit).text(result.api_url);
+        $('#api_headers_' + form_submit).html(
+            '<pre>' +
+            JSON.stringify(result.request_headers, null, 4) +
+            '</pre>'
+        );
+        if (result.data_package) {
+            if ( $('#api_body_wrapper_' + form_submit).is(':hidden') ) {
+                $('#api_body_wrapper_' + form_submit).toggle();
+            }
+            $('#api_body_' + form_submit).html(
+                '<pre>' +
+                JSON.stringify(result.data_package, null, 4) +
+                '</pre>'
+            );
+        }
+        if (form_value != 'Mock API Call') {
+            $('.response-headers-' + form_submit).show();
+            $('.response-body-' + form_submit).show();
+            $('#api_response_headers_' + form_submit).html(
+                '<pre>' +
+                JSON.stringify(result.response_headers, null, 4) +
+                '</pre>'
+            );
+            var content_type = [];
+            if (result.response_headers['content-type']) {
+                content_type = result.response_headers['content-type'].split(';');
+            }
+            if ( result.response_code >= 400 ) {
+                if (
+                    $.inArray('application/xml', content_type) >= 0 ||
+                    $.inArray('application/atom+xml', content_type) >= 0
+                ) {
+                    $('#api_content_' + form_submit).html(
+                        formatXml(result.response_body)
+                    );
+                } else {
+                    $('#api_content_' + form_submit).html(
+                        '<pre>' +
+                        JSON.stringify(result.response_body, null, 4) +
+                        '</pre>'
+                    );
+                }
+            } else {
+                if (
+                    $.inArray('application/xml', content_type) >= 0 ||
+                    $.inArray('application/atom+xml', content_type) >= 0
+                ) {
+                    $('#api_content_' + form_submit).html(
+                        formatXml(result.response_body)
+                    );
+                } else {
+                    $('#api_content_' + form_submit).html(
+                        '<pre>' +
+                        JSON.stringify(result.response_body, null, 4) +
+                        '</pre>'
+                    );
+                }
+            }
+        } else {
+            $('.response-headers-' + form_submit).hide();
+            $('.response-body-' + form_submit).hide();
+        }
+    }
+
+    function error_process(result) {
+        $('#loading_div_' + form_submit).hide();
+    }
+}
+
+$('.api_call_submit').on('click', function() {
+    var form_submit = $(this).attr('name');
+    var form_value = $(this).attr('value');
+    $("#" + form_submit + "_form").unbind('submit').bind('submit', function(e){
+        e.preventDefault();
+        $('#loading_div_' + form_submit).show();
+        var sending = {};
+        var send_to = 'api/call/process';
+        var validated = false;
+        var data = $("#" + form_submit + "_form").serialize();
+        $.each(data.split('&'), function (index, elem) {
+            var vals = elem.split('=');
+            if (vals[0] === 'app_url_link' && vals[1] != 'None') {
+                send_to = unescape(vals[1].replace(/\+/g, ' ')) + '/api/call/process';
+            }
+            sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
+        });
+        var message = "You must provide the following data before the request can be sent:<br /><br />";
+        var dc_check = false;
+        if ( require_dc && form_value != 'Mock API Call' ) {
+            if ( validate_field('data_center') ) {
+                sending['data_center'] = $('#data_center').val();
+                sending['ddi'] = $('#ddi').val().trim();
+                dc_check = true;
+            } else {
+                $('#data_center').addClass('error');
+                if (restrict_dcs === 'true') {
+                    message += "<span class='text-danger'>Region</span>";
+                } else {
+                    message += "<span class='text-danger'>Data Center</span>";
+                }
+            }
+        } else if (require_dc === 'true') {
+            if ( $('#data_center').val() != 'none' ) {
+                sending['data_center'] = $('#data_center').val();
+                sending['ddi'] = $('#ddi').val().trim();
+            }
+        } else {
+            dc_check = true;
+            sending['ddi'] = $('#ddi').val().trim();
+        }
+        if (dc_check) {
+            sending['testing'] = testing;
+            validated = true;
+        }
+        if (form_value == 'Mock API Call') {
+            validated = true;
+            sending['mock'] = true;
+        }
+        if (validated) {
+            process_display_api_call(
+                send_to,
+                sending,
+                form_submit,
+                form_value
+            );
+        }
+        else {
+            bootbox.alert(message);
+            $('#loading_div_' + form_submit).hide();
+        }
+    });
+});
