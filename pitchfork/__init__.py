@@ -111,7 +111,6 @@ def utility_processor():
     )
 
 
-# Set g to the db so that each blueprint can use it
 @app.before_request
 def before_request():
     g.db = db
@@ -142,8 +141,8 @@ def search():
     search_string = request.json.get('search_string')
     api_results = search_for_calls(search_string)
     return render_template(
-        '_api_call_wrapper_template.html',
-        most_accessed=api_results
+        '_api_call_template.html',
+        call_loop=api_results
     )
 
 
