@@ -241,7 +241,7 @@ $('.api_call_submit').on('click', function() {
                 }
             }
         } else if (require_dc === 'true') {
-            if ( $('#data_center').val() != 'none' ) {
+            if ($('#data_center').length > 0 && $('#data_center').val() != 'None') {
                 sending['data_center'] = $('#data_center').val();
                 sending['ddi'] = $('#ddi').val().trim();
             }
