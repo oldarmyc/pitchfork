@@ -14,7 +14,7 @@
 
 from dateutil import tz, parser, relativedelta
 from datetime import datetime, timedelta, date
-from flask import g, session
+from flask import g
 from operator import itemgetter
 from isoweek import Week
 
