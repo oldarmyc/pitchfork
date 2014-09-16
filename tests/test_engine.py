@@ -7,7 +7,7 @@ import re
 
 
 from datetime import datetime, timedelta
-from dateutil import tz, parser
+from dateutil import parser
 from uuid import uuid4
 
 
@@ -47,43 +47,43 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def setup_useable_logged_history(self, days=None):
         data = {
-        	'username': 'bobo1234',
-        	'ddi': '123456',
-        	'details': {
-        		'description': 'Retrieve a listing of the feed catalog',
-        		'doc_url': (
+            'username': 'bobo1234',
+            'ddi': '123456',
+            'details': {
+                'description': 'Retrieve a listing of the feed catalog',
+                'doc_url': (
                     'http://docs.rackspace.com/cloud-feeds/api/v1.0/feeds-'
                     'getting-started/content/Cloud_Feeds_Catalog.html'
                 ),
-        		'id': '53e50582192a8b6a41d06d3f',
-        		'title': 'Retrieve Feed Catalog'
-        	},
-        	'data_center': 'dfw',
-        	'product': 'Cloud Feeds',
-        	'request': {
-        		'url': 'https://dfw.feeds.api.rackspacecloud.com/123456/',
-        		'verb': 'GET',
-        		'data': None
-        	},
-        	'response': {
-        		'body': None,
-        		'headers': {
-        			'content-length': '510',
-        			'via': '1.1 Repose (Repose/5.0.2)',
-        			'content-language': 'en-US',
-        			'content-encoding': 'gzip',
-        			'accept-ranges': 'bytes',
-        			'vary': 'Accept-Encoding',
-        			'x-newrelic-app-data': 'misc_data',
-        			'server': 'Jetty(8.y.z-SNAPSHOT)',
-        			'last-modified': 'Tue, 29 Jul 2014 17:17:46 GMT',
-        			'connection': 'Keep-Alive',
-        			'etag': 'W/\"5406-1406654266000\"',
-        			'date': 'Fri, 08 Aug 2014 19:48:27 GMT',
-        			'content-type': 'application/xml;charset=UTF-8'
-        		},
-        		'code': 200
-        	}
+                'id': '53e50582192a8b6a41d06d3f',
+                'title': 'Retrieve Feed Catalog'
+            },
+            'data_center': 'dfw',
+            'product': 'Cloud Feeds',
+            'request': {
+                'url': 'https://dfw.feeds.api.rackspacecloud.com/123456/',
+                'verb': 'GET',
+                'data': None
+            },
+            'response': {
+                'body': None,
+                'headers': {
+                    'content-length': '510',
+                    'via': '1.1 Repose (Repose/5.0.2)',
+                    'content-language': 'en-US',
+                    'content-encoding': 'gzip',
+                    'accept-ranges': 'bytes',
+                    'vary': 'Accept-Encoding',
+                    'x-newrelic-app-data': 'misc_data',
+                    'server': 'Jetty(8.y.z-SNAPSHOT)',
+                    'last-modified': 'Tue, 29 Jul 2014 17:17:46 GMT',
+                    'connection': 'Keep-Alive',
+                    'etag': 'W/\"5406-1406654266000\"',
+                    'date': 'Fri, 08 Aug 2014 19:48:27 GMT',
+                    'content-type': 'application/xml;charset=UTF-8'
+                },
+                'code': 200
+            }
         }
         if days:
             data['completed_at'] = datetime.now() + timedelta(days=days)
@@ -326,7 +326,11 @@ class PitchforkEngineTests(unittest.TestCase):
     """ Report Setup """
 
     def test_engine_admin_setup_settings_good(self):
-        settings = pitchfork.db.settings.update({}, {'$unset': {'reporting': 1}})
+        settings = pitchfork.db.settings.update(
+            {}, {
+                '$unset': {'reporting': 1}
+            }
+        )
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
@@ -375,7 +379,11 @@ class PitchforkEngineTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_engine_admin_setup_settings_bad_data(self):
-        settings = pitchfork.db.settings.update({}, {'$unset': {'reporting': 1}})
+        settings = pitchfork.db.settings.update(
+            {}, {
+                '$unset': {'reporting': 1}
+            }
+        )
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)

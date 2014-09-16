@@ -1,5 +1,4 @@
 import pitchfork
-import flask
 import unittest
 import happymongo
 import json
@@ -8,10 +7,7 @@ import re
 import mock
 
 
-from datetime import datetime, timedelta
-from dateutil import tz
 from uuid import uuid4
-from bson.objectid import ObjectId
 
 
 class EdgeCasesTests(unittest.TestCase):
@@ -644,7 +640,7 @@ class EdgeCasesTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_manage_api_with_bad_product(self):
-        api_id = self.setup_useable_api_call()
+        self.setup_useable_api_call()
         pitchfork.db.autoscale.remove()
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
@@ -665,7 +661,7 @@ class EdgeCasesTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_manage_api_add_call_with_bad_product(self):
-        api_id = self.setup_useable_api_call()
+        self.setup_useable_api_call()
         pitchfork.db.autoscale.remove()
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:

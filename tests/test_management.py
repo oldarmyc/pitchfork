@@ -1,5 +1,4 @@
 import pitchfork
-import flask
 import unittest
 import happymongo
 import json
@@ -8,11 +7,8 @@ import re
 import mock
 
 
-from flask import session
-from datetime import datetime, timedelta
-from dateutil import tz
+from datetime import datetime
 from uuid import uuid4
-from bson.objectid import ObjectId
 
 
 class PitchforkTests(unittest.TestCase):
@@ -246,7 +242,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_login_page_placeholder(self):
-        with pitchfork.app.test_client() as c:
+        with pitchfork.app.test_client():
             response = self.app.get('/admin/login')
 
         self.assertIn(
@@ -2671,7 +2667,7 @@ class PitchforkTests(unittest.TestCase):
                 'menu_item_status': 'y',
                 'menu_permissions': 'administrators'
             }
-            add_response = c.post(
+            c.post(
                 '/admin/settings/menu',
                 data=data,
                 follow_redirects=True
@@ -2734,25 +2730,24 @@ class PitchforkTests(unittest.TestCase):
                 'menu_item_status': 'y',
                 'menu_permissions': 'administrators'
             }
-            add_response = c.post(
+            c.post(
                 '/admin/settings/menu',
                 data=data,
                 follow_redirects=True
             )
             data = {'name': 'test'}
-            response_promote = c.post(
+            c.post(
                 '/admin/settings/menu/promote',
                 data=json.dumps(data),
                 content_type='application/json',
                 follow_redirects=True
             )
-            response_promote = c.post(
+            c.post(
                 '/admin/settings/menu/promote',
                 data=json.dumps(data),
                 content_type='application/json',
                 follow_redirects=True
             )
-
             response = c.get(
                 '/admin/settings/menu/remove/test',
                 follow_redirects=True
@@ -2863,7 +2858,6 @@ class PitchforkTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get('/admin/settings/menu')
-            token = self.retrieve_csrf_token(response.data)
             response = c.get(
                 '/admin/settings/menu/remove/test',
                 follow_redirects=True
@@ -2878,7 +2872,6 @@ class PitchforkTests(unittest.TestCase):
             )
         )
         settings = pitchfork.db.settings.find_one()
-        top_level_menu = settings.get('top_level_menu')
         menus = settings.get('menu')
         db_top_order = pitchfork.db.settings.find_one(
             {
@@ -3107,7 +3100,6 @@ class PitchforkTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get('/manage/dcs')
-            token = self.retrieve_csrf_token(response.data)
             data = {
                 'name': 'Test',
                 'abbreviation': 'TEST'
@@ -3271,7 +3263,6 @@ class PitchforkTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get('/manage/dcs')
-            token = self.retrieve_csrf_token(response.data)
             data = {
                 'name': 'GET',
                 'active': True
