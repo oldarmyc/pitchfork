@@ -75,13 +75,11 @@
             $("#data_center").change();
         });
 
-        function submitSearch() {
-            var search_string = $('#search_api').val();
-            var sending = {};
-            sending['search_string'] = search_string;
+        $('.search-button').on('click', function() {
+            var sending = {'search_string': $('#search_api').val()};
             $.ajax({
                 url: '/search',
-                type: "post",
+                type: 'POST',
                 data: JSON.stringify(sending),
                 contentType: "application/json",
                 success: function(data){
@@ -91,6 +89,6 @@
                     $('#api_call_items').html('<strong>There was an error with the request</strong>');
                 }
             });
-        }
+        });
     </script>
 {% endblock %}
