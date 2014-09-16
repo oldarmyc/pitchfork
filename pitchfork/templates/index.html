@@ -1,66 +1,65 @@
-{% extends "_fluid_base.html" %}
+{% extends "_base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block addHeaders %}
-    <style>
-        div.loading-div, div.loading-div-vars {
-            float: left;
-            margin: -46px 0 0 250px;
-        }
-    </style>
+    <link href="{{ url_for('static', filename='css/ui.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
 {% endblock %}
 {% block body %}
-    <div class="row-fluid">
-        <div class="span3">
-            <div class="well sidebar-nav">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="well">
                 {% if active_products %}
-                    <ul class="nav nav-list">
-                        <li class="nav-header">Cloud Products</li>
+                    <ul class="nav nav-pills nav-stacked left-nav">
+                        <li class="navbar-header">Cloud Products</li>
                         {% for product in active_products %}
                             {% set setting = api_settings.get(product) %}
                             <li>
-                                {% if setting %}
-                                    <a href="{{ setting.get('app_url') }}" title="{{ setting.get('title') }}">{{ setting.get('title') }}</a>
-                                {% endif %}
+                                <a href="{{ setting.get('app_url') }}" title="{{ setting.get('title') }}">{{ setting.get('title') }}</a>
                             </li>
                         {% endfor %}
                     </ul>
                 {% endif %}
             </div>
         </div>
-        <div class="span9">
-            <div class="hero-unit">
-                <h1>Pitchfork</h1>
-                <p>Cloud API interactive Website Application</p>
+        <div class="col-md-10">
+            <div class="jumbotron">
+                <h1 class="site-header">{{ app_title }}</h1>
+                {{ app_well|safe }}
                 {% if not session.get('username') %}
                     <p><a href="/admin/login" title="Login to Application" class="btn btn-primary">Login to Application</a></p>
                 {% endif %}
             </div>
-            <div class="row-fluid">
-                {% if session.get('username') %}
-                    <h3>Search</h3>
-                    <p>
-                        <input type="text" placeholder="Search Title and Description" id="search_api" name="search_api" class="search-input">
-                        <a onclick="submitSearch();" class="btn btn-info search-button" title="Search API Calls">Search</a>
-                    </p>
-                    <div id="front_call_wrapper">
-                        <h3>Most Accessed Calls</h3>
-                        <div id="global_vars">
-                            <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
-                            <span class="input-label">Data Center:</span><select id="data_center" name="data_center">
-                                <option value="none" selected="selected">Select Data Center</option>
-                                {% for option in data_centers %}
-                                    <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div id="api_call_items">
-                            {% include "_api_call_wrapper_template.html" %}
-                        </div>
-                    </div>
+            <h3>Search for API Call</h3>
+            <p>
+                <input type="text" placeholder="Search Title and Description" id="search_api" name="search_api" class="search-input">
+                <button class="btn btn-info search-button" title="Search API Calls">Search</button>
+            </p>
+            {% if session.get('username') %}
+                <h3>Most Accessed Calls</h3>
+                <div id="global_vars">
+                    <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
+                    <label class="region-dc-label">Data Center:</label>
+                    <select id="data_center" name="data_center">
+                        <option value="none" selected="selected">Select Data Center</option>
+                        {% for option in data_centers %}
+                            <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% else %}
+                <input id="ddi" name="ddi" type="hidden" value="None"></input>
+                <input id="data_center" name="data_center" type="hidden" value="None"></input>
+            {% endif %}
+            <div id="api_call_items">
+                {% if most_accessed is string %}
+                    <p>{{ most_accessed }}</p>
+                {% else %}
+                    {% set call_loop = most_accessed %}
+                    {% include '_api_call_template.html' %}
+                    {# include "_api_call_wrapper_template.html" #}
                 {% endif %}
             </div>
         </div>
-        <div style="clear: both;"></div>
     </div>
 
 {% endblock %}
