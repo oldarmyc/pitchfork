@@ -6,7 +6,7 @@ $('.scrollup').click(function(){
 $('.toc').click(function(e) {
     e.preventDefault();
     var target = $(this).attr('href');
-    $('html, body').animate({ scrollTop: $(target).offset().top - 60}, 600);
+    $('html, body').animate({ scrollTop: $(target).offset().top - 200}, 600);
 });
 
 $('.testing-button').on('click', function() {
