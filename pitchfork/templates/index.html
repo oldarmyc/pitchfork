@@ -64,164 +64,15 @@
 
 {% endblock %}
 {% block jquery %}
-    <script src="{{ url_for('static', filename='js/bootstrap-modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
     <script>
-
         var global_count = 0;
-
-        function validate_field(field_name) {
-            if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0 & $.trim($('#' + field_name).val()) != 'none' ) {
-                return true;
-            }
-            else {
-                $('#' + field_name).addClass('error');
-                return false;
-            }
-        }
-
-        $("#data_center").change(function () {
-            if ($(this).val() == "none") {
-                $(this).addClass("empty");
-            }
-            else {
-                $(this).removeClass("empty");
-            }
-            // Clear out results on page as the DC changing affects that data and makes it invalid
-            $('.code-block').text('None');
-            // Hide the results after clearing them
-            $('.code-blocks-wrapper').hide();
-            if ( global_count > 1 ) {
-                $('#generated_messages').html('<div class="alert"><button type="button" class="close" data-dismiss="alert">&times;</button><p>Reponses have been cleared as the data does not apply to the new data center</p></div>');
-            }
-            else {
-                global_count += 1;
-            }
-        });
-
-        $("#data_center").change();
-
-        function show_element(div_id, index) {
-            $('.' + div_id).toggle('slow', function() {
-                if ( $('.' + div_id).is(':hidden') ) {
-                    $('.toggle-element-' + index).html('API Call Details');
-                }
-                else {
-                    $('.toggle-element-' + index).html('Hide API Details');
-                }
-            });
-        }
-
-        $('#api_call_items').on('click', '.api_call_submit', function() {
-            var form_submit = $(this).attr('name');
-            var form_value = $(this).attr('value');
-            $("#" + form_submit + "_form").unbind('submit').bind('submit', function(e){
-                e.preventDefault();
-                $('#loading_div_' + form_submit).show();
-                var sending = {}
-                var validated = false
-                var data = $("#" + form_submit + "_form").serialize()
-                var send_to = '';
-                $.each(data.split('&'), function (index, elem) {
-                    var vals = elem.split('=');
-                    if ( vals[0] == 'app_url_link' ) {
-                        send_to = unescape(vals[1].replace(/\+/g, ' ')) + '/api_call/process'
-                    }
-                    sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
-                });
-                var message = "You must provide the following data before the request can be sent:<br /><br />"
-                var dc_check = false
-
-                if ( form_value != 'Mock API Call' ) {
-                    if ( validate_field('data_center') ) {
-                        sending['data_center'] = $('#data_center').val();
-                        sending['ddi'] = $('#ddi').val().trim();
-                        dc_check = true;
-                    } else {
-                        $('#data_center').addClass('error');
-                        message += "<strong>Data Center</strong>";
-                    }
-                } else {
-                    if ( $('#data_center').val() != 'none' ) {
-                        sending['data_center'] = $('#data_center').val();
-                    }
-                    dc_check = true;
-                    sending['ddi'] = $('#ddi').val().trim();
-                }
-
-                if ( dc_check ) {
-                    sending['testing'] = false;
-                    validated = true;
-                }
-
-                if ( form_value == 'Mock API Call') {
-                    validated = true;
-                    sending['mock'] = true;
-                }
-
-                if ( validated ) {
-                    $.ajax({
-                        url: send_to,
-                        type: "post",
-                        data: JSON.stringify(sending),
-                        contentType: "application/json",
-                        success: function(data){
-                            $('#loading_div_' + form_submit).hide();
-                            if ( !$('#api_results_wrapper_' + form_submit).is(':visible') ) {
-                                $('#api_results_wrapper_' + form_submit).toggle('slow')
-                            }
-                            $('#api_url_' + form_submit).text(data.api_url)
-
-                            var header_content = JSON.stringify(data.request_headers, null, 4);
-                            $('#api_headers_' + form_submit).html('<pre>' + header_content + '</pre>')
-
-                            if ( data.data_package ) {
-                                if ( $('#api_body_wrapper_' + form_submit).is(':hidden') ) {
-                                    $('#api_body_wrapper_' + form_submit).toggle();
-                                }
-                                var data_format = JSON.stringify(data.data_package, null, 4);
-                                $('#api_body_' + form_submit).html('<pre>' + data_format + '</pre>');
-                            }
-
-                            if ( form_value != 'Mock API Call' ) {
-                                $('.response-headers-' + form_submit).show();
-                                $('.response-body-' + form_submit).show();
-
-                                var response_headers = JSON.stringify(data.response_headers, null, 4);
-                                $('#api_response_headers_' + form_submit).html('<pre>' + response_headers + '</pre>')
-
-                                var content_type = data.response_headers['content-type'].split(';');
-                                if ( data.response_code >= 400 ) {
-                                    if ( $.inArray('application/xml', content_type) >= 0 || $.inArray('application/atom+xml', content_type) >= 0 ) {
-                                        $('#api_content_' + form_submit).html(formatXml(data.response_body));
-                                    } else {
-                                        var response_body = JSON.stringify(data.response_body, null, 4);
-                                        $('#api_content_' + form_submit).html('<pre>' + response_body + '</pre>');
-                                    }
-                                }
-                                else {
-                                    if ( $.inArray('application/xml', content_type) >= 0 || $.inArray('application/atom+xml', content_type) >= 0 ) {
-                                        $('#api_content_' + form_submit).html(formatXml(data.response_body));
-                                    } else {
-                                        var response_content = JSON.stringify(data.response_body, null, 4);
-                                        $('#api_content_' + form_submit).html('<pre>' + response_content + '</pre>');
-                                    }
-                                }
-                            } else {
-                                $('.response-headers-' + form_submit).hide();
-                                $('.response-body-' + form_submit).hide();
-                            }
-                        },
-                        error: function(data) {
-                            $('#loading_div_' + form_submit).hide();
-                        }
-                    });
-                }
-                else {
-                    bootbox.alert(message);
-                    $('#loading_div_' + form_submit).hide();
-                }
-            });
+        var require_dc = 'true';
+        var restrict_dcs = '{{ restrict_dcs|lower }}';
+        var testing = 'false';
+        $(document).ready(function() {
+            $("#data_center").change();
         });
 
         function submitSearch() {
@@ -240,38 +91,6 @@
                     $('#api_call_items').html('<strong>There was an error with the request</strong>');
                 }
             });
-        }
-
-        function escapeHTML(data) {
-            return data.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g, '<br />').replace(/\s\s/g, '&nbsp;&nbsp;');
-        }
-
-        function formatXml(xml) {
-            var formatted = '';
-            var reg = /(>)(<)(\/*)/g;
-            xml = xml.toString().replace(reg, '$1\r\n$2$3');
-            var pad = 0;
-            $.each(xml.split('\r\n'), function(index, node) {
-                var indent = 0;
-                if (node.match( /.+<\/\w[^>]*>$/ )) {
-                    indent = 0;
-                } else if (node.match( /^<\/\w/ )) {
-                    if (pad != 0) {
-                        pad -= 2;
-                    }
-                } else if (node.match( /^<\w[^>]*[^\/]>.*$/ )) {
-                    indent = 2;
-                } else {
-                    indent = 0;
-                }
-                var padding = '';
-                for (var i = 0; i < pad; i++) {
-                    padding += ' ';
-                }
-                formatted += padding + node + '\r\n';
-                pad += indent;
-            });
-            return escapeHTML(formatted);
         }
     </script>
 {% endblock %}
