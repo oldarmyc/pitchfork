@@ -64,8 +64,13 @@ input[type="text"] {
 
 .testing-button,
 .active-button {
-    margin-top: -3px;
     margin-left: 100px;
+}
+
+.testing-button,
+.active-button,
+.search-button {
+    margin-top: -3px;
 }
 
 .danger-note {
