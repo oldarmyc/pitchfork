@@ -36,7 +36,6 @@
                 <tr>
                     <th>Username</th>
                     <th>Name</th>
-                    <th>Email</th>
                     <th></th>
                 </tr>
             </thead>
@@ -48,9 +47,6 @@
                         </td>
                         <td>
                             {{ user.get('admin_name') }}
-                        </td>
-                        <td>
-                            {{ user.get('admin_email') }}
                         </td>
                         <td>
                             <a href="/admin/settings/remove/admin/{{ user.get('admin') }}" class="tooltip-title" title="Remove administrator from system"><span class="fa fa-trash-o"></span></a>
