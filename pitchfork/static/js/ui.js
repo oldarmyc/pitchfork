@@ -256,6 +256,8 @@ $('.api_call_submit').on('click', function() {
         if (form_value == 'Mock API Call') {
             validated = true;
             sending['mock'] = true;
+            sending['data_center'] = '{data_center}';
+            sending['ddi'] = '{ddi}';
         }
         if (validated) {
             process_display_api_call(
