@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from pitchfork import app
-from flask import (Flask, g, render_template, request, redirect, url_for,
-    flash, jsonify)
+from flask import g, render_template, request, redirect
+from flask import url_for, flash, jsonify
 from flask.ext.classy import FlaskView, route
-from models import Product, Call, Variable
+from models import Product, Call
 from pitchfork.adminbp.decorators import check_perms
 from bson.objectid import ObjectId
 
@@ -24,7 +24,6 @@ from bson.objectid import ObjectId
 import global_helper
 import global_forms
 import pymongo
-import json
 
 
 class ProductsView(FlaskView):
@@ -297,7 +296,7 @@ class ProductsView(FlaskView):
         action_map = {'delete': True, 'confirm': True, 'unconfirm': False}
         found_product = self.retrieve_product(product)
         if type(found_product) is not str:
-            if action_map.has_key(action):
+            if action in action_map:
                 if getattr(g.db, found_product.db_name).find_one(
                     {'_id': ObjectId(api_id)}
                 ):

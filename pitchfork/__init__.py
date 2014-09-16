@@ -14,7 +14,6 @@
 
 from flask import Flask, render_template, g, request
 from happymongo import HapPyMongo
-from datetime import timedelta
 from config import config
 
 
@@ -38,11 +37,11 @@ app.register_blueprint(engine_bp, url_prefix='/engine')
 mongo, db = HapPyMongo(config)
 
 
-from global_helper import (front_page_most_accessed, search_for_calls,
-    gather_history)
+from global_helper import front_page_most_accessed, search_for_calls
+from global_helper import gather_history
 
 
-import product_views
+import product_views  # noqa
 
 
 @app.template_filter()

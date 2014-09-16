@@ -1,5 +1,4 @@
 import pitchfork
-import flask
 import unittest
 import happymongo
 import json
@@ -8,8 +7,6 @@ import re
 import mock
 
 
-from datetime import datetime, timedelta
-from dateutil import tz
 from uuid import uuid4
 from bson.objectid import ObjectId
 
@@ -240,7 +237,7 @@ class ProductTests(unittest.TestCase):
         assert updated, 'Product was not updated successfully'
         active_products = api_settings.get('active_products')
         not_active = False
-        if not 'autoscale' in active_products:
+        if 'autoscale' not in active_products:
             not_active = True
 
         assert not_active, 'Product was not removed from active products'

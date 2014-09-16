@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import g, session, current_app
+from flask import g, session
 from dateutil import tz
 from models import Variable
 
@@ -621,8 +621,6 @@ def log_api_call_request(
 
 def gather_history():
     history = []
-    username = session.get('username')
-
     history = g.db.history.find(
         {
             'username': session.get('username')
