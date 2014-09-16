@@ -100,7 +100,9 @@
                                     {% endfor %}
                                 </table>
                                 <p style="font-size: 12px;"><span class="text-danger">*</span> Required for API Call</p>
-                                <input name="{{ call_fixed_title }}-{{ prod_fixed_title }}" class="api_call_submit btn btn-warning" type="submit" value="Send API Call">
+                                {% if session.get('username') %}
+                                    <input name="{{ call_fixed_title }}-{{ prod_fixed_title }}" class="api_call_submit btn btn-warning" type="submit" value="Send API Call">
+                                {% endif %}
                                 <input name="{{ call_fixed_title }}-{{ prod_fixed_title }}" class="api_call_submit btn btn-info" type="submit" value="Mock API Call">
                             </form>
                             <div id="loading_div_{{ call_fixed_title }}-{{ prod_fixed_title }}" class="loading-div" style="display: none;">
@@ -113,7 +115,9 @@
                                 <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
                                 <input id="app_url_link" name="app_url_link" type="hidden" value="{{ api_call.get('app_link') }}">
                                 <input id="api_endpoint" name="api_endpoint" type="hidden" value="{{ api_call.get('endpoint') }}">
-                                <input name="{{ call_fixed_title }}-{{ prod_fixed_title }}" class="api_call_submit btn btn-warning no-var-btn" type="submit" value="Send API Call">
+                                {% if session.get('username') %}
+                                    <input name="{{ call_fixed_title }}-{{ prod_fixed_title }}" class="api_call_submit btn btn-warning" type="submit" value="Send API Call">
+                                {% endif %}
                                 <input name="{{ call_fixed_title }}-{{ prod_fixed_title }}" class="api_call_submit btn btn-info no-var-btn" type="submit" value="Mock API Call">
                             </form>
                             <div id="loading_div_{{ call_fixed_title }}-{{ prod_fixed_title }}" class="loading-div" style="display: none;">
