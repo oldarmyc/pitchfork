@@ -8,29 +8,31 @@
     <div id="static_div_header">
         <div id="generated_messages">&nbsp;</div>
         <h2>{{ title }}{% if testing %} - Testing API Calls{% else %} - API Calls{% endif %}</h2>
-        <div id="global_vars">
-            <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
-            {% if require_dc %}
-                <label class="region-dc-label">{% if restrict_dcs %}Region{% else %}Data Center{% endif %}:</label>
-                <select id="data_center" name="data_center">
-                    {% if restrict_dcs %}
-                        <option value="none" selected="selected">Select Region</option>
-                    {% else %}
-                        <option value="none" selected="selected">Select Data Center</option>
-                    {% endif %}
-                    {% for option in data_centers %}
-                        <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
-                    {% endfor %}
-                </select>
-            {% endif %}
-			{% if check_if_admin %}
-                {% if not testing %}
-                    <button class="btn btn-info testing-button">View Testing Calls</button>
-                {% else %}
-                    <button class="btn btn-info active-button">View Active Calls</button>
+        {% if session.get('username') %}
+            <div id="global_vars">
+                <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
+                {% if require_dc %}
+                    <label class="region-dc-label">{% if restrict_dcs %}Region{% else %}Data Center{% endif %}:</label>
+                    <select id="data_center" name="data_center">
+                        {% if restrict_dcs %}
+                            <option value="none" selected="selected">Select Region</option>
+                        {% else %}
+                            <option value="none" selected="selected">Select Data Center</option>
+                        {% endif %}
+                        {% for option in data_centers %}
+                            <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
+                        {% endfor %}
+                    </select>
                 {% endif %}
-            {% endif %}
-        </div>
+                {% if check_if_admin %}
+                    {% if not testing %}
+                        <button class="btn btn-info testing-button">View Testing Calls</button>
+                    {% else %}
+                        <button class="btn btn-info active-button">View Active Calls</button>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
     <div class="row">
         <div class="col-md-2">
