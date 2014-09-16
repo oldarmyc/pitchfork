@@ -33,11 +33,18 @@
 				<div class="navbar-collapse collapse">
 					<ul class="nav navbar-nav">
 						{% set menu = get_menu %}
+						{% set parent = '' %}
 						{% for menu_item in menu %}
 							{% if menu_item.get('parent') == '' %}
 								<li><a href="{{ menu_item.get('url') }}">{{ menu_item.get('display_name') }}</a></li>
 							{% else %}
-								{% if menu_item.get('parent') == menu[(loop.index - 2)].get('parent') %}
+								{% if menu_item.get('parent') and parent == '' %}
+									{% set parent = menu_item.get('parent') %}
+									<li class="dropdown">
+									<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ get_parent_name(menu_item.get('parent')) }} <b class="caret"></b></a>
+									<ul class="dropdown-menu">
+										<li><a href="{{ menu_item.get('url') }}">{{ menu_item.get('display_name') }}</a></li>
+								{% elif menu_item.get('parent') == menu[(loop.index - 2)].get('parent') %}
 									<li><a href="{{ menu_item.get('url') }}">{{ menu_item.get('display_name') }}</a></li>
 									{% if menu_item.get('divider') %}
 										<li class="divider"></li>
