@@ -42,3 +42,64 @@ a.scrollup {
     text-indent: -9999px;
     width: 40px;
 }
+
+a.product {
+    right: 40px;
+}
+
+.region-dc-label {
+    padding: 10px;
+}
+
+select#data_center,
+input[type="text"] {
+    height: 34px;
+    padding: 6px 12px;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    color: #555;
+    width: 200px;
+    line-height: 1.42857;
+}
+
+.testing-button,
+.active-button {
+    margin-top: -3px;
+    margin-left: 100px;
+}
+
+.danger-note {
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.panel-title {
+    padding: 5px 20px;
+}
+
+.panel-title h4 {
+    width: 700px;
+}
+
+.panel-title h4 button {
+    float: right;
+    /*margin: -14px 100px 0 0;*/
+}
+
+.dl-horizontal dt {
+    width: 70px;
+}
+
+.dl-horizontal dd {
+    margin-left: 90px;
+}
+
+.loading-div {
+    float: left;
+    margin: -28px 0 0 250px;
+}
+
+div#global_vars select.error {
+    border: 1px solid #a94442;
+    color: #a94442;
+}
