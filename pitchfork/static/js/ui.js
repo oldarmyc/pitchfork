@@ -76,7 +76,7 @@ $('#data_center').on('change', function () {
 
 function display_message(response_message, alert_class) {
     var message = '<div class="alert alert-' + alert_class +'"><button type="button" class="close" data-dismiss="alert">&times;</button><p>' + response_message + '</p></div>';
-    $('#generated_messages').html(message);
+    $('#generated_messages_product').html(message);
 }
 
 function validate_field(field_name) {
