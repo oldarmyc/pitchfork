@@ -1,6 +1,8 @@
-{% extends "_base_call.html" %}
+{% extends "_base.html" %}
 {% block title %} - {{ title }}{% endblock %}
 {% block addHeaders %}
+    <link href="{{ url_for('static', filename='css/ui.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
 {% endblock %}
 {% block body %}
     <div id="static_div_header">
@@ -9,7 +11,8 @@
         <div id="global_vars">
             <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
             {% if require_dc %}
-                <span class="input-label">{% if restrict_dcs %}Region{% else %}Data Center{% endif %}:</span><select id="data_center" name="data_center">
+                <label class="region-dc-label">{% if restrict_dcs %}Region{% else %}Data Center{% endif %}:</label>
+                <select id="data_center" name="data_center">
                     {% if restrict_dcs %}
                         <option value="none" selected="selected">Select Region</option>
                     {% else %}
@@ -20,16 +23,20 @@
                     {% endfor %}
                 </select>
             {% endif %}
-			{% if not testing and check_if_admin %}
-                <a onClick="goto_testing()" class="btn btn-primary testing-button">Goto Testing</a>
+			{% if check_if_admin %}
+                {% if not testing %}
+                    <button class="btn btn-info testing-button">View Testing Calls</button>
+                {% else %}
+                    <button class="btn btn-info active-button">View Active Calls</button>
+                {% endif %}
             {% endif %}
         </div>
     </div>
-    <div class="row-fluid">
-        <div class="span3">
-            <div class="well sidebar-nav">
-                <ul class="nav nav-list">
-                    <li class="nav-header">API Calls</li>
+    <div class="row">
+        <div class="col-md-2">
+            <div class="well">
+                <ul class="nav nav-pills nav-stacked left-nav">
+                    <li class="navbar-header">API Calls</li>
                     {% for menu in api_calls %}
                         <li>
                             <a href="#{{ menu.get('title')|lower|slug }}" class="toc">{{ menu.get('title') }}</a>
@@ -38,188 +45,168 @@
                 </ul>
             </div>
         </div>
-        <div class="span9">
-            <div id="global_call_wrapper">
-                {% for api_call in api_calls.rewind() %}
-                    <section id="{{ api_call.get('title')|lower|slug }}">
-                        <div id="api_call_wrapper" class="{{ loop.cycle('bg-odd', 'bg-even') }}">
-                            <h4>{{ api_call.get('title') }}</h4>
-                            <div id="api_description">
-                                {{ api_call.get('short_description')|nl2br|tab2spaces|safe }}
-                            </div>
-                            <div id="show_hide" class="out-api">
-                                <a onclick="show_element('{{ api_call.get('title')|lower|slug }}', {{loop.index}})" class="toggle-element-{{ loop.index }} btn btn-primary">API Call Details</a>
-                            </div>
-                            <div id="total_api_wrap">
-                                <div id="api_call_inner" class="{{ api_call.get('title')|lower|slug }}" style="display: none;">
-                                    <div id="basic_api_info">
-                                        <table>
-                                            <tr>
-                                                <td>
-                                                    <span class="ep-label">Endpoint:</span>
-                                                </td>
-                                                <td>
-                                                    <span class="basic-values api-call-endpoint">{{ api_settings.us_api }}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <span class="ep-label">URI:</span>
-                                                </td>
-                                                <td>
-                                                    <span class="basic-values">{{ api_call.get('api_uri') }}</span>
-                                                </td>
-                                            </tr>
-                                            {% if api_call.get('add_to_header') %}
-                                                <tr>
-                                                    <td>
-                                                        <span class="ep-label">Add Header:</span>
-                                                    </td>
-                                                    <td>
-                                                        <span class="basic-values">{{ api_call.get('custom_header_key') }}: {{ api_call.get('custom_header_value') }}</span>
-                                                    </td>
-                                                </tr>
-                                            {% endif %}
-                                            <tr>
-                                                <td>
-                                                    <span class="ep-label">Verb:</span>
-                                                </td>
-                                                <td>
-                                                    <span class="basic-values">{{ api_call.get('verb') }}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                     <span class="ep-label">Docs:</span>
-                                                </td>
-                                                <td>
-                                                    {% if api_call.get('doc_url') %}
-                                                        <span class="basic-values"><a href="{{ api_call.get('doc_url') }}" target="_blank" title="API Documents URL">API Reference Document</a></span>
-                                                    {% else %}
-                                                        <span class="basic-values">No Documentation Linked</span>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                        </table>
-                                        {% if api_call.get('verb')|lower == 'post' or api_call.get('verb')|lower == 'put' or api_call.get('verb')|lower == 'delete' %}
-                                            <p style="margin: 5px 0" class="text-error">Note: This action can be destructive, or result in additional charges to a customers account. Please proceed with caution.</p>
-                                        {% endif %}
-                                    </div>
-                                    {% if api_call.get('variables') %}
-                                        <form class="{{ api_call.get('title')|lower|slug }}_form" action="" id="{{ api_call.get('title')|lower|slug }}_form" method="POST">
-                                            <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
-                                            <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
-                                            <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
-                                            <table class="table parameters" style="width: 90%">
-                                                <tr>
-                                                    <th>Parameter</th>
-                                                    <th></th>
-                                                    <th>Type</th>
-                                                    <th style="text-align: center;">Required</th>
-                                                    <th>Description</th>
-                                                </tr>
-                                                {% for var in api_call.get('variables') %}
-                                                    <tr>
-                                                        <td>
-                                                            {{ var.get('variable_name') }}
-                                                        </td>
-                                                        <td{% if var.get('required') %} class="required"{% endif %}>
-                                                            {% if var.get('field_display') == 'TextField' %}
-                                                                <input id="{{ var.get('variable_name') }}" name="{{ var.get('variable_name') }}" type="text" placeholder="{{ var.get('variable_name')|unslug|title }}">
-                                                            {% elif var.get('field_display') == 'SelectField' %}
-                                                                <select id="{{ var.get('variable_name') }}" name="{{ var.get('variable_name') }}">
-                                                                    {% for var in parse_field_data(var.get('field_display_data')) %}
-                                                                        <option value="{{ var }}">{{ var }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            {{ var.get('field_type') }}
-                                                        </td>
-                                                        <td style="text-align: center;">
-                                                            {% if var.get('required') %}
-                                                                <span class="required">Yes</span>
-                                                            {% else %}
-                                                                No
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            {{ var.get('description') }}
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                            </table>
-                                            <p style="font-size: 12px;"><span class="required">*</span> Required for API Call</p>
-                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-warning" type="submit" value="Send API Call">
-                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-info" type="submit" value="Mock API Call">
-                                        </form>
-                                        <div id="loading_div_{{ api_call.get('title')|lower|slug }}" class="loading-div-vars" style="display: none;">
-                                            <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
-                                        </div>
-                                    {% else %}
-                                        <form class="{{ api_call.get('title')|lower|slug }}_form" action="" id="{{ api_call.get('title')|lower|slug }}_form" method="POST">
-                                            <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
-                                            <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
-                                            <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
-                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-warning no-var-btn" type="submit" value="Send API Call">
-                                            <input name="{{ api_call.get('title')|lower|slug }}" class="api_call_submit btn btn-info no-var-btn" type="submit" value="Mock API Call">
-                                        </form>
-                                        <div id="loading_div_{{ api_call.get('title')|lower|slug }}" class="loading-div" style="display: none;">
-                                            <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
-                                        </div>
+        <div class="col-md-10">
+            {% for api_call in api_calls.rewind() %}
+                {% set call_fixed_title = api_call.get('title')|lower|slug %}
+                <div class="panel panel-default anchor" id="{{ call_fixed_title }}" target="{{ slugify(call_fixed_title) }}">
+                    <div class="panel-title">
+                        <h4>
+                            {{ api_call.get('title') }}
+                            <button data-title="{{ call_fixed_title }}" data-loop="{{ loop.index }}" id="toggle_details" class="toggle-element-{{ loop.index }} btn btn-primary">Call Details</a>
+                        </h4>
+                        <div id="api_description">
+                            {{ api_call.get('short_description')|nl2br|tab2spaces|safe }}
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="total_api_wrap">
+                            <div id="api_call_inner" class="{{ call_fixed_title }}" style="display: none;">
+                                <dl class="dl-horizontal">
+                                    <dt>Endpoint:</dt>
+                                    <dd>
+                                        {{ api_settings.us_api }}
+                                    </dd>
+                                    <dt>URI:</dt>
+                                    <dd>
+                                        {{ api_call.get('api_uri') }}
+                                    </dd>
+                                    {% if api_call.get('add_to_header') %}
+                                        <dt>Add Header:</dt>
+                                        <dd>{{ api_call.get('custom_header_key') }}: {{ api_call.get('custom_header_value') }}</dd>
                                     {% endif %}
-                                    <div id="api_results_wrapper_{{ api_call.get('title')|lower|slug }}" class="code-blocks-wrapper" style="display: none">
-                                        <div id="api_uri">
-                                            <h5>Request URL</h5>
-                                            <div class="code-block" id="api_url_{{ api_call.get('title')|lower|slug }}">
-                                                URL Here
-                                            </div>
+                                    <dt>Verb:</dt>
+                                    <dd>
+                                        {{ api_call.get('verb') }}
+                                    </dd>
+                                    <dt>Docs:</dt>
+                                    <dd>
+                                        {% if api_call.get('doc_url') %}
+                                            <span class="basic-values"><a href="{{ api_call.get('doc_url') }}" class="tooltip-title" target="_blank" title="View Documentation">API Reference Document</a></span>
+                                        {% else %}
+                                            <span class="basic-values">No Documentation Linked</span>
+                                        {% endif %}
+                                    </dd>
+                                </dl>
+                                {% if api_call.get('verb')|lower == 'post' or api_call.get('verb')|lower == 'put' or api_call.get('verb')|lower == 'delete' %}
+                                    <p class="danger-note text-danger">Note: This action can be destructive, or result in additional charges to a customers account. Please proceed with caution.</p>
+                                {% endif %}
+                                {% if api_call.get('variables') %}
+                                    <form class="{{ call_fixed_title }}_form" id="{{ call_fixed_title }}_form" method="POST">
+                                        <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
+                                        <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
+                                        <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
+                                        <table class="table">
+                                            <tr>
+                                                <th>Parameter</th>
+                                                <th></th>
+                                                <th>Type</th>
+                                                <th style="text-align: center;">Required</th>
+                                                <th>Description</th>
+                                            </tr>
+                                            {% for var in api_call.get('variables') %}
+                                                <tr>
+                                                    <td>
+                                                        {{ var.get('variable_name') }}
+                                                    </td>
+                                                    <td{% if var.get('required') %} class="text-danger"{% endif %}>
+                                                        {% if var.get('field_display') == 'TextField' %}
+                                                            <input id="{{ var.get('variable_name') }}" name="{{ var.get('variable_name') }}" type="text" placeholder="{{ var.get('variable_name')|unslug|title }}">
+                                                        {% elif var.get('field_display') == 'SelectField' %}
+                                                            <select id="{{ var.get('variable_name') }}" name="{{ var.get('variable_name') }}">
+                                                                {% for var in parse_field_data(var.get('field_display_data')) %}
+                                                                    <option value="{{ var }}">{{ var }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {{ var.get('field_type') }}
+                                                    </td>
+                                                    <td style="text-align: center;">
+                                                        {% if var.get('required') %}
+                                                            <span class="text-danger">Yes</span>
+                                                        {% else %}
+                                                            No
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {{ var.get('description') }}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </table>
+                                        <p style="font-size: 12px;"><span class="text-danger">*</span> Required for API Call</p>
+                                        <input name="{{ call_fixed_title }}" class="api_call_submit btn btn-warning" type="submit" value="Send API Call">
+                                        <input name="{{ call_fixed_title }}" class="api_call_submit btn btn-info" type="submit" value="Mock API Call">
+                                    </form>
+                                    <div id="loading_div_{{ call_fixed_title }}" class="loading-div-vars" style="display: none;">
+                                        <img id="img-spinner" src="{{ url_for('static', filename='loading.gif') }}" alt="Loading"/><span class="loading-text">Executing...</span>
+                                    </div>
+                                {% else %}
+                                    <form class="{{ call_fixed_title }}_form" action="" id="{{ call_fixed_title }}_form" method="POST">
+                                        <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
+                                        <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
+                                        <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
+                                        <input name="{{ call_fixed_title }}" class="api_call_submit btn btn-warning no-var-btn" type="submit" value="Send API Call">
+                                        <input name="{{ call_fixed_title }}" class="api_call_submit btn btn-info no-var-btn" type="submit" value="Mock API Call">
+                                    </form>
+                                    <div id="loading_div_{{ call_fixed_title }}" class="loading-div" style="display: none;">
+                                        Executing Call&nbsp;<span class="fa fa-spin fa-spinner text-info"></span>
+                                    </div>
+                                {% endif %}
+                                <div id="api_results_wrapper_{{ call_fixed_title }}" class="code-blocks-wrapper" style="display: none">
+                                    <div id="api_uri">
+                                        <h5>Request URL</h5>
+                                        <div class="code-block" id="api_url_{{ call_fixed_title }}">
+                                            URL Here
                                         </div>
-                                        <div id="api_headers">
-                                            <h5>Request Headers</h5>
-                                            <div class="code-block" id="api_headers_{{ api_call.get('title')|lower|slug }}">
-                                                Request Headers Here
-                                            </div>
+                                    </div>
+                                    <div id="api_headers">
+                                        <h5>Request Headers</h5>
+                                        <div class="code-block" id="api_headers_{{ call_fixed_title }}">
+                                            Request Headers Here
                                         </div>
-                                        <div id="api_body_wrapper_{{ api_call.get('title')|lower|slug }}" style="display: none;">
-                                            <h5>Request Data Object</h5>
-                                            <div class="code-block" id="api_body_{{ api_call.get('title')|lower|slug }}">
-                                                Data Object if any
-                                            </div>
+                                    </div>
+                                    <div id="api_body_wrapper_{{ call_fixed_title }}" style="display: none;">
+                                        <h5>Request Data Object</h5>
+                                        <div class="code-block" id="api_body_{{ call_fixed_title }}">
+                                            Data Object if any
                                         </div>
-                                        <div id="api_response_headers" class="response-headers-{{ api_call.get('title')|lower|slug }}">
-                                            <h5>Response Headers</h5>
-                                            <div class="code-block" id="api_response_headers_{{ api_call.get('title')|lower|slug }}">
-                                                Response Code
-                                                Request ID
-                                            </div>
+                                    </div>
+                                    <div id="api_response_headers" class="response-headers-{{ call_fixed_title }}">
+                                        <h5>Response Headers</h5>
+                                        <div class="code-block" id="api_response_headers_{{ call_fixed_title }}">
+                                            Response Code
+                                            Request ID
                                         </div>
-                                        <div id="api_response_body" class="response-body-{{ api_call.get('title')|lower|slug }}">
-                                            <h5>Response Body</h5>
-                                            <div class="code-block" id="api_content_{{ api_call.get('title')|lower|slug }}">
-                                                Body Here
-                                            </div>
+                                    </div>
+                                    <div id="api_response_body" class="response-body-{{ call_fixed_title }}">
+                                        <h5>Response Body</h5>
+                                        <div class="code-block" id="api_content_{{ call_fixed_title }}">
+                                            Body Here
                                         </div>
-                                        <div id="show_hide" class="in-api">
-                                            <a onclick="show_element('{{ api_call.get('title')|lower|slug }}', {{loop.index}})" class="toggle-element-{{ loop.index }} btn btn-primary">API Call Details</a>
-                                        </div>
+                                    </div>
+                                    <div id="show_hide" class="in-api">
+                                        <button data-title="{{ call_fixed_title }}" data-loop="{{ loop.index }}" data-results="true" id="toggle_results" class="toggle-element-{{ loop.index }} btn btn-primary">Hide Results</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </section>
-                {% endfor %}
-            </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-        <a class="scrollup">Scroll</a>
     </div>
+    <a class="scrollup product">Scroll</a>
 {% endblock %}
 {% block jquery %}
-    <script src="{{ url_for('static', filename='js/bootstrap-modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
 	<script>
+        var global_count = 0;
+        var require_dc = '{{ require_dc|lower }}';
         $(document).ready(function(){
+            $('.tooltip-title').tooltip();
             $(window).scroll(function(){
                 if ( $(this).scrollTop() > 100 ) {
                     $('.scrollup').fadeIn();
@@ -227,77 +214,8 @@
                     $('.scrollup').fadeOut();
                 }
             });
+            $("#data_center").change();
         });
-
-		function goto_testing() {
-            var pathname = window.location.pathname;
-            pathname += 'testing';
-            window.location = pathname;
-        }
-
-        $('.scrollup').click(function(){
-            $('html, body').animate({ scrollTop: 0 }, 600);
-            return false;
-        });
-
-        $('.toc').click(function(e) {
-            e.preventDefault();
-            $('html, body').animate( { scrollTop: ( $( $(this).attr('href') ).offset().top - 210 ) }, 600);
-        });
-
-        var global_count = 0;
-        var require_dc = {{ require_dc|lower }};
-
-        function validate_field(field_name) {
-            if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0 & $.trim($('#' + field_name).val()) != 'none' ) {
-                return true;
-            }
-            else {
-                $('#' + field_name).addClass('error');
-                return false;
-            }
-        }
-
-        $("#data_center").change(function () {
-            if ($(this).val() == "none") {
-                $(this).addClass("empty");
-            }
-            else {
-                $(this).removeClass("empty");
-            }
-            // Clear out results on page as the DC changing affects that data and makes it invalid
-            $('.code-block').text('None');
-            // Hide the results after clearing them
-            $('.code-blocks-wrapper').hide();
-            if ( global_count > 1 ) {
-                $('#generated_messages').html('<div class="alert"><button type="button" class="close" data-dismiss="alert">&times;</button><p>Reponses have been cleared as the data does not apply to the new data center</p></div>');
-            }
-            else {
-                global_count += 1;
-            }
-            if ( {{ restrict_dcs|lower }} ) {
-                if ( $('#data_center').val() == 'us' ) {
-                    $('span.api-call-endpoint').text("{{ api_settings.us_api }}")
-                } else if ( $('#data_center').val() == 'uk' ) {
-                    $('span.api-call-endpoint').text("{{ api_settings.uk_api }}")
-                } else {
-                    $('span.api-call-endpoint').text("{{ api_settings.us_api }}")
-                }
-            }
-        });
-
-        $("#data_center").change();
-
-        function show_element(div_id, index) {
-            $('.' + div_id).toggle('slow', function() {
-                if ( $('.' + div_id).is(':hidden') ) {
-                    $('.toggle-element-' + index).html('API Call Details');
-                }
-                else {
-                    $('.toggle-element-' + index).html('Hide Details');
-                }
-            });
-        }
 
         $('.api_call_submit').on('click', function() {
             var form_submit = $(this).attr('name');
@@ -312,10 +230,8 @@
                     var vals = elem.split('=');
                     sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
                 });
-
                 var message = "You must provide the following data before the request can be sent:<br /><br />"
                 var dc_check = false
-
                 if ( require_dc && form_value != 'Mock API Call' ) {
                     if ( validate_field('data_center') ) {
                         sending['data_center'] = $('#data_center').val();
@@ -324,9 +240,9 @@
                     } else {
                         $('#data_center').addClass('error');
                         if ( {{ restrict_dcs|lower }} ) {
-                            message += "<strong>Region</strong>";
+                            message += "<span class='text-danger'>Region</span>";
                         } else {
-                            message += "<strong>Data Center</strong>";
+                            message += "<span class='text-danger'>Data Center</span>";
                         }
                     }
                 } else if (require_dc) {
@@ -338,21 +254,18 @@
                     dc_check = true;
 					sending['ddi'] = $('#ddi').val().trim();
                 }
-
                 if ( dc_check ) {
                     sending['testing'] = {{ testing|lower }};
                     validated = true;
                 }
-
 				if ( form_value == 'Mock API Call') {
                     validated = true;
                     sending['mock'] = true;
                 }
-
                 if ( validated ) {
                     $.ajax({
                         url: "{{ api_process }}",
-                        type: "post",
+                        type: 'POST',
                         data: JSON.stringify(sending),
                         contentType: "application/json",
                         success: function(data){
@@ -411,37 +324,5 @@
                 }
             });
         });
-
-		function escapeHTML(data) {
-		    return data.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g, '<br />').replace(/\s\s/g, '&nbsp;&nbsp;');
-		}
-
-		function formatXml(xml) {
-			var formatted = '';
-			var reg = /(>)(<)(\/*)/g;
-			xml = xml.toString().replace(reg, '$1\r\n$2$3');
-			var pad = 0;
-			$.each(xml.split('\r\n'), function(index, node) {
-				var indent = 0;
-				if (node.match( /.+<\/\w[^>]*>$/ )) {
-					indent = 0;
-				} else if (node.match( /^<\/\w/ )) {
-					if (pad != 0) {
-						pad -= 2;
-					}
-				} else if (node.match( /^<\w[^>]*[^\/]>.*$/ )) {
-					indent = 2;
-				} else {
-					indent = 0;
-				}
-				var padding = '';
-				for (var i = 0; i < pad; i++) {
-					padding += ' ';
-				}
-				formatted += padding + node + '\r\n';
-				pad += indent;
-			});
-			return escapeHTML(formatted);
-		}
 	</script>
 {% endblock %}
