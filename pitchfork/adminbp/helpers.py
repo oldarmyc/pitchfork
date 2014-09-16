@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from operator import itemgetter, attrgetter
-from unicodedata import normalize
-from flask import g, current_app, session
+from operator import itemgetter
+from flask import g, session
 from bson.objectid import ObjectId
 from dateutil import parser, tz
-from datetime import timedelta
 
 
 import re
@@ -83,7 +81,7 @@ def get_next_order_number(menu_list, parent_menu):
 
 
 def get_parent_order(parent_menu, settings, name):
-    last, duplicate = 0, False
+    last = 0
     if settings.get('top_level_menu'):
         menu_list = sorted(
             settings.get('top_level_menu'),
@@ -484,9 +482,7 @@ def process_auth_request(data):
         headers=auth_header,
         data=json.dumps(data)
     )
-    response_headers = dict(response.headers)
     content = json.loads(response.content)
-
     if content:
         if content.get('access'):
             access_data_token = content.get('access').get('token')

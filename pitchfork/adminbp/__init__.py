@@ -28,10 +28,9 @@ from defaults import check_and_initialize
 from operator import itemgetter
 
 
-import helpers as help
 import permissions
 import re
-import views
+import views  # noqa
 
 
 def utility_processor():

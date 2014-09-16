@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import Flask, session, g, current_app
+from flask import session, g
 
 
 def check_for_admin(user):
@@ -75,7 +75,6 @@ def role_has_access(path):
 
 
 def set_permissions_for_application(username):
-    settings = g.db.settings.find_one()
     if username:
         if check_for_admin(username):
             session['role'] = 'administrators'

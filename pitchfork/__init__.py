@@ -22,11 +22,9 @@ import re
 import json
 
 
-# Start import for all blueprints
 from adminbp import bp as admin_bp
 from manage_globals import bp as manage_bp
 from engine import bp as engine_bp
-# End Blueprint import
 
 
 app = Flask(__name__)

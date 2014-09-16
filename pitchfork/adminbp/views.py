@@ -12,29 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import (Blueprint, Flask, request, session, redirect, url_for,
-    render_template, flash, jsonify, g, current_app)
+from flask import (
+    request, session, redirect, url_for, render_template, flash,
+    jsonify, g, current_app
+)
 from . import bp
-from urllib import unquote
 from decorators import check_perms
 from defaults import check_and_initialize
 from bson.objectid import ObjectId
 
 
-import pymongo
 import forms
-import helpers as help
-import json
+import helpers
 import permissions
 
 
 @bp.route('/settings/general', methods=['GET', 'POST'])
 @check_perms(request)
 def general_settings():
-    error = True
     settings = check_and_initialize()
     title = "Application Settings"
-    form = help.deploy_custom_form(
+    form = helpers.deploy_custom_form(
         'application_settings',
         application_title=settings.get('application_title'),
         application_email=settings.get('application_email'),
@@ -79,7 +77,7 @@ def manage_admins():
     error = True
     settings = check_and_initialize()
     title = "Manage Administrators"
-    form = help.deploy_custom_form('add_administrator')
+    form = helpers.deploy_custom_form('add_administrator')
     if request.method == 'POST' and form.validate_on_submit():
         found = g.db.settings.find_one(
             {
@@ -159,12 +157,12 @@ def remove_admin(user):
 @check_perms(request)
 def menu_settings(edit_menu_name=None):
     settings = check_and_initialize()
-    menu_list = help.get_and_sort(
+    menu_list = helpers.get_and_sort(
         settings.get('menu'),
         'parent_order',
         'order'
     )
-    top_level_menu = help.get_and_sort(
+    top_level_menu = helpers.get_and_sort(
         settings.get('top_level_menu'),
         'order'
     )
@@ -177,7 +175,7 @@ def menu_settings(edit_menu_name=None):
                 break
 
         if menu_edit:
-            menu_form = help.deploy_custom_form(
+            menu_form = helpers.deploy_custom_form(
                 'menu_items_form',
                 parent_menu=menu_edit.get('parent'),
                 menu_display_name=menu_edit.get('display_name'),
@@ -189,21 +187,21 @@ def menu_settings(edit_menu_name=None):
                 action='edit'
             )
         else:
-            menu_form = help.deploy_custom_form('menu_items_form')
+            menu_form = helpers.deploy_custom_form('menu_items_form')
             edit_menu_name = None
     else:
-        menu_form = help.deploy_custom_form('menu_items_form')
+        menu_form = helpers.deploy_custom_form('menu_items_form')
 
-    parent_menus = help.generate_parent_menu(settings.get('menu'))
+    parent_menus = helpers.generate_parent_menu(settings.get('menu'))
     menu_form.parent_menu.choices = [
         (parent, parent) for parent in parent_menus
     ]
-    active_roles = help.generate_active_roles(settings.get('roles'))
+    active_roles = helpers.generate_active_roles(settings.get('roles'))
     menu_form.menu_permissions.choices = [
-        (help.slug(role), role) for role in active_roles
+        (helpers.slug(role), role) for role in active_roles
     ]
     if request.method == 'POST' and menu_form.validate_on_submit():
-        db_name = help.slug(
+        db_name = helpers.slug(
             str(request.form.get('db_name'))
         )
         existing_name = g.db.settings.find_one(
@@ -248,7 +246,7 @@ def menu_settings(edit_menu_name=None):
             if request.form.get('new_parent'):
                 existing_parent = g.db.settings.find_one(
                     {
-                        'top_level_menu.slug': help.slug(
+                        'top_level_menu.slug': helpers.slug(
                             request.form.get('new_parent')
                         )
                     }
@@ -265,7 +263,7 @@ def menu_settings(edit_menu_name=None):
                         menu_list=menu_list,
                         top_level_menu=top_level_menu
                     )
-                parent_menu = help.normalize(request.form.get('new_parent'))
+                parent_menu = helpers.normalize(request.form.get('new_parent'))
             else:
                 flash(
                     'New Parent cannot be blank when adding a new Parent Item',
@@ -278,7 +276,7 @@ def menu_settings(edit_menu_name=None):
                     top_level_menu=top_level_menu
                 )
         else:
-            parent_menu = help.normalize(request.form.get('parent_menu'))
+            parent_menu = helpers.normalize(request.form.get('parent_menu'))
 
         status = bool(request.form.get('menu_item_status'))
         divider = bool(request.form.get('menu_item_divider'))
@@ -289,7 +287,7 @@ def menu_settings(edit_menu_name=None):
                 }, {
                     '$set': {
                         'menu.$.name': db_name,
-                        'menu.$.display_name': help.normalize(
+                        'menu.$.display_name': helpers.normalize(
                             request.form.get('menu_display_name')
                         ),
                         'menu.$.url': request.form.get('menu_item_url'),
@@ -298,8 +296,8 @@ def menu_settings(edit_menu_name=None):
                         ),
                         'menu.$.active': status,
                         'menu.$.divider': divider,
-                        'menu.$.parent': help.slug(parent_menu),
-                        'menu.$.parent_order': help.get_parent_order(
+                        'menu.$.parent': helpers.slug(parent_menu),
+                        'menu.$.parent_order': helpers.get_parent_order(
                             parent_menu,
                             settings,
                             request.form.get('menu_display_name')
@@ -309,14 +307,14 @@ def menu_settings(edit_menu_name=None):
             )
             if (
                 (
-                    menu_edit.get('display_name') != help.normalize(
+                    menu_edit.get('display_name') != helpers.normalize(
                         request.form.get('menu_display_name')
                     )
                 ) or (
-                    menu_edit.get('parent') != help.slug(parent_menu)
+                    menu_edit.get('parent') != helpers.slug(parent_menu)
                 )
             ):
-                help.check_top_level_to_remove(menu_edit)
+                helpers.check_top_level_to_remove(menu_edit)
             flash('Menu Item was edited successfully', 'success')
         else:
             g.db.settings.update(
@@ -326,7 +324,7 @@ def menu_settings(edit_menu_name=None):
                     '$push': {
                         'menu': {
                             'name': db_name,
-                            'display_name': help.normalize(
+                            'display_name': helpers.normalize(
                                 request.form.get('menu_display_name')
                             ),
                             'url': request.form.get('menu_item_url'),
@@ -334,12 +332,12 @@ def menu_settings(edit_menu_name=None):
                                 'menu_permissions'
                             ),
                             'active': status,
-                            'parent': help.slug(parent_menu),
-                            'order': help.get_next_order_number(
+                            'parent': helpers.slug(parent_menu),
+                            'order': helpers.get_next_order_number(
                                 menu_list, parent_menu
                             ),
                             'divider': divider,
-                            'parent_order': help.get_parent_order(
+                            'parent_order': helpers.get_parent_order(
                                 parent_menu,
                                 settings,
                                 request.form.get('menu_display_name')
@@ -383,7 +381,7 @@ def menu_settings(edit_menu_name=None):
 def promote_top_level_menu_item():
     settings = g.db.settings.find_one()
     menu_item = request.json.get('name')
-    sorted_menu = help.get_and_sort(settings.get('top_level_menu'), 'order')
+    sorted_menu = helpers.get_and_sort(settings.get('top_level_menu'), 'order')
     found, new_position = 0, None
     for item in reversed(sorted_menu):
         if item.get('name') == menu_item:
@@ -408,14 +406,14 @@ def promote_top_level_menu_item():
                     }
                 }
             )
-    help.change_top_level_order(
+    helpers.change_top_level_order(
         settings,
         new_position,
         (new_position + 1),
         menu_item
     )
     settings = g.db.settings.find_one()
-    new_sorted = help.get_and_sort(settings.get('top_level_menu'), 'order')
+    new_sorted = helpers.get_and_sort(settings.get('top_level_menu'), 'order')
     message = 'Top Level Menu Item has been promoted'
     return jsonify(message=message, menu_items=new_sorted)
 
@@ -425,7 +423,7 @@ def promote_top_level_menu_item():
 def demote_top_level_menu_item():
     settings = g.db.settings.find_one()
     menu_item = request.json.get('name')
-    sorted_menu = help.get_and_sort(settings.get('top_level_menu'), 'order')
+    sorted_menu = helpers.get_and_sort(settings.get('top_level_menu'), 'order')
     found, new_position = 0, None
     for item in sorted_menu:
         if item.get('name') == menu_item:
@@ -450,14 +448,13 @@ def demote_top_level_menu_item():
                     }
                 }
             )
-    help.change_top_level_order(
+    helpers.change_top_level_order(
         settings,
         new_position,
         (new_position - 1),
         menu_item
     )
     settings = g.db.settings.find_one()
-    new_sorted = help.get_and_sort(settings.get('top_level_menu'), 'order')
     message = 'Top Level Menu Item has been demoted'
     return jsonify(message=message)
 
@@ -466,7 +463,7 @@ def demote_top_level_menu_item():
 @check_perms(request)
 def menu_top_level_html_generate():
     settings = g.db.settings.find_one()
-    sorted_menu = help.get_and_sort(settings.get('top_level_menu'), 'order')
+    sorted_menu = helpers.get_and_sort(settings.get('top_level_menu'), 'order')
     return render_template(
         'admin/_menu_parent.html',
         top_level_menu=sorted_menu
@@ -478,7 +475,7 @@ def menu_top_level_html_generate():
 def promote_menu_item():
     settings = g.db.settings.find_one()
     menu_item = request.json.get('name')
-    sorted_menu = help.get_and_sort(
+    sorted_menu = helpers.get_and_sort(
         settings.get('menu'),
         'parent_order',
         'order'
@@ -519,7 +516,7 @@ def promote_menu_item():
 def demote_menu_item():
     settings = g.db.settings.find_one()
     menu_item = request.json.get('name')
-    sorted_menu = help.get_and_sort(
+    sorted_menu = helpers.get_and_sort(
         settings.get('menu'),
         'parent_order',
         'order'
@@ -559,7 +556,7 @@ def demote_menu_item():
 @check_perms(request)
 def menu_children_html_generate():
     settings = g.db.settings.find_one()
-    sorted_menu = help.get_and_sort(
+    sorted_menu = helpers.get_and_sort(
         settings.get('menu'),
         'parent_order',
         'order'
@@ -591,7 +588,7 @@ def remove_menu_item(menu_item):
                 }
             }
         )
-        help.check_top_level_to_remove(current_menu)
+        helpers.check_top_level_to_remove(current_menu)
         flash('Menu Item %s was successfully removed' % menu_item, 'success')
     return redirect(url_for('adminblueprint.menu_settings'))
 
@@ -627,9 +624,9 @@ def toggle_menu_item(task, menu_item):
 @check_perms(request)
 def manage_roles(edit_role_name=None):
     settings = check_and_initialize()
-    form = help.deploy_custom_form('manage_roles')
+    form = helpers.deploy_custom_form('manage_roles')
     if request.method == 'POST' and form.validate_on_submit():
-        role_name = help.slug(request.form.get('display_name'))
+        role_name = helpers.slug(request.form.get('display_name'))
         existing_role = g.db.settings.find_one(
             {
                 'roles.name': role_name
@@ -654,7 +651,7 @@ def manage_roles(edit_role_name=None):
                     '$push': {
                         'roles': {
                             'name': role_name,
-                            'display_name': help.normalize(
+                            'display_name': helpers.normalize(
                                 request.form.get('display_name')
                             ),
                             'active': bool(request.form.get('status'))
@@ -735,11 +732,10 @@ def remove_role(role_name):
 @check_perms(request)
 def permissions_define(role):
     form = forms.ManagePermissions()
-    url_root = request.url_root[:-1]
     url_routes = current_app.url_map.iter_rules()
-    form = help.generate_dynamic_form(url_routes, role)
+    form = helpers.generate_dynamic_form(url_routes, role)
     if request.method == 'POST' and form.validate_on_submit():
-        set_perms = help.evaluate_permissions(request.form.iterlists())
+        set_perms = helpers.evaluate_permissions(request.form.iterlists())
         g.db.settings.update(
             {
                 'roles.name': role
@@ -759,7 +755,7 @@ def permissions_define(role):
             }
         )
         flash(
-            'Permissions have been updated for %s' % help.unslug(role),
+            'Permissions have been updated for %s' % helpers.unslug(role),
             'success'
         )
         return redirect(url_for('adminblueprint.manage_roles'))
@@ -791,7 +787,7 @@ def permissions_define(role):
 @check_perms(request)
 def manage_form_fields(form_id, field_name=None):
     custom_form = g.db.forms.find_one({'_id': ObjectId(form_id)})
-    sorted_fields = help.get_and_sort(custom_form.get('fields'), 'order')
+    sorted_fields = helpers.get_and_sort(custom_form.get('fields'), 'order')
     if field_name:
         fields = g.db.forms.find_one(
             {
@@ -825,8 +821,7 @@ def manage_form_fields(form_id, field_name=None):
         form = forms.BuildCustomForm(form_id=custom_form.get('_id'))
 
     if request.method == 'POST' and form.validate_on_submit():
-        sani_name = help.slug(request.form.get('name'))
-        active, required, default = False, False, False
+        sani_name = helpers.slug(request.form.get('name'))
         if field_name:
             if not sani_name == field_name:
                 if g.db.forms.find(
@@ -886,7 +881,9 @@ def manage_form_fields(form_id, field_name=None):
                             'default_value'
                         ),
                         'fields.$.style_id': request.form.get('style_id'),
-                        'fields.$.required': bool(request.form.get('required')),
+                        'fields.$.required': bool(
+                            request.form.get('required')
+                        ),
                         'fields.$.active': bool(request.form.get('active')),
                         'fields.$.order': int(request.form.get('order')),
                         'fields.$.description': request.form.get('description')
@@ -916,7 +913,7 @@ def manage_form_fields(form_id, field_name=None):
                             'style_id': request.form.get('style_id'),
                             'required': bool(request.form.get('required')),
                             'active': bool(request.form.get('active')),
-                            'order': help.get_form_field_order(form_id),
+                            'order': helpers.get_form_field_order(form_id),
                             'description': request.form.get('description')
                         }
                     }
@@ -978,7 +975,7 @@ def promote_form_field():
     form_id = request.json.get('form_id')
     field_name = request.json.get('field_name')
     form = g.db.forms.find_one({'_id': ObjectId(form_id)})
-    fields = help.get_and_sort(form.get('fields'), 'order')
+    fields = helpers.get_and_sort(form.get('fields'), 'order')
     found = 0
     for item in reversed(fields):
         if item.get('name') == field_name:
@@ -1015,7 +1012,7 @@ def demote_form_field():
     form_id = request.json.get('form_id')
     field_name = request.json.get('field_name')
     form = g.db.forms.find_one({'_id': ObjectId(form_id)})
-    fields = help.get_and_sort(form.get('fields'), 'order')
+    fields = helpers.get_and_sort(form.get('fields'), 'order')
     found = 0
     for item in fields:
         if item.get('name') == field_name:
@@ -1050,7 +1047,7 @@ def demote_form_field():
 @check_perms(request)
 def form_html_generate(form_id):
     custom_form = g.db.forms.find_one({'_id': ObjectId(form_id)})
-    sorted_fields = help.get_and_sort(custom_form.get('fields'), 'order')
+    sorted_fields = helpers.get_and_sort(custom_form.get('fields'), 'order')
     return render_template(
         'admin/_form_fields.html',
         form_id=form_id,
@@ -1068,7 +1065,7 @@ def remove_custom_field_from_form(form_id, field_name):
         }
     )
     if found_field:
-        help.reorder_fields(form_id, found_field, field_name)
+        helpers.reorder_fields(form_id, found_field, field_name)
         g.db.forms.update(
             {
                 '_id': ObjectId(form_id)
@@ -1149,7 +1146,7 @@ def manage_forms(form_id=None):
         form = forms.BuildForm()
 
     if request.method == 'POST' and form.validate_on_submit():
-        sani_name = help.slug(request.form.get('name'))
+        sani_name = helpers.slug(request.form.get('name'))
         active, system_form = False, False
 
         if request.form.get('active') == 'y':
@@ -1197,7 +1194,7 @@ def manage_forms(form_id=None):
                 }, {
                     '$set': {
                         'name': sani_name,
-                        'display_name': help.unslug(sani_name),
+                        'display_name': helpers.unslug(sani_name),
                         'submission_url': request.form.get('submission_url'),
                         'active': active,
                         'system_form': system_form
@@ -1236,7 +1233,7 @@ def manage_forms(form_id=None):
             g.db.forms.insert(
                 {
                     'name': sani_name,
-                    'display_name': help.unslug(sani_name),
+                    'display_name': helpers.unslug(sani_name),
                     'submission_url': request.form.get('submission_url'),
                     'active': active,
                     'system_form': system_form
@@ -1325,13 +1322,13 @@ def toggle_custom_forms(method, form_id):
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     results, title, placeholder = None, None, None
-    form = help.deploy_custom_form('login_form')
+    form = helpers.deploy_custom_form('login_form')
     title = 'Log In'
     placeholder = 'API Key'
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            results = help.cloud_authenticate(request)
+            results = helpers.cloud_authenticate(request)
         else:
             flash('Form validation error, please check the form and try again')
             return render_template(

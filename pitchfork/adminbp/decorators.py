@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import wraps, update_wrapper
+from functools import update_wrapper
 from flask import flash, redirect, url_for, request
 
 
