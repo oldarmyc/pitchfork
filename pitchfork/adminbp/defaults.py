@@ -634,8 +634,10 @@ def check_and_initialize():
                         'display_name': 'All',
                         'name': 'all',
                         'perms': [
+                            '/',
                             '/search',
                             '/<product>/',
+                            '/<product>/api_call/process',
                             '/admin/login'
                         ]
                     },
