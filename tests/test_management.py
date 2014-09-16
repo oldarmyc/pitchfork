@@ -2952,7 +2952,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            '<div id="global_call_wrapper">',
+            'No API calls were found to display',
             response.data,
             'Did not find correct HTML on page'
         )

@@ -318,8 +318,6 @@ class EdgeCasesTests(unittest.TestCase):
                     content_type='application/json'
                 )
 
-        print response.data
-
         data = json.loads(response.data)
         assert data.get('response_code'), 'No response code received'
         assert data.get('api_url'), 'API URL was not found'
@@ -342,7 +340,7 @@ class EdgeCasesTests(unittest.TestCase):
             response = c.get('/')
 
         self.assertIn(
-            '<h4>Test Call - Autoscale</h4>',
+            'Autoscale - Test Call',
             response.data,
             'Could not find correct call for front most accessed'
         )
@@ -364,7 +362,7 @@ class EdgeCasesTests(unittest.TestCase):
             )
 
         self.assertIn(
-            '<h4>Test Call - Autoscale</h4>',
+            'Autoscale - Test Call',
             response.data,
             'Could not find correct html after search'
         )
@@ -386,7 +384,7 @@ class EdgeCasesTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'No Results Found',
+            'No API calls were found to display',
             response.data,
             'Could not find correct message after no items'
         )
@@ -415,7 +413,7 @@ class EdgeCasesTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'No Active Products to Search',
+            'No API calls were found to display',
             response.data,
             'Could not find correct message after no active products'
         )
@@ -757,7 +755,6 @@ class EdgeCasesTests(unittest.TestCase):
             'Found invalid message in return'
         )
         self.teardown_app_data()
-
 
     """ End Misc Tests """
 
