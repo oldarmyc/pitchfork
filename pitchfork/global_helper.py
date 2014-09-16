@@ -195,6 +195,7 @@ def generate_vars_for_call(product, call, request):
     header = create_custom_header(call, request.json)
     return api_url, header, data_package
 
+
 def generate_api_url_for_call(product, request):
     data_center = request.json.get('data_center')
     if data_center in ['uk', 'lon']:
@@ -568,9 +569,9 @@ def search_for_calls(search_string):
                     item['_id'] = str(item.get('_id'))
                     data.append(item)
         else:
-            return 'No Active Products to Search'
+            return []
     else:
-        return 'No Results Found'
+        return []
 
     return data
 
