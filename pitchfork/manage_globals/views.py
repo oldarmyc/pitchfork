@@ -14,8 +14,7 @@
 
 from . import bp
 from pitchfork.adminbp.decorators import check_perms
-from flask import (render_template, redirect, url_for, request,
-    flash, g, current_app)
+from flask import render_template, redirect, url_for, request, flash, g
 
 
 import forms

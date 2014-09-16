@@ -24,4 +24,4 @@ bp = Blueprint(
 )
 
 
-import views
+import views  # noqa
