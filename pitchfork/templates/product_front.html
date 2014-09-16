@@ -6,7 +6,7 @@
 {% endblock %}
 {% block body %}
     <div id="static_div_header">
-        <div id="generated_messages">&nbsp;</div>
+        <div id="generated_messages_product">&nbsp;</div>
         <h2>{{ title }}{% if testing %} - Testing API Calls{% else %} - API Calls{% endif %}</h2>
         {% if session.get('username') %}
             <div id="global_vars">
@@ -34,7 +34,7 @@
             </div>
         {% endif %}
     </div>
-    <div class="row">
+    <div class="row offset-calls">
         <div class="col-md-2">
             <div class="well">
                 <ul class="nav nav-pills nav-stacked left-nav">
