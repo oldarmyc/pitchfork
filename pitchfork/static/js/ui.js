@@ -44,9 +44,9 @@ $('.code-blocks-wrapper #toggle_results').click(function(e){
     var title = $(this).data('title');
     var results = $(this).data('results');
     $('#api_results_wrapper_' + title).toggle('slow', function() {
-        if ( $('#api_results_wrapper_' + title).is(':visible') === false) {
-            // $('html, body').animate({ scrollTop: $('#' + title).offset().top - 160}, 10);
-        }
+        // if ( $('#api_results_wrapper_' + title).is(':visible') === false) {
+        //     $('html, body').animate({ scrollTop: $('#' + title).offset().top - 160}, 10);
+        // }
     });
     e.stopPropagation();
 });
