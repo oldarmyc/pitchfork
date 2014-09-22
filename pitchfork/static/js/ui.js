@@ -74,10 +74,10 @@ $('#data_center').on('change', function () {
     }
 });
 
-function scroll_if_anchor(href) {
+function scroll_if_anchor(href, add_to) {
     href = typeof(href) === 'string' ? href : $(this).attr('href');
     if(!href) return;
-    var fromTop = 160;
+    var fromTop = 160 + add_to;
     if(href.charAt(0) === '#') {
         var $target = $(href);
         if($target.length) {
