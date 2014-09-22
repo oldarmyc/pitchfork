@@ -41,7 +41,7 @@
                     <li class="navbar-header">API Calls</li>
                     {% for menu in api_calls %}
                         <li>
-                            <a href="#{{ menu.get('title')|lower|slug }}-{{ title|lower }}" class="toc">{{ menu.get('title') }}</a>
+                            <a href="#{{ menu.get('title')|lower|slug }}-{{ title|lower|slug }}" class="toc">{{ menu.get('title') }}</a>
                         </li>
                     {% endfor %}
                 </ul>
