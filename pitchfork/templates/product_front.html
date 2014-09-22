@@ -62,6 +62,7 @@
         var require_dc = '{{ require_dc|lower }}';
         var restrict_dcs = '{{ restrict_dcs|lower }}';
         var testing = '{{ testing|lower }}';
+        var user = '{{ session.get("username") }}';
         $(document).ready(function(){
             $('.prod-popover').popover();
             $('.tooltip-title').tooltip();
