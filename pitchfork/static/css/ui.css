@@ -125,3 +125,14 @@ div#static_div_header .alert {
 div.offset-calls {
     margin-top: 150px;
 }
+
+.prod-popover,
+.popover-content {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.popover {
+    white-space: nowrap;
+    max-width: 600px;
+}
