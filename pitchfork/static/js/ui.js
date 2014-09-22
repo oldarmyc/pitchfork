@@ -6,7 +6,11 @@ $('.scrollup').click(function(){
 $('.toc').click(function(e) {
     e.preventDefault();
     var target = $(this).attr('href');
-    $('html, body').animate({ scrollTop: $(target).offset().top - 160}, 600);
+    if (user != 'None') {
+        $('html, body').animate({ scrollTop: $(target).offset().top - 200}, 600);
+    } else {
+        $('html, body').animate({ scrollTop: $(target).offset().top - 160}, 600);
+    }
 });
 
 $('.testing-button').on('click', function() {
