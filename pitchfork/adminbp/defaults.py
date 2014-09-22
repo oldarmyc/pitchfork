@@ -895,7 +895,7 @@ def check_and_initialize():
                         'https://monitoring.api.rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'uk_api': (
-                        'https://monitoring.api.rackspacecloud.com/v1.0/{ddi}',
+                        'https://monitoring.api.rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'active': True,
                     'doc_url': (
