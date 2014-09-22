@@ -78,6 +78,13 @@
             setup_api_call_submit();
         });
 
+        $('#search_api').keydown(function(e) {
+            if (e.keyCode === 13) {
+                $('.search-button').click();
+                return false;
+            }
+        });
+
         $('.search-button').on('click', function() {
             var sending = {'search_string': $('#search_api').val()};
             $.ajax({
