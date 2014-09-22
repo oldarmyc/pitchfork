@@ -226,68 +226,70 @@ function process_display_api_call(send_to, data, form_submit, form_value) {
     }
 }
 
-$('.api_call_submit').on('click', function() {
-    var form_submit = $(this).attr('name');
-    var form_value = $(this).attr('value');
-    $("#" + form_submit + "_form").unbind('submit').bind('submit', function(e){
-        e.preventDefault();
-        $('#loading_div_' + form_submit).show();
-        var sending = {};
-        var send_to = 'api/call/process';
-        var validated = false;
-        var data = $("#" + form_submit + "_form").serialize();
-        $.each(data.split('&'), function (index, elem) {
-            var vals = elem.split('=');
-            if (vals[0] === 'app_url_link' && vals[1] != 'None') {
-                send_to = unescape(vals[1].replace(/\+/g, ' ')) + '/api/call/process';
-            }
-            sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
-        });
-        var message = "You must provide the following data before the request can be sent:<br /><br />";
-        var dc_check = false;
-        if ( require_dc && form_value != 'Mock API Call' ) {
-            if ( validate_field('data_center') ) {
-                sending['data_center'] = $('#data_center').val();
-                sending['ddi'] = $('#ddi').val().trim();
-                dc_check = true;
-            } else {
-                $('#data_center').addClass('error');
-                if (restrict_dcs === 'true') {
-                    message += "<span class='text-danger'>Region</span>";
-                } else {
-                    message += "<span class='text-danger'>Data Center</span>";
+function setup_api_call_submit() {
+    $('.api_call_submit').on('click', function() {
+        var form_submit = $(this).attr('name');
+        var form_value = $(this).attr('value');
+        $("#" + form_submit + "_form").unbind('submit').bind('submit', function(e){
+            e.preventDefault();
+            $('#loading_div_' + form_submit).show();
+            var sending = {};
+            var send_to = 'api/call/process';
+            var validated = false;
+            var data = $("#" + form_submit + "_form").serialize();
+            $.each(data.split('&'), function (index, elem) {
+                var vals = elem.split('=');
+                if (vals[0] === 'app_url_link' && vals[1] != 'None') {
+                    send_to = unescape(vals[1].replace(/\+/g, ' ')) + '/api/call/process';
                 }
-            }
-        } else if (require_dc === 'true') {
-            if ($('#data_center').length > 0 && $('#data_center').val() != 'None') {
-                sending['data_center'] = $('#data_center').val();
+                sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
+            });
+            var message = "You must provide the following data before the request can be sent:<br /><br />";
+            var dc_check = false;
+            if ( require_dc && form_value != 'Mock API Call' ) {
+                if ( validate_field('data_center') ) {
+                    sending['data_center'] = $('#data_center').val();
+                    sending['ddi'] = $('#ddi').val().trim();
+                    dc_check = true;
+                } else {
+                    $('#data_center').addClass('error');
+                    if (restrict_dcs === 'true') {
+                        message += "<span class='text-danger'>Region</span>";
+                    } else {
+                        message += "<span class='text-danger'>Data Center</span>";
+                    }
+                }
+            } else if (require_dc === 'true') {
+                if ($('#data_center').length > 0 && $('#data_center').val() != 'None') {
+                    sending['data_center'] = $('#data_center').val();
+                    sending['ddi'] = $('#ddi').val().trim();
+                }
+            } else {
+                dc_check = true;
                 sending['ddi'] = $('#ddi').val().trim();
             }
-        } else {
-            dc_check = true;
-            sending['ddi'] = $('#ddi').val().trim();
-        }
-        if (dc_check) {
-            sending['testing'] = testing;
-            validated = true;
-        }
-        if (form_value == 'Mock API Call') {
-            validated = true;
-            sending['mock'] = true;
-            sending['data_center'] = '{data_center}';
-            sending['ddi'] = '{ddi}';
-        }
-        if (validated) {
-            process_display_api_call(
-                send_to,
-                sending,
-                form_submit,
-                form_value
-            );
-        }
-        else {
-            bootbox.alert(message);
-            $('#loading_div_' + form_submit).hide();
-        }
+            if (dc_check) {
+                sending['testing'] = testing;
+                validated = true;
+            }
+            if (form_value == 'Mock API Call') {
+                validated = true;
+                sending['mock'] = true;
+                sending['data_center'] = '{data_center}';
+                sending['ddi'] = '{ddi}';
+            }
+            if (validated) {
+                process_display_api_call(
+                    send_to,
+                    sending,
+                    form_submit,
+                    form_value
+                );
+            }
+            else {
+                bootbox.alert(message);
+                $('#loading_div_' + form_submit).hide();
+            }
+        });
     });
-});
+}
