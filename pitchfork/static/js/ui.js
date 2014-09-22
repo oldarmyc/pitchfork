@@ -74,6 +74,18 @@ $('#data_center').on('change', function () {
     }
 });
 
+function scroll_if_anchor(href) {
+    href = typeof(href) === 'string' ? href : $(this).attr('href');
+    if(!href) return;
+    var fromTop = 160;
+    if(href.charAt(0) === '#') {
+        var $target = $(href);
+        if($target.length) {
+            $('html, body').animate({ scrollTop: $target.offset().top - fromTop });
+        }
+    }
+}
+
 function display_message(response_message, alert_class) {
     var message = '<div class="alert alert-' + alert_class +'"><button type="button" class="close" data-dismiss="alert">&times;</button><p>' + response_message + '</p></div>';
     $('#generated_messages_product').html(message);
