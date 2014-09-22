@@ -10,6 +10,7 @@
             <div class="panel-title">
                 <h4>
                     {% if api_call.get('prod_title') %}{{ api_call.get('prod_title') }} - {% endif %}{{ api_call.get('title') }}
+                    <a class="prod-popover" data-toggle="popover" data-placement="top" data-content="{{ request.url_root }}{{ prod_fixed_title }}/#{{ call_fixed_title }}-{{ prod_fixed_title }}"><span class="fa fa-link tooltip-title" data-placement="right" title="View Direct Call Link"></span></a>
                     <button data-title="{{ call_fixed_title }}-{{ prod_fixed_title }}" data-loop="{{ loop.index }}" id="toggle_details" class="toggle-element-{{ loop.index }} btn btn-primary">Call Details</a>
                 </h4>
                 <div id="api_description">
