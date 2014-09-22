@@ -12,3 +12,5 @@ WTForms
 python-memcached
 python-dateutil
 requests
+isoweek
+flask-classy

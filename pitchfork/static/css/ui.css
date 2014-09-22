@@ -1,0 +1,138 @@
+div.code-block {
+    font-family: Monaco;
+    background-color: #e3e3e3;
+    border: 1px solid #333;
+    border-radius: 4px 4px 4px 4px;
+    display: block;
+    font-size: 13px;
+    line-height: 20px;
+    margin: 0 0 10px;
+    padding: 10px;
+}
+
+pre {
+    background-color: #e3e3e3;
+    border: none;
+    margin-bottom: 0;
+    padding: 10px;
+}
+
+ul.left-nav li a {
+    padding: 1px 15px;
+}
+
+ul.left-nav li a:hover {
+    color: #FFF;
+    background-color: #428bca
+}
+
+li.navbar-header {
+    color: #777;
+    font-size: 18px;
+    line-height: 20px;
+}
+
+a.scrollup {
+    background: url('/static/images/icon_gototop.png') no-repeat scroll 0 0 transparent;
+    bottom: 80px;
+    display: none;
+    height: 40px;
+    position: fixed;
+    right: 20px;
+    text-indent: -9999px;
+    width: 40px;
+}
+
+a.product {
+    right: 40px;
+}
+
+.region-dc-label {
+    padding: 10px;
+}
+
+select#data_center,
+input[type="text"] {
+    height: 34px;
+    padding: 6px 12px;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    color: #555;
+    width: 200px;
+    line-height: 1.42857;
+}
+
+.testing-button,
+.active-button {
+    margin-left: 100px;
+}
+
+.testing-button,
+.active-button,
+.search-button {
+    margin-top: -3px;
+}
+
+.danger-note {
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.panel-title {
+    padding: 5px 20px;
+}
+
+.panel-title h4 {
+    width: 700px;
+}
+
+.panel-title h4 button {
+    float: right;
+    /*margin: -14px 100px 0 0;*/
+}
+
+.dl-horizontal dt {
+    width: 70px;
+}
+
+.dl-horizontal dd {
+    margin-left: 90px;
+}
+
+.loading-div {
+    float: left;
+    margin: -28px 0 0 250px;
+}
+
+div#global_vars select.error {
+    border: 1px solid #a94442;
+    color: #a94442;
+}
+
+div#static_div_header {
+    position: fixed;
+    width: 100%;
+    background-color: #FFF;
+    z-index: 99;
+    padding: 10px 0 10px;
+    margin-top: -30px;
+}
+
+div#static_div_header .alert {
+    margin-bottom: 0;
+}
+
+div.offset-calls {
+    margin-top: 150px;
+}
+
+.prod-popover,
+.popover-content {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.popover {
+    white-space: nowrap;
+    max-width: 600px;
+}

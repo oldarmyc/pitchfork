@@ -1,0 +1,240 @@
+{% extends "_base.html" %}
+{% block title %} - {{ title }}{% endblock %}
+{% block addHeaders %}
+    <style>
+        textarea.form-control {
+            width: 400px;
+            height: 120px;
+        }
+
+        div#sub_field textarea.form-control {
+            width: 220px;
+            height: 80px;
+        }
+
+        div#data_object_top,
+        div#custom_header_key_top,
+        div#custom_header_value_top,
+        div#required_key_name_top,
+        div#required_key_type_top {
+            display: none;
+        }
+
+        .col-sm-2 {
+            width: 185px;
+        }
+
+        .col-sm-offset-2 {
+            margin-left: 185px;
+        }
+
+        .col-md-3 {
+            width: 500px;
+        }
+
+        div#sub_field .col-sm-1 {
+            width: 170px;
+        }
+
+        div#sub_field {
+            padding: 5px 0 5px;
+        }
+
+        div#sub_field_wrapper {
+            margin: 15px 0;
+            border: 1px solid #E3E3E3;
+            border-radius: 4px 4px 4px 4px;
+            padding: 10px 0;
+            width: 526px;
+        }
+
+        div#variable_add {
+            margin: -20px 0 10px;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <h2>
+        {{ title }}
+    </h2>
+    <form method="POST" action="{{ post_url }}" class="form-horizontal" role="form">
+        {{ form.hidden_tag() }}
+        {% for field in form if field.widget.input_type not in ['hidden', 'submit'] %}
+            {% if loop.first %}
+                {% set show_link = 1 %}
+                {% set unvar = 1 %}
+            {% endif %}
+            {% if show_link == 1 %}
+                <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
+            {% endif %}
+            {% if not field.name|check_regex %}
+                {{ field.label(class="col-sm-2 control-label") }}
+            {% endif %}
+            {% if field.name|check_regex %}
+                {% if show_link == 1 %}
+                    {% set show_link = 99 %}
+                {% endif %}
+                <div class="col-md-12">
+                    <div id="sub_field_wrapper" class="variable{% if unvar == 1 %}{% set unvar = 99 %}{% else %}_0{% endif %}">
+                        {% for sub_field in field %}
+                            {% if sub_field.widget.input_type != 'hidden' %}
+                                <div id="sub_field">
+                                    {{ sub_field.label(class="col-sm-1 control-label") }}
+                                    {% if sub_field.type == 'TextField' or sub_field.type == 'TextAreaField'  %}
+                                        {{ sub_field(class="form-control", **{'type': 'text'})|safe }}
+                                    {% elif sub_field.type == 'BooleanField' %}
+                                        {{ sub_field(type="checkbox") }}
+                                    {% else %}
+                                        {{ sub_field(class="form-control") }}
+                                    {% endif %}
+                                    {% if sub_field.type == "TextAreaField" %}
+                                        <p style="font-size: 12px; margin: 5px 0 0 140px;" class="text-info"><strong>Note:</strong> Coma seperated list or one option per line</p>
+                                    {% endif %}
+                                    {% for error in sub_field.errors %}
+                                        <span class="form-control-feedback">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ sub_field }}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+            {% else %}
+                <div class="col-md-3">
+                    {% if field.type == 'TextField' or field.type == 'TextAreaField'  %}
+                        {{ field(class="form-control", **{'type': 'text'})|safe }}
+                    {% elif field.type == 'BooleanField' %}
+                        {{ field(type="checkbox") }}
+                    {% else %}
+                        {{ field(class="form-control") }}
+                    {% endif %}
+                    {% if field.name == "data_object" %}
+                        <p style="font-size: 12px;" class="text-info"><strong>Note:</strong> Ensure that the variables used in this data object are defined below</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <span class="form-control-feedback" style="width: 230px;">{{ error }}</span>
+                    {% endfor %}
+            {% endif %}
+            {% if show_link == 1 or (show_link != 1 and loop.last) %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+        <div id="variable_add">
+            <a id="add_variable" class="btn btn-xs btn-success">+ Add Variable</a>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-xs-2">
+                {% for field in form if (field.widget.input_type == 'submit') %}
+                    {{ field(class="btn btn-primary") }}
+                {% endfor %}
+                <a href="{{ cancel_return }}" title="Cancel" class="btn btn-default">Cancel</a>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+{% block jquery %}
+    <script>
+        $(document).ready(function() {
+            if ( $('#use_data').prop('checked') ) {
+                $('#data_object_top').show();
+            }
+            if ( $('#add_to_header').prop('checked') ) {
+                $('#custom_header_key_top').show();
+                $('#custom_header_value_top').show();
+            }
+            if ( $('#required_key').prop('checked') ) {
+                $('#required_key_name_top').show();
+                $('#required_key_type_top').show();
+            }
+        });
+
+        $('#add_to_header').on('change', function() {
+            var selectVal = $('input[name="add_to_header"]:checked').length > 0;
+            if (selectVal) {
+                $('#custom_header_key_top').show();
+                $('#custom_header_value_top').show();
+            } else {
+                $('#custom_header_key_top').hide();
+                $('#custom_header_value_top').hide();
+            }
+        })
+
+        $('#required_key').on('change', function() {
+            var selectVal = $('input[name="required_key"]:checked').length > 0;
+            if (selectVal) {
+                $('#required_key_name_top').show();
+                $('#required_key_type_top').show();
+            } else {
+                $('#required_key_name_top').hide();
+                $('#required_key_type_top').hide();
+            }
+        })
+
+        $('#use_data').on('change', function() {
+            var selectVal = $('input[name="use_data"]:checked').length > 0;
+            if (selectVal) {
+                $('#data_object_top').show();
+            } else { $('#data_object_top').hide(); }
+        })
+
+        var is_edit = {{ edit|lower }};
+        if ( is_edit ) {
+            var cloneCount = {{ count }};
+        }
+        else {
+            var cloneCount = 1;
+        }
+        $('#add_variable').on('click', function() {
+            $('.variable')
+                .clone()
+                .attr('class', 'variable' + cloneCount++)
+                .insertAfter($('[class^=variable]:last'))
+
+            $('.variable' + (cloneCount - 1)).children().each(function () {
+                var id = $(this).attr('id').replace(/variable_\d/, 'variable_' + (cloneCount - 1));
+                if ( $(this).attr('name') ) {
+                    var name = $(this).attr('name').replace(/variable_\d/, 'variable_' + (cloneCount - 1));
+                    $(this).attr('name', name);
+                } else {
+                    $(this).children('input').each(function () {
+                        var id = $(this).attr('id').replace(/variable_\d/, 'variable_' + (cloneCount - 1));
+                        $(this).attr('id', id);
+                        if ($(this).attr('name')) {
+                            var name = $(this).attr('name').replace(/variable_\d/, 'variable_' + (cloneCount - 1));
+                            $(this).attr('name', name);
+                        }
+                        if ( $(this).is(':checked') ) {
+                            $(this).prop('checked', false);
+                        }
+                        else {
+                            $(this).val('');
+                        }
+                    });
+
+                    $(this).children('select').each(function () {
+                        var id = $(this).attr('id').replace(/variable_\d/, 'variable_' + (cloneCount - 1));
+                        $(this).attr('id', id);
+                        if ($(this).attr('name')) {
+                            var name = $(this).attr('name').replace(/variable_\d/, 'variable_' + (cloneCount - 1));
+                            $(this).attr('name', name);
+                        }
+                        $(this).val('').removeAttr('selected')
+                    });
+
+                    $(this).children('textarea').each(function () {
+                        var id = $(this).attr('id').replace(/variable_\d/, 'variable_' + (cloneCount - 1));
+                        $(this).attr('id', id);
+                        if ($(this).attr('name')) {
+                            var name = $(this).attr('name').replace(/variable_\d/, 'variable_' + (cloneCount - 1));
+                            $(this).attr('name', name);
+                        }
+                        $(this).val('')
+                    });
+                }
+                $(this).attr('id', id);
+            });
+            $('#variable_' + (cloneCount - 1) + '-id_value').val(cloneCount - 1)
+        });
+    </script>
+{% endblock %}

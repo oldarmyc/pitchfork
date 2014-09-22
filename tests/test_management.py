@@ -1,5 +1,4 @@
 import pitchfork
-import flask
 import unittest
 import happymongo
 import json
@@ -8,11 +7,8 @@ import re
 import mock
 
 
-from flask import session
-from datetime import datetime, timedelta
-from dateutil import tz
+from datetime import datetime
 from uuid import uuid4
-from bson.objectid import ObjectId
 
 
 class PitchforkTests(unittest.TestCase):
@@ -119,6 +115,22 @@ class PitchforkTests(unittest.TestCase):
         )
         self.teardown_app_data()
 
+    def test_admin_no_login_redirect(self):
+        with pitchfork.app.test_client() as c:
+            result = c.get('/admin/settings/general')
+
+        assert result._status_code == 302, \
+            'Invalid response code %s' % result._status_code
+
+        location = result.headers.get('Location')
+        o = urlparse.urlparse(location)
+        self.assertEqual(
+            o.path,
+            '/admin/login',
+            'Invalid redirect location %s, expected "/"' % o.path
+        )
+        self.teardown_app_data()
+
     def test_ui_login_post_bad_data(self):
         with pitchfork.app.test_client() as c:
             response = c.get('/admin/login')
@@ -137,6 +149,8 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_ui_login_post(self):
+        today = datetime.now()
+        tomorrow = '%s-%s-%s' % (today.year, today.month, today.day + 1)
         with pitchfork.app.test_client() as c:
             response = c.get('/admin/login')
             token = self.retrieve_csrf_token(response.data)
@@ -144,9 +158,9 @@ class PitchforkTests(unittest.TestCase):
                 type(patched_post.return_value).content = mock.PropertyMock(
                     return_value=(
                         '{"access": {"token": {"RAX-AUTH:authenticatedBy": '
-                        '["APIKEY"], "expires": "2014-03-22T04:17:18.880Z", '
+                        '["APIKEY"], "expires": "%sT04:17:18.880Z", '
                         '"id": "a359c49c0e6f4b2db32618cc98137a8d", "tenant": '
-                        '{"id": "123456","name": "123456"}}}}'
+                        '{"id": "123456","name": "123456"}}}}' % tomorrow
                     )
                 )
                 data = {
@@ -159,20 +173,22 @@ class PitchforkTests(unittest.TestCase):
                     data=data,
                     follow_redirects=True
                 )
-
-        self.assertEquals(
-            response._status_code,
-            200,
-            'Invalid response code %s, expected 200' % response._status_code
-        )
-        # self.assertIn(
-        #     'Logged in as pitchfork',
-        #     response.data,
-        #     'User was not logged in as expected'
-        # )
+                self.assertEquals(
+                    response._status_code,
+                    200,
+                    'Invalid response code %s, expected 200' % (
+                        response._status_code
+                    )
+                )
+                result = c.post('/admin/forms')
+                assert result._status_code == 302, (
+                    'Invalid response code %s' % result._status_code
+                )
         self.teardown_app_data()
 
     def test_ui_login_post_admin(self):
+        today = datetime.now()
+        tomorrow = '%s-%s-%s' % (today.year, today.month, today.day + 1)
         with pitchfork.app.test_client() as c:
             response = c.get('/admin/login')
             token = self.retrieve_csrf_token(response.data)
@@ -180,9 +196,9 @@ class PitchforkTests(unittest.TestCase):
                 type(patched_post.return_value).content = mock.PropertyMock(
                     return_value=(
                         '{"access": {"token": {"RAX-AUTH:authenticatedBy": '
-                        '["APIKEY"], "expires": "2014-03-22T04:17:18.880Z", '
+                        '["APIKEY"], "expires": "%sT04:17:18.880Z", '
                         '"id": "a359c49c0e6f4b2db32618cc98137a8d", "tenant": '
-                        '{"id": "123456","name": "123456"}}}}'
+                        '{"id": "123456","name": "123456"}}}}' % tomorrow
                     )
                 )
                 data = {
@@ -195,17 +211,17 @@ class PitchforkTests(unittest.TestCase):
                     data=data,
                     follow_redirects=True
                 )
-
-        self.assertEquals(
-            response._status_code,
-            200,
-            'Invalid response code %s, expected 200' % response._status_code
-        )
-        # self.assertIn(
-        #     'Administrators',
-        #     response.data,
-        #     'User was not logged in with correct permissions'
-        # )
+                self.assertEquals(
+                    response._status_code,
+                    200,
+                    'Invalid response code %s, expected 200' % (
+                        response._status_code
+                    )
+                )
+                result = c.post('/admin/forms')
+                assert result._status_code == 200, (
+                    'Invalid response code %s' % result._status_code
+                )
         self.teardown_app_data()
 
     def test_ui_logout(self):
@@ -226,7 +242,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_login_page_placeholder(self):
-        with pitchfork.app.test_client() as c:
+        with pitchfork.app.test_client():
             response = self.app.get('/admin/login')
 
         self.assertIn(
@@ -236,27 +252,23 @@ class PitchforkTests(unittest.TestCase):
         )
         self.teardown_app_data()
 
-    """
-        Admin Manage
-        Permissions Tests
-    """
+    """ Admin Manage - Permissions Tests """
 
     def test_ui_admin_perms_admins(self):
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
-
             result = c.get('/admin/settings/admins')
 
-        assert result._status_code == 200, \
+        assert result._status_code == 200, (
             'Invalid response code %s' % result._status_code
+        )
         self.teardown_app_data()
 
     def test_ui_user_perms_admins(self):
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
-
             result = c.get('/admin/settings/admins')
 
         assert result._status_code == 302, \
@@ -384,13 +396,11 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after removal'
         )
-
         settings = pitchfork.db.settings.find_one()
         admins = settings.get('administrators')
         assert len(admins) == 1, (
             'Incorrect numbers of admins, expected 1 and got %d' % len(admins)
         )
-
         settings = pitchfork.db.settings.find_one()
         updated_admins = settings.get('administrators')
         found_admin = True
@@ -400,10 +410,7 @@ class PitchforkTests(unittest.TestCase):
         assert found_admin, 'Found admin that should have been removed'
         self.teardown_app_data()
 
-    """
-        End Admin
-        General Settings
-    """
+    """ General Settings """
 
     def test_ui_admin_perms_settings(self):
         with pitchfork.app.test_client() as c:
@@ -419,7 +426,6 @@ class PitchforkTests(unittest.TestCase):
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
-
             result = c.get('/admin/settings/general')
 
         assert result._status_code == 302, \
@@ -439,11 +445,9 @@ class PitchforkTests(unittest.TestCase):
         update_email = 'test@test.com'
         update_footer = 'test footer'
         update_intro = 'test intro'
-
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
-
             response = c.get('/admin/settings/general')
             token = self.retrieve_csrf_token(response.data)
             data = {
@@ -454,7 +458,6 @@ class PitchforkTests(unittest.TestCase):
                 'application_well': update_intro,
                 'settings': 'Apply Settings'
             }
-
             response = c.post(
                 '/admin/settings/general',
                 data=data,
@@ -466,26 +469,22 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after update'
         )
-
         settings = pitchfork.db.settings.find_one()
-        assert settings.get('application_title') == update_title, \
-            ('Title was not set correctly on update')
-
-        assert settings.get('application_email') == update_email, \
-            ('Email was not set correctly on update')
-
-        assert settings.get('application_footer') == update_footer, \
-            ('Footer was not set correctly on update')
-
-        assert settings.get('application_well') == update_intro, \
-            ('Intro was not set correctly on update')
-
+        assert settings.get('application_title') == update_title, (
+            'Title was not set correctly on update'
+        )
+        assert settings.get('application_email') == update_email, (
+            'Email was not set correctly on update'
+        )
+        assert settings.get('application_footer') == update_footer, (
+            'Footer was not set correctly on update'
+        )
+        assert settings.get('application_well') == update_intro, (
+            'Intro was not set correctly on update'
+        )
         self.teardown_app_data()
 
-    """
-        Manage Roles
-        Permissions Tests
-    """
+    """ Manage Roles - Permissions Tests """
 
     def test_ui_admin_perms_roles(self):
         with pitchfork.app.test_client() as c:
@@ -502,12 +501,11 @@ class PitchforkTests(unittest.TestCase):
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
-
             result = c.get('/admin/settings/roles')
 
-        assert result._status_code == 302, \
+        assert result._status_code == 302, (
             'Invalid response code %s' % result._status_code
-
+        )
         location = result.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
@@ -683,7 +681,6 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after delete'
         )
-
         settings = pitchfork.db.settings.find_one()
         roles = settings.get('roles')
         role_removed = True
@@ -695,10 +692,7 @@ class PitchforkTests(unittest.TestCase):
         assert role_removed, 'Role was found and not removed as expected'
         self.teardown_app_data()
 
-    """
-        Manage Permissions
-        Permissions Tests
-    """
+    """ Manage Permissions - Permissions Tests """
 
     def test_ui_admin_perms_roles_set(self):
         using_role = 'all'
@@ -719,14 +713,13 @@ class PitchforkTests(unittest.TestCase):
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
-
             result = c.get(
                 '/admin/settings/permissions/%s' % using_role
             )
 
-        assert result._status_code == 302, \
+        assert result._status_code == 302, (
             'Invalid response code %s' % result._status_code
-
+        )
         location = result.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
@@ -763,7 +756,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Permissions have been updated for %s role' % using_role.title(),
+            'Permissions have been updated for %s' % using_role.title(),
             response.data,
             'Did not find or incorrect flash message after submit'
         )
@@ -803,10 +796,7 @@ class PitchforkTests(unittest.TestCase):
         )
         self.teardown_app_data()
 
-    """
-        Manage Forms
-        Permissions Tests
-    """
+    """ Manage Forms - Permissions Tests """
 
     def test_ui_admin_perms_forms(self):
         with pitchfork.app.test_client() as c:
@@ -815,20 +805,20 @@ class PitchforkTests(unittest.TestCase):
 
             result = c.get('/admin/forms')
 
-        assert result._status_code == 200, \
+        assert result._status_code == 200, (
             'Invalid response code %s' % result._status_code
+        )
         self.teardown_app_data()
 
     def test_ui_user_perms_forms(self):
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
-
             result = c.get('/admin/forms')
 
-        assert result._status_code == 302, \
+        assert result._status_code == 302, (
             'Invalid response code %s' % result._status_code
-
+        )
         location = result.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
@@ -1195,10 +1185,7 @@ class PitchforkTests(unittest.TestCase):
         assert form_url, 'Form route was updated when it was not supposed to'
         self.teardown_app_data()
 
-    """
-        Manage Form Fields
-        Permissions Tests
-    """
+    """ Manage Form Fields - Permissions Tests """
 
     def test_ui_admin_perms_form_fields(self):
         first_form = pitchfork.db.forms.find_one()
@@ -1206,11 +1193,11 @@ class PitchforkTests(unittest.TestCase):
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
-
             result = c.get('/admin/forms/fields/%s' % form_id)
 
-        assert result._status_code == 200, \
+        assert result._status_code == 200, (
             'Invalid response code %s' % result._status_code
+        )
         self.teardown_app_data()
 
     def test_ui_user_perms_form_fields(self):
@@ -1222,9 +1209,9 @@ class PitchforkTests(unittest.TestCase):
 
             result = c.get('/admin/forms/fields/%s' % form_id)
 
-        assert result._status_code == 302, \
+        assert result._status_code == 302, (
             'Invalid response code %s' % result._status_code
-
+        )
         location = result.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
@@ -1759,32 +1746,28 @@ class PitchforkTests(unittest.TestCase):
         )
         self.teardown_app_data()
 
-    """
-        Manage Menus
-        Permissions Tests
-    """
+    """ Manage Menus - Permissions Tests """
 
     def test_ui_admin_perms_menus(self):
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
-
             result = c.get('/admin/settings/menu')
 
-        assert result._status_code == 200, \
+        assert result._status_code == 200, (
             'Invalid response code %s' % result._status_code
+        )
         self.teardown_app_data()
 
     def test_ui_user_perms_menus(self):
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
-
             result = c.get('/admin/settings/menu')
 
-        assert result._status_code == 302, \
+        assert result._status_code == 302, (
             'Invalid response code %s' % result._status_code
-
+        )
         location = result.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
@@ -2184,7 +2167,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Application Menu Settings',
+            'Manage Application Menus',
             response.data,
             'Did not find or incorrect flash message after edit menu render'
         )
@@ -2684,7 +2667,7 @@ class PitchforkTests(unittest.TestCase):
                 'menu_item_status': 'y',
                 'menu_permissions': 'administrators'
             }
-            add_response = c.post(
+            c.post(
                 '/admin/settings/menu',
                 data=data,
                 follow_redirects=True
@@ -2747,25 +2730,24 @@ class PitchforkTests(unittest.TestCase):
                 'menu_item_status': 'y',
                 'menu_permissions': 'administrators'
             }
-            add_response = c.post(
+            c.post(
                 '/admin/settings/menu',
                 data=data,
                 follow_redirects=True
             )
             data = {'name': 'test'}
-            response_promote = c.post(
+            c.post(
                 '/admin/settings/menu/promote',
                 data=json.dumps(data),
                 content_type='application/json',
                 follow_redirects=True
             )
-            response_promote = c.post(
+            c.post(
                 '/admin/settings/menu/promote',
                 data=json.dumps(data),
                 content_type='application/json',
                 follow_redirects=True
             )
-
             response = c.get(
                 '/admin/settings/menu/remove/test',
                 follow_redirects=True
@@ -2876,7 +2858,6 @@ class PitchforkTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get('/admin/settings/menu')
-            token = self.retrieve_csrf_token(response.data)
             response = c.get(
                 '/admin/settings/menu/remove/test',
                 follow_redirects=True
@@ -2891,7 +2872,6 @@ class PitchforkTests(unittest.TestCase):
             )
         )
         settings = pitchfork.db.settings.find_one()
-        top_level_menu = settings.get('top_level_menu')
         menus = settings.get('menu')
         db_top_order = pitchfork.db.settings.find_one(
             {
@@ -2934,8 +2914,6 @@ class PitchforkTests(unittest.TestCase):
 
         self.teardown_app_data()
 
-    """ End Menus """
-
     """ Misc API Browse tests """
 
     def test_pf_history(self):
@@ -2946,7 +2924,7 @@ class PitchforkTests(unittest.TestCase):
             response = c.get('/history')
 
         self.assertIn(
-            '<h3>My API History</h3>',
+            'API Call History',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -2967,7 +2945,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            '<div id="global_call_wrapper">',
+            'No API calls were found to display',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -2984,8 +2962,11 @@ class PitchforkTests(unittest.TestCase):
 
             response = c.get('/manage/dcs')
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
-            '<h3>Available Data Centers</h3>',
+            'Manage Data Centers',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -2998,9 +2979,9 @@ class PitchforkTests(unittest.TestCase):
 
             result = c.get('/manage/dcs')
 
-        assert result._status_code == 302, \
+        assert result._status_code == 302, (
             'Invalid response code %s' % result._status_code
-
+        )
         location = result.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
@@ -3013,6 +2994,38 @@ class PitchforkTests(unittest.TestCase):
     """ Functional Tests """
 
     def test_pf_manage_dcs_add(self):
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get('/manage/dcs')
+            token = self.retrieve_csrf_token(response.data)
+            data = {
+                'csrf_token': token,
+                'name': 'Test',
+                'abbreviation': 'TEST'
+            }
+            response = c.post(
+                '/manage/dcs',
+                data=data,
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'DC successfully added to system',
+            response.data,
+            'Incorrect flash message after add'
+        )
+        found_add = pitchfork.db.api_settings.find_one(
+            {
+                'dcs.name': 'Test'
+            }
+        )
+        assert found_add, 'DC not found after add'
+        self.teardown_app_data()
+
+    def test_pf_manage_dcs_add_no_dcs(self):
+        pitchfork.db.api_settings.update({}, {'$unset': {'dcs': 1}})
         with pitchfork.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
@@ -3087,7 +3100,6 @@ class PitchforkTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get('/manage/dcs')
-            token = self.retrieve_csrf_token(response.data)
             data = {
                 'name': 'Test',
                 'abbreviation': 'TEST'
@@ -3119,7 +3131,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Data center was successfully removed',
+            'Dallas was deleted successfully',
             response.data,
             'Incorrect flash message after remove'
         )
@@ -3146,8 +3158,11 @@ class PitchforkTests(unittest.TestCase):
 
             response = c.get('/manage/verbs')
 
+        assert response._status_code == 200, (
+            'Invalid response code %s' % response._status_code
+        )
         self.assertIn(
-            '<h3>Available API Verbs</h3>',
+            'Manage API Verbs',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -3160,9 +3175,9 @@ class PitchforkTests(unittest.TestCase):
 
             result = c.get('/manage/verbs')
 
-        assert result._status_code == 302, \
+        assert result._status_code == 302, (
             'Invalid response code %s' % result._status_code
-
+        )
         location = result.headers.get('Location')
         o = urlparse.urlparse(location)
         self.assertEqual(
@@ -3248,7 +3263,6 @@ class PitchforkTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get('/manage/dcs')
-            token = self.retrieve_csrf_token(response.data)
             data = {
                 'name': 'GET',
                 'active': True
@@ -3281,7 +3295,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Verb GET was removed successfully',
+            'Get was deleted successfully',
             response.data,
             'Incorrect flash message after remove'
         )
@@ -3310,7 +3324,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Verb GET was deactivated successfully',
+            'Get was deactivated successfully',
             response.data,
             'Incorrect flash message after deactivate'
         )
@@ -3345,7 +3359,7 @@ class PitchforkTests(unittest.TestCase):
             )
 
         self.assertIn(
-            'Verb GET was activated successfully',
+            'Get was activated successfully',
             response.data,
             'Incorrect flash message after activate'
         )
@@ -3360,6 +3374,92 @@ class PitchforkTests(unittest.TestCase):
         assert activated, 'Verb was not activated'
         self.teardown_app_data()
 
+    def test_pf_bad_key_for_actions(self):
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/manage/BAD_KEY/delete/GET',
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Invalid data key given so no action taken',
+            response.data,
+            'Incorrect flash message after bad key'
+        )
+        api_settings = pitchfork.db.api_settings.find_one()
+        verbs = api_settings.get('verbs')
+        count = 0
+        for verb in verbs:
+            if verb.get('name') == 'GET':
+                count += 1
+
+        self.assertEquals(
+            count,
+            1,
+            'Incorrect count after bad key, found %d instead of 1' % count
+        )
+        self.teardown_app_data()
+
+    def test_pf_bad_action_for_actions(self):
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/manage/verbs/BAD_ACTION/GET',
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Invalid action given so no action taken',
+            response.data,
+            'Incorrect flash message after bad action'
+        )
+        api_settings = pitchfork.db.api_settings.find_one()
+        verbs = api_settings.get('verbs')
+        count = 0
+        for verb in verbs:
+            if verb.get('name') == 'GET':
+                count += 1
+
+        self.assertEquals(
+            count,
+            1,
+            'Incorrect count after bad key, found %d instead of 1' % count
+        )
+        self.teardown_app_data()
+
+    def test_pf_bad_dat_element_for_actions(self):
+        with pitchfork.app.test_client() as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/manage/verbs/delete/BAD_DATA',
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Bad_Data was not found so no action taken',
+            response.data,
+            'Incorrect flash message after bad data'
+        )
+        api_settings = pitchfork.db.api_settings.find_one()
+        verbs = api_settings.get('verbs')
+        count = 0
+        for verb in verbs:
+            if verb.get('name') == 'GET':
+                count += 1
+
+        self.assertEquals(
+            count,
+            1,
+            'Incorrect count after bad key, found %d instead of 1' % count
+        )
+        self.teardown_app_data()
 
 if __name__ == '__main__':
     unittest.main()

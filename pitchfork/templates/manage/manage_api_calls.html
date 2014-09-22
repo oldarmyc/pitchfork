@@ -1,0 +1,67 @@
+{% extends "_base.html" %}
+{% block title %} - {{ title }}{% endblock %}
+{% block addHeaders %}
+    <style>
+        table.table tr td {
+            vertical-align: top;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+	<h1>
+        {{ title }}
+        <a href="{{ product_url }}/add" title="Add API Call" class="btn btn-primary">Add API Call</a>
+    </h1>
+    {% if api_commands and api_commands.count() > 0 %}
+        <table class="table table-bordered table-condensed table-hover">
+            <tr>
+                <th>Name</th>
+                <th>Verb</th>
+                <th>URI</th>
+                <th>Variables</th>
+                <th style="text-align: center;">Tested</th>
+                <th></th>
+            </tr>
+            {% for api in api_commands %}
+                <tr class="{{ loop.cycle('bg-odd', 'bg-even') }}">
+                    <td>
+                        {{ api.get('title') }}
+                    </td>
+                    <td>
+                        {{ api.get('verb') }}
+                    </td>
+                    <td>
+                        {{ api.get('api_uri') }}
+                    </td>
+                    <td>
+                        {% if api.get('variables') %}
+                            {% for var in api.get('variables') %}
+                                <span {% if var.get('required') %}class="text-danger"><span class="fa fa-start tooltip-title" title="Required Attribute"></span{% endif %}>{{ var.get('variable_name') }}</span><br />
+                            {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if api.get('tested') %}
+                            <a href="{{ product_url }}/unconfirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Untested"><span class="fa fa-check-circle-o"></span></a>
+                        {% else %}
+                            <a href="{{ product_url }}/confirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Tested"><span class="fa fa-ban"></span></a>
+                        {% endif %}
+                    </td>
+                    <td style="width: 40px;">
+                        <a href="{{ product_url }}/edit/{{ api.get('_id') }}" class="tooltip_show" title="Edit API Call"><span class="fa fa-pencil"></span></a>
+                        <a href="{{ product_url }}/delete/{{ api.get('_id') }}" class="tooltip_show" title="Delete API Call"><span class="fa fa-trash-o"></span></a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>There are no setup API commands for this product currently</p>
+    {% endif %}
+{% endblock %}
+{% block jquery %}
+    <script>
+        $(document).ready(function() {
+            $('.tooltip_show').tooltip();
+        });
+    </script>
+{% endblock %}

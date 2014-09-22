@@ -13,28 +13,25 @@
 # limitations under the License.
 
 from flask.ext.wtf import Form
-from wtforms import TextField, SelectField, IntegerField, BooleanField,\
-    PasswordField, TextAreaField, SubmitField, HiddenField, RadioField,\
-    SelectMultipleField
-from wtforms import validators
+from wtforms import fields, validators
 
 
 class BuildForm(Form):
-    name = TextField('Form Name:', validators=[validators.required()])
-    submission_url = TextField(
+    name = fields.TextField('Form Name:', validators=[validators.required()])
+    submission_url = fields.TextField(
         'Submit URL:',
         validators=[validators.required()]
     )
-    active = BooleanField('Active:')
-    system_form = BooleanField('System Form?:')
-    submit = SubmitField('Submit')
+    active = fields.BooleanField('Active:')
+    system_form = fields.BooleanField('System Form?:')
+    submit = fields.SubmitField('Submit')
 
 
 class BuildCustomForm(Form):
-    form_id = HiddenField('Form ID:')
-    name = TextField('Name:', validators=[validators.required()])
-    label = TextField('Label:', validators=[validators.required()])
-    field_type = SelectField(
+    form_id = fields.HiddenField('Form ID:')
+    name = fields.TextField('Name:', validators=[validators.required()])
+    label = fields.TextField('Label:', validators=[validators.required()])
+    field_type = fields.SelectField(
         'Type of Field:',
         validators=[validators.required()],
         choices=[
@@ -50,14 +47,14 @@ class BuildCustomForm(Form):
             ('SubmitField', 'Submit Field')
         ]
     )
-    field_choices = TextAreaField('Choices:')
-    description = TextField('Description:')
-    default = BooleanField('Default Value:', default=False)
-    default_value = TextField('Default Value:')
-    required = BooleanField('Required:', default=False)
-    active = BooleanField('Active:', default=True)
-    order = HiddenField('Order')
-    submit = SubmitField('Submit')
+    field_choices = fields.TextAreaField('Choices:')
+    description = fields.TextField('Description:')
+    default = fields.BooleanField('Default Value:', default=False)
+    default_value = fields.TextField('Default Value:')
+    required = fields.BooleanField('Required:', default=False)
+    active = fields.BooleanField('Active:', default=True)
+    order = fields.HiddenField('Order')
+    submit = fields.SubmitField('Submit')
 
 
 class BaseForm(Form):

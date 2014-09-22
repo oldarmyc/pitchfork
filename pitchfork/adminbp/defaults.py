@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import g, session, current_app
+from flask import g, current_app
 
 
 def check_and_initialize():
     settings = g.db.settings.find_one()
     forms = g.db.forms.find_one()
+    reporting = g.db.reporting.find_one()
     api_settings = g.db.api_settings.find_one()
     if settings is None:
         current_app.logger.debug('Settings are empty...initializing')
@@ -26,15 +27,20 @@ def check_and_initialize():
                 'application_title': current_app.name.title(),
                 'application_email': current_app.config.get('APP_EMAIL'),
                 'application_well': (
-                    '<p class="lead">Rackspace Cloud API interactive website '
-                    'application</p><div class="center">'
+                    '<p class="lead">Rackspace Cloud - API Interactive Website'
+                    ' Application</p><div class="center">'
                     'For improvements or suggestions please go to GitHub and '
                     'submit an <a href="https://github.com/rackerlabs/'
-                    'pitchfork/issues/new" target="_blank" title="Submit'
-                    ' a GitHub issue">issue</a></div><div id="issue_feedback"'
-                    ' class="center"></div>'
+                    'pitchfork/issues/new" class="tooltip-title" '
+                    'target="_blank" title="Submit a GitHub issue">issue</a>'
+                    '</div><div id="issue_feedback" class="center"></div>'
                 ),
-                'application_footer': '&copy; Rackspace, US',
+                'application_footer': (
+                    'This site is not officially supported by Rackspace. '
+                    'Source is available on <a href="https://github.com/'
+                    'rackerlabs/pitchfork/" class="tooltip-title" '
+                    'target="_blank" title="Pitchfork Repository">github</a>'
+                ),
                 'administrators': [
                     {
                         'admin': current_app.config.get(
@@ -47,533 +53,526 @@ def check_and_initialize():
                 ],
                 'menu': [
                     {
-                        'active': True,
+                        'url': '/history',
                         'display_name': 'My History',
                         'name': 'my_history',
                         'parent': '',
-                        'url': '/history',
+                        'active': True,
                         'parent_order': 1,
-                        'order': 2,
+                        'order': 1,
                         'view_permissions': 'logged_in'
                     }, {
-                        'active': True,
+                        'url': '/autoscale',
                         'display_name': 'Autoscale',
                         'name': 'autoscale',
                         'parent': 'cloud_products',
-                        'url': '/autoscale',
+                        'active': True,
                         'parent_order': 2,
                         'order': 1,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/cloud_backup',
                         'display_name': 'Backup',
                         'name': 'backup',
                         'parent': 'cloud_products',
-                        'url': '/cloud_backup',
+                        'active': True,
                         'parent_order': 2,
                         'order': 2,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/big_data',
                         'display_name': 'Big Data',
                         'name': 'big_data',
                         'parent': 'cloud_products',
-                        'url': '/big_data',
+                        'active': True,
                         'parent_order': 2,
                         'order': 3,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/block_storage',
                         'display_name': 'Block Storage',
                         'name': 'block_storage',
                         'parent': 'cloud_products',
-                        'url': '/block_storage',
+                        'active': True,
                         'parent_order': 2,
                         'order': 4,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/databases',
                         'display_name': 'Databases',
                         'name': 'databases',
                         'parent': 'cloud_products',
-                        'url': '/databases',
+                        'active': True,
                         'parent_order': 2,
                         'order': 5,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/dns',
                         'display_name': 'DNS',
                         'name': 'dns',
                         'parent': 'cloud_products',
-                        'url': '/dns',
+                        'active': True,
                         'parent_order': 2,
                         'order': 6,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/cloud_feeds',
                         'display_name': 'Feeds',
                         'name': 'cloud_feeds',
                         'parent': 'cloud_products',
-                        'url': '/cloud_feeds',
+                        'active': True,
                         'parent_order': 2,
                         'order': 7,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/fg_servers',
                         'display_name': 'First Gen Servers',
                         'name': 'first_gen_servers',
                         'parent': 'cloud_products',
-                        'url': '/fg_servers',
+                        'active': True,
                         'parent_order': 2,
                         'order': 8,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/identity',
                         'display_name': 'Identity',
                         'name': 'identity',
                         'parent': 'cloud_products',
-                        'url': '/identity',
+                        'active': True,
                         'parent_order': 2,
                         'order': 9,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/images',
                         'display_name': 'Images',
                         'name': 'images',
                         'parent': 'cloud_products',
-                        'url': '/images',
+                        'active': True,
                         'parent_order': 2,
                         'order': 10,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/load_balancers',
                         'display_name': 'Load Balancers',
                         'name': 'load_balancers',
                         'parent': 'cloud_products',
-                        'url': '/load_balancers',
+                        'active': True,
                         'parent_order': 2,
                         'order': 11,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/monitoring',
                         'display_name': 'Monitoring',
                         'name': 'monitoring',
                         'parent': 'cloud_products',
-                        'url': '/monitoring',
+                        'active': True,
                         'parent_order': 2,
                         'order': 12,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/networks',
                         'display_name': 'Networks',
                         'name': 'networks',
                         'parent': 'cloud_products',
-                        'url': '/networks',
+                        'active': True,
                         'parent_order': 2,
                         'order': 13,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/ng_servers',
                         'display_name': 'Next Gen Servers',
                         'name': 'next_gen_servers',
                         'parent': 'cloud_products',
-                        'url': '/ng_servers',
+                        'active': True,
                         'parent_order': 2,
                         'order': 14,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/orchestration',
                         'display_name': 'Orchestration',
                         'name': 'orchestration',
                         'parent': 'cloud_products',
-                        'url': '/orchestration',
+                        'active': True,
                         'parent_order': 2,
                         'order': 15,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/queues',
                         'display_name': 'Queues',
                         'name': 'queues',
                         'parent': 'cloud_products',
-                        'url': '/queues',
+                        'active': True,
                         'parent_order': 2,
                         'order': 16,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
-                        'active': True,
+                        'url': '/autoscale/manage',
                         'display_name': 'Autoscale',
                         'name': 'autoscale_manage',
                         'parent': 'manage_products',
-                        'url': '/autoscale/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 1,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/cloud_backup/manage',
                         'display_name': 'Backup',
                         'name': 'backup_setup',
-                        'order': 2,
                         'parent': 'manage_products',
+                        'active': True,
                         'parent_order': 3,
-                        'url': '/cloud_backup/manage',
+                        'order': 2,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/big_data/manage',
                         'display_name': 'Big Data',
                         'name': 'big_data_setup',
                         'parent': 'manage_products',
-                        'url': '/big_data/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 3,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/block_storage/manage',
                         'display_name': 'Block Storage',
                         'name': 'block_storage_setup',
                         'parent': 'manage_products',
-                        'url': '/block_storage/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 4,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/databases/manage',
                         'display_name': 'Databases',
                         'name': 'databases_setup',
                         'parent': 'manage_products',
-                        'url': '/databases/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 5,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/dns/manage',
                         'display_name': 'DNS',
                         'name': 'dns_setup',
                         'parent': 'manage_products',
-                        'url': '/dns/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 6,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/cloud_feeds/manage',
                         'display_name': 'Feeds',
                         'name': 'manage_feeds',
                         'parent': 'manage_products',
-                        'url': '/cloud_feeds/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 7,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/fg_servers/manage',
                         'display_name': 'FG Servers',
                         'name': 'fg_servers_setup',
                         'parent': 'manage_products',
-                        'url': '/fg_servers/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 8,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/identity/manage',
                         'display_name': 'Identity',
                         'name': 'identity_setup',
                         'parent': 'manage_products',
-                        'url': '/identity/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 9,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/images/manage',
                         'display_name': 'Images',
                         'name': 'images_manage',
                         'parent': 'manage_products',
-                        'url': '/images/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 10,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/load_balancers/manage',
                         'display_name': 'Load Balancers',
                         'name': 'lb_setup',
                         'parent': 'manage_products',
-                        'url': '/load_balancers/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 11,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/monitoring/manage',
                         'display_name': 'Monitoring',
                         'name': 'monitoring_manage',
-                        'order': 12,
                         'parent': 'manage_products',
+                        'active': True,
                         'parent_order': 3,
-                        'url': '/monitoring/manage',
+                        'order': 12,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/networks/manage',
                         'display_name': 'Networks',
                         'name': 'networks_setup',
                         'parent': 'manage_products',
-                        'url': '/networks/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 13,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/ng_servers/manage',
                         'display_name': 'NG Servers',
                         'name': 'ng_server_setup',
                         'parent': 'manage_products',
-                        'url': '/ng_servers/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 14,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/orchestration/manage',
                         'display_name': 'Orchestration',
                         'name': 'orchestration_manage',
                         'parent': 'manage_products',
-                        'url': '/orchestration/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 15,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/queues/manage',
                         'display_name': 'Queues',
                         'name': 'queues_manage',
                         'parent': 'manage_products',
-                        'url': '/queues/manage',
+                        'active': True,
                         'parent_order': 3,
                         'order': 16,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/autoscale/manage/api',
                         'display_name': 'Autoscale',
                         'name': 'autoscale_api',
                         'parent': 'api_settings',
-                        'url': '/autoscale/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 1,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/cloud_backup/manage/api',
                         'display_name': 'Backup',
                         'name': 'backup_api',
                         'parent': 'api_settings',
-                        'url': '/cloud_backup/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 2,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/big_data/manage/api',
                         'display_name': 'Big Data',
                         'name': 'big_data_api',
                         'parent': 'api_settings',
-                        'url': '/big_data/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 3,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/block_storage/manage/api',
                         'display_name': 'Block Storage',
                         'name': 'block_storage_api',
                         'parent': 'api_settings',
-                        'url': '/block_storage/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 4,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/databases/manage/api',
                         'display_name': 'Databases',
                         'name': 'databases_api',
                         'parent': 'api_settings',
-                        'url': '/databases/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 5,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/dns/manage/api',
                         'display_name': 'DNS',
                         'name': 'dns_api',
                         'parent': 'api_settings',
-                        'url': '/dns/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 6,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/cloud_feeds/manage/api',
                         'display_name': 'Feeds',
                         'name': 'feeds_api',
                         'parent': 'api_settings',
-                        'url': '/cloud_feeds/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 7,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/fg_servers/manage/api',
                         'display_name': 'FG Servers',
                         'name': 'fg_servers_api',
                         'parent': 'api_settings',
-                        'url': '/fg_servers/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 8,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/identity/manage/api',
                         'display_name': 'Identity',
                         'name': 'identity_api',
                         'parent': 'api_settings',
-                        'url': '/identity/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 9,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/images/manage/api',
                         'display_name': 'Images',
                         'name': 'images_api',
                         'parent': 'api_settings',
-                        'url': '/images/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 10,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/load_balancers/manage/api',
                         'display_name': 'Load Balancers',
                         'name': 'load_balancers_api',
                         'parent': 'api_settings',
-                        'url': '/load_balancers/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 11,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/monitoring/manage/api',
                         'display_name': 'Monitoring',
                         'name': 'monitoring_api',
                         'parent': 'api_settings',
-                        'url': '/monitoring/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 12,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/networks/manage/api',
                         'display_name': 'Networks',
                         'name': 'networks_api',
                         'parent': 'api_settings',
-                        'url': '/networks/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 13,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/ng_servers/manage/api',
                         'display_name': 'NG Servers',
                         'name': 'ng_servers_api',
                         'parent': 'api_settings',
-                        'url': '/ng_servers/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 14,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/orchestration/manage/api',
                         'display_name': 'Orchestration',
                         'name': 'orchestration_api',
                         'parent': 'api_settings',
-                        'url': '/orchestration/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 15,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/queues/manage/api',
                         'display_name': 'Queues',
                         'name': 'queues_api',
                         'parent': 'api_settings',
-                        'url': '/queues/manage/api',
+                        'active': True,
                         'parent_order': 4,
                         'order': 16,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
                         'display_name': 'Generate Report',
-                        'name': 'reporting',
-                        'order': 1,
-                        'parent': 'reporting',
+                        'name': 'engine',
+                        'parent': '',
+                        'url': '/engine/',
                         'parent_order': 5,
-                        'url': '/reporting',
-                        'view_permissions': 'administrators'
-                    }, {
-                        'active': True,
-                        'display_name': 'Report Setup',
-                        'name': 'reporting_setup',
-                        'order': 2,
-                        'parent': 'reporting',
-                        'parent_order': 5,
-                        'url': '/reporting/setup',
-                        'view_permissions': 'administrators'
-                    }, {
-                        'active': True,
-                        'display_name': 'Manage Fields',
-                        'name': 'reporting_fields',
+                        'divider': False,
                         'order': 3,
-                        'parent': 'reporting',
-                        'parent_order': 5,
-                        'url': '/reporting/fields/manage',
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/admin/settings/admins',
                         'display_name': 'Manage Admins',
                         'name': 'manage_admins',
                         'parent': 'system',
-                        'url': '/admin/settings/admins',
+                        'active': True,
                         'parent_order': 6,
                         'order': 1,
                         'view_permissions': 'administrators'
                     }, {
                         'active': True,
+                        'display_name': 'Manage Engine',
+                        'divider': True,
+                        'name': 'engine_setup',
+                        'order': 2,
+                        'parent': 'system',
+                        'parent_order': 6,
+                        'url': '/engine/setup',
+                        'view_permissions': 'administrators'
+                    }, {
+                        'url': '/manage/dcs',
                         'display_name': 'Data Centers',
                         'name': 'manage_dcs',
                         'parent': 'system',
-                        'url': '/manage/dcs',
+                        'active': True,
                         'parent_order': 6,
-                        'order': 2,
+                        'order': 3,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/manage/verbs',
                         'display_name': 'API Verbs',
                         'name': 'manage_verbs',
                         'parent': 'system',
-                        'url': '/manage/verbs',
+                        'active': True,
                         'parent_order': 6,
-                        'order': 3,
+                        'order': 4,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/admin/settings/general',
                         'display_name': 'General Settings',
                         'name': 'general_settings',
-                        'order': 1,
                         'parent': 'administrators',
+                        'active': True,
                         'parent_order': 7,
-                        'url': '/admin/settings/general',
+                        'order': 1,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/admin/settings/menu',
                         'display_name': 'Menu Settings',
                         'name': 'menu_settings',
                         'parent': 'administrators',
-                        'url': '/admin/settings/menu',
+                        'active': True,
                         'parent_order': 7,
                         'order': 2,
                         'view_permissions': 'administrators'
                     }, {
-                        'active': True,
+                        'url': '/admin/settings/roles',
                         'display_name': 'Manage Roles',
                         'name': 'manage_roles',
                         'parent': 'administrators',
-                        'url': '/admin/settings/roles',
+                        'active': True,
                         'parent_order': 7,
                         'order': 3,
                         'view_permissions': 'administrators'
                     }, {
-                        'url': '/admin/forms',
+                        'active': True,
                         'display_name': 'Manage Forms',
                         'name': 'manage_forms',
                         'parent': 'administrators',
-                        'active': True,
+                        'url': '/admin/forms',
                         'parent_order': 7,
                         'order': 4,
                         'view_permissions': 'administrators'
@@ -589,33 +588,33 @@ def check_and_initialize():
                 },
                 'top_level_menu': [
                     {
+                        'order': 1,
                         'slug': 'my_history',
-                        'name': 'My History',
-                        'order': 1
+                        'name': 'My History'
                     }, {
+                        'order': 2,
                         'slug': 'cloud_products',
-                        'name': 'Cloud Products',
-                        'order': 2
+                        'name': 'Cloud Products'
                     }, {
+                        'order': 3,
                         'slug': 'manage_products',
-                        'name': 'Manage Products',
-                        'order': 3
+                        'name': 'Manage Products'
                     }, {
+                        'order': 4,
                         'slug': 'api_settings',
-                        'name': 'API Settings',
-                        'order': 4
+                        'name': 'API Settings'
                     }, {
-                        'slug': 'reporting',
-                        'name': 'Reporting',
-                        'order': 5
+                        'order': 5,
+                        'name': 'Generate Report',
+                        'slug': 'generate_report'
                     }, {
-                        'slug': 'system',
+                        'order': 6,
                         'name': 'System',
-                        'order': 6
+                        'slug': 'system'
                     }, {
-                        'name': 'Administrators',
-                        'slug': 'administrators',
                         'order': 7,
+                        'name': 'Administrators',
+                        'slug': 'administrators'
                     }
                 ],
                 'roles': [
@@ -631,45 +630,20 @@ def check_and_initialize():
                             '/',
                             '/history',
                             '/search',
-                            '/ng_servers/',
-                            '/ng_servers/api_call/process',
-                            '/identity/',
-                            '/identity/api_call/process',
-                            '/dns/',
-                            '/dns/api_call/process',
-                            '/cloud_backup/',
-                            '/cloud_backup/api_call/process',
-                            '/queues/',
-                            '/queues/api_call/process',
-                            '/networks/',
-                            '/networks/api_call/process',
-                            '/big_data/',
-                            '/big_data/api_call/process',
-                            '/cloud_feeds/',
-                            '/cloud_feeds/api_call/process',
-                            '/autoscale/',
-                            '/autoscale/api_call/process',
-                            '/block_storage/',
-                            '/block_storage/api_call/process',
-                            '/monitoring/',
-                            '/monitoring/api_call/process',
-                            '/images/',
-                            '/images/api_call/process',
-                            '/orchestration/',
-                            '/orchestration/api_call/process',
-                            '/load_balancers/',
-                            '/load_balancers/api_call/process',
-                            '/databases/',
-                            '/databases/api_call/process',
-                            '/fg_servers/',
-                            '/fg_servers/api_call/process',
+                            '/<product>/',
+                            '/<product>/api/call/process',
+                            '/admin/logout/'
                         ]
                     }, {
                         'active': True,
                         'display_name': 'All',
                         'name': 'all',
                         'perms': [
-                            '/'
+                            '/',
+                            '/search',
+                            '/<product>/',
+                            '/<product>/api/call/process',
+                            '/admin/login'
                         ]
                     },
                 ]
@@ -684,23 +658,24 @@ def check_and_initialize():
                     'autoscale',
                     'cloud_backup',
                     'big_data',
-                    'cbs',
-                    'cloud_db',
-                    'cloud_dns',
+                    'block_storage',
+                    'databases',
+                    'dns',
                     'cloud_feeds',
                     'fg_servers',
-                    'cloud_identity',
+                    'identity',
                     'images',
                     'load_balancers',
                     'monitoring',
                     'ng_servers',
-                    'cloud_networks',
+                    'networks',
                     'orchestration',
                     'queues'
                 ],
                 'autoscale': {
                     'app_url': '/autoscale',
                     'title': 'Autoscale',
+                    'db_name': 'autoscale',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.autoscale.api.'
@@ -719,6 +694,7 @@ def check_and_initialize():
                 'big_data': {
                     'app_url': '/big_data',
                     'title': 'Big Data',
+                    'db_name': 'big_data',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.bigdata.api.'
@@ -734,9 +710,10 @@ def check_and_initialize():
                         'cbd-devguide/content/overview.html'
                     )
                 },
-                'cbs': {
+                'block_storage': {
                     'app_url': '/block_storage',
                     'title': 'Block Storage',
+                    'db_name': 'cbs',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.blockstorage.api.'
@@ -755,6 +732,7 @@ def check_and_initialize():
                 'cloud_backup': {
                     'app_url': '/cloud_backup',
                     'title': 'Backup',
+                    'db_name': 'cloud_backup',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.backup.api.'
@@ -770,9 +748,10 @@ def check_and_initialize():
                         'rcbu-devguide/content/overview.html'
                     )
                 },
-                'cloud_db': {
+                'databases': {
                     'app_url': '/databases',
                     'title': 'Databases',
+                    'db_name': 'cloud_db',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.databases.api.'
@@ -788,9 +767,10 @@ def check_and_initialize():
                         'v1.0/cdb-devguide/content/overview.html'
                     )
                 },
-                'cloud_dns': {
+                'dns': {
                     'app_url': '/dns',
                     'title': 'DNS',
+                    'db_name': 'cloud_dns',
                     'require_dc': True,
                     'us_api': (
                         'https://dns.api.rackspacecloud.com/v1.0/{ddi}'
@@ -804,9 +784,10 @@ def check_and_initialize():
                         'v1.0/cdns-devguide/content/overview.html'
                     )
                 },
-                'cloud_identity': {
+                'identity': {
                     'app_url': '/identity',
                     'title': 'Identity',
+                    'db_name': 'cloud_identity',
                     'require_dc': True,
                     'us_api': (
                         'https://identity.api.rackspacecloud.com/v2.0'
@@ -823,6 +804,7 @@ def check_and_initialize():
                 'cloud_feeds': {
                     'app_url': '/cloud_feeds',
                     'title': 'Cloud Feeds',
+                    'db_name': 'cloud_feeds',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.feeds.api.rackspacecloud.com'
@@ -836,9 +818,10 @@ def check_and_initialize():
                         'v1.0/feeds-devguide/content/overview.html'
                     )
                 },
-                'cloud_networks': {
+                'networks': {
                     'app_url': '/networks',
                     'title': 'Networks',
+                    'db_name': 'cloud_networks',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.servers.api.'
@@ -857,6 +840,7 @@ def check_and_initialize():
                 'fg_servers': {
                     'app_url': '/fg_servers',
                     'title': 'First Gen Servers',
+                    'db_name': 'fg_servers',
                     'require_dc': True,
                     'us_api': (
                         'https://servers.api.rackspacecloud.com/v1.0/{ddi}'
@@ -873,6 +857,7 @@ def check_and_initialize():
                 'images': {
                     'app_url': '/images',
                     'title': 'Images',
+                    'db_name': 'images',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.images.api.'
@@ -891,6 +876,7 @@ def check_and_initialize():
                 'load_balancers': {
                     'app_url': '/load_balancers',
                     'title': 'Load Balancers',
+                    'db_name': 'load_balancers',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.loadbalancers.api.'
@@ -909,11 +895,12 @@ def check_and_initialize():
                 'monitoring': {
                     'app_url': '/monitoring',
                     'title': 'Monitoring',
+                    'db_name': 'monitoring',
                     'us_api': (
                         'https://monitoring.api.rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'uk_api': (
-                        'https://monitoring.api.rackspacecloud.com/v1.0/{ddi}',
+                        'https://monitoring.api.rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'active': True,
                     'doc_url': (
@@ -924,6 +911,7 @@ def check_and_initialize():
                 'ng_servers': {
                     'app_url': '/ng_servers',
                     'title': 'Next Gen Servers',
+                    'db_name': 'ng_servers',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.servers.api.'
@@ -942,6 +930,7 @@ def check_and_initialize():
                 'orchestration': {
                     'app_url': '/orchestration',
                     'title': 'Orchestration',
+                    'db_name': 'orchestration',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.orchestration.api.'
@@ -960,6 +949,7 @@ def check_and_initialize():
                 'queues': {
                     'app_url': '/queues',
                     'title': 'Queues',
+                    'db_name': 'queues',
                     'require_dc': True,
                     'us_api': (
                         'https://{data_center}.queues.api.'
@@ -1063,7 +1053,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1106,7 +1095,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1149,7 +1137,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1182,7 +1169,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1250,7 +1236,6 @@ def check_and_initialize():
                 'system_form': True
             }
         )
-
         g.db.forms.insert(
             {
                 'active': True,
@@ -1321,7 +1306,7 @@ def check_and_initialize():
                         'required': True,
                         'active': True,
                         'order': 6,
-                        'label': 'View Permissions:'
+                        'label': 'Permissions:'
                     }, {
                         'default_value': '',
                         'field_type': 'BooleanField',
@@ -1335,6 +1320,17 @@ def check_and_initialize():
                         'label': 'Active?:'
                     }, {
                         'default_value': '',
+                        'field_type': 'BooleanField',
+                        'field_choices': '',
+                        'name': 'menu_item_divider',
+                        'default': False,
+                        'style_id': '',
+                        'required': False,
+                        'active': True,
+                        'order': 8,
+                        'label': 'Add Divider?:'
+                    }, {
+                        'default_value': '',
                         'field_type': 'SubmitField',
                         'field_choices': '',
                         'name': 'menu',
@@ -1342,13 +1338,87 @@ def check_and_initialize():
                         'style_id': '',
                         'required': False,
                         'active': True,
-                        'order': 8,
+                        'order': 9,
                         'label': 'Submit'
                     }
                 ],
                 'name': 'menu_items_form',
                 'submission_url': '/admin/settings/menu',
                 'system_form': True
+            }
+        )
+
+    if reporting is None:
+        g.db.reporting.insert(
+            {
+                'data_type': 'text',
+                'description': 'Full name of user who ran call ',
+                'field_display': 'TextField',
+                'field_display_data': '',
+                'field_display_label': '',
+                'field_name': 'name',
+                'graphable': False,
+                'searchable': True
+            }
+        )
+        g.db.reporting.insert(
+            {
+                'data_type': 'text',
+                'description': 'Account Number used to make call ',
+                'field_display': 'TextField',
+                'field_display_data': '',
+                'field_display_label': 'DDI',
+                'field_name': 'ddi',
+                'graphable': False,
+                'searchable': True
+            }
+        )
+        g.db.reporting.insert(
+            {
+                'data_type': 'text',
+                'description': 'Data Center where call was made',
+                'field_display': 'SelectField',
+                'field_display_data': '',
+                'field_display_label': '',
+                'field_name': 'data_center',
+                'graphable': True,
+                'searchable': True
+            }
+        )
+        g.db.reporting.insert(
+            {
+                'data_type': 'text',
+                'description': 'Verb used for generating call',
+                'field_display': 'SelectField',
+                'field_display_data': '',
+                'field_display_label': 'Verb',
+                'field_name': 'request.verb',
+                'graphable': True,
+                'searchable': True
+            }
+        )
+        g.db.reporting.insert(
+            {
+                'data_type': 'text',
+                'description': 'Product call was generated for',
+                'field_display': 'SelectField',
+                'field_display_data': '',
+                'field_display_label': '',
+                'field_name': 'product',
+                'graphable': False,
+                'searchable': True
+            }
+        )
+        g.db.reporting.insert(
+            {
+                'data_type': 'datetime',
+                'field_display_label': '',
+                'description': 'Timestamp when call was executed',
+                'searchable': True,
+                'field_display_data': '',
+                'field_name': 'completed_at',
+                'field_display': 'TextField',
+                'graphable': False
             }
         )
 

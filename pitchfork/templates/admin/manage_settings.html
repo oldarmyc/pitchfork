@@ -1,78 +1,50 @@
-{% extends "admin/_admin_base.html" %}
-{% block title %} - Manage General Settings{% endblock %}
+{% extends "_base.html" %}
+{% block title %} - Manage Settings{% endblock %}
 {% block addHeaders %}
     <style>
-        textarea {
-            width: 500px;
+        textarea.form-control {
             height: 150px;
         }
 
-        input[type="text"] {
+        input[type="text"], textarea.form-control {
             width: 500px;
         }
-
-        /* Front Page display elements for well */
-        .hero-unit, .well {
-            text-align: center;
-        }
-
-        .hero-unit h1 {
-            font-size: 75px;
-        }
-
-        .site-header {
-            text-shadow: 0 6px 6px rgba(0, 0, 0, 0.4);
-        }
-
-        p.lead {
-            font-size: 25px;
-        }
-
-        div#issue_feedback {
-            margin-bottom: 20px;
-        }
-
     </style>
 {% endblock %}
 {% block body %}
-    <h2>{{ title }}</h2>
-    <div class="row-fluid">
-        <h4>General Settings</h4>
-        <form method="POST" action="/admin/settings/general" class="form-horizontal">
-            {{ form.hidden_tag() }}
-            {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
-                <div class="control-group{% if field.errors %} error{% endif %}">
-                    {{ field.label(class="control-label") }}
-                    <div class="controls">
-                        {{ field|safe }}
-                        {% if field.errors %}
-                            {% for error in field.errors %}
-                                <span style="color: #B94A48;">{{ error }}</span>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                </div>
-            {% endfor %}
-            <div class="control-group">
-                <div class="controls">
-                    {% for field in form if (field.widget.input_type == 'submit') %}
-                        {{ field(class="btn") }}
+    <div class="page-header">
+        <h1>Application Settings</h1>
+    </div>
+    <form method="POST" action="/admin/settings/general" class="form-horizontal" role="form">
+        {{ form.hidden_tag() }}
+        {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
+            <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}">
+                {{ field.label(class="col-sm-1 control-label") }}
+                <div class="col-xs-3">
+                    {{ field(class="form-control", **{'type': 'text'})|safe }}
+                    {% for error in field.errors %}
+                        <span class="form-control-feedback">{{ error }}</span>
                     {% endfor %}
                 </div>
             </div>
-        </form>
+        {% endfor %}
+        <div class="form-group">
+            <div class="col-sm-offset-1 col-xs-2">
+                {% for field in form if (field.widget.input_type == 'submit') %}
+                    {{ field(class="btn btn-primary") }}
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+    <hr />
+    <h4>Current Intro Display</h4>
+    <div class="jumbotron">
+        <div class="container">
+            <h1 class="site-header">{{ app_title }}</h1>
+            {{ app_well|safe }}
+            <p><a href="{{ url_for('adminblueprint.login') }}" title="Login to Application" class="btn btn-primary">Login to Application</a></p>
+        </div>
     </div>
-
-    <h3>Current App Intro Display</h3>
-    <div class="hero-unit">
-        <h1 class="site-header">{{ app_title }}</h1>
-        {{ app_well|safe }}
-    </div>
-    
-
 {% endblock %}
 {% block jquery %}
-    <script>
-
-    </script>
 {% endblock %}

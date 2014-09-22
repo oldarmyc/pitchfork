@@ -1,15 +1,15 @@
-{% extends "admin/_admin_base.html" %}
-{% block title %} - {{ title }}{% endblock %}
+{% extends "_base.html" %}
+{% block title %} - Manage Permissions{{ title }}{% endblock %}
 {% block addHeaders %}
 {% endblock %}
 {% block body %}
-    <div class="row-fluid">
-        <h2>Permission Settings</h2>
-        <h4>{{ title }}</h4>
-        <h5>Application</h5>
-        <form method="POST" action="" class="form-horizontal">
-            {{ form.hidden_tag() }}
-            <table class="table permissions-table">
+    <div class="page-header">
+        <h1>Manage Permissions for {{ unslug(role)|title }}</h1>
+    </div>
+    <h5 style="font-weight: 700;">Application</h5>
+    <form method="POST" action="" class="form-horizontal">
+        {{ form.hidden_tag() }}
+        <table class="table">
             {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit') %}
                 {% if field.widget.input_type == 'text' %}
                     {% set admin_loop = loop.index %}
@@ -24,39 +24,39 @@
                         {% endif %}
                     {% endif %}
                     </table>
-                    <h5>{{ field.label(id="label_header") }}</h5>
+                    <h5>{{ field.label }}</h5>
                     <table class="table permissions-table">
                 {% else %}
                     {% if admin_loop %}
                         {% if (loop.index - admin_loop) % 3 == 0 %}
                                 <td>
-                                    {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                    {{ field(id="permissions_box") }}&nbsp;{{ field.label(class="permissions-label") }}
                                 </td>
                             </tr>
                         {% elif (loop.index - admin_loop) % 3 == 1 %}
                             <tr>
                                 <td>
-                                    {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                    {{ field(id="permissions_box") }}&nbsp;{{ field.label(class="permissions-label") }}
                                 </td>
                         {% else %}
                             <td>
-                                {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                {{ field(id="permissions_box") }}&nbsp;{{ field.label(class="permissions-label") }}
                             </td>
                         {% endif %}
                     {% else %}
                         {% if loop.index % 3 == 0 %}
                                 <td>
-                                    {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                    {{ field(id="permissions_box") }}&nbsp;{{ field.label(class="permissions-label") }}
                                 </td>
                             </tr>
                         {% elif loop.index % 3 == 1 %}
                             <tr>
                                 <td>
-                                    {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                    {{ field(id="permissions_box") }}&nbsp;{{ field.label(class="permissions-label") }}
                                 </td>
                         {% else %}
                             <td>
-                                {{ field(id="permissions_box") }}{{ field.label(class="permissions-label") }}
+                                {{ field(id="permissions_box") }}&nbsp;{{ field.label(class="permissions-label") }}
                             </td>
                         {% endif %}
                     {% endif %}
@@ -74,17 +74,15 @@
                     {% endif %}
                 {% endif %}
             {% endfor %}
-            </table>
-            <div class="control-group">
-                <div>
-                    {% for field in form if (field.widget.input_type == 'submit') %}
-                        {{ field(class="btn") }}
-                    {% endfor %}
-                </div>
+        </table>
+        <div class="form-group">
+            <div class="col-xs-2">
+                {% for field in form if (field.widget.input_type == 'submit') %}
+                    {{ field(class="btn btn-primary") }}
+                {% endfor %}
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 {% endblock %}
 {% block jquery %}
-
 {% endblock %}

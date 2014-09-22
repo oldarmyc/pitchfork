@@ -1,108 +1,122 @@
-{% extends "admin/_admin_base.html" %}
+{% extends "_base.html" %}
 {% block title %} - Manage Forms{% endblock %}
 {% block addHeaders %}
+    <style>
+        .add-form-button {
+            float: left;
+            margin: -45px 0 0 300px;
+        }
+    </style>
 {% endblock %}
 {% block body %}
-    <h2>Application Custom Forms</h2>
-    <div id="add_menu_button">
+    <div class="page-header">
+        <h1>Custom Forms</h1>
         <a class="btn btn-primary add-form-button" data-toggle="modal" data-target="#add_custom_form">Add New Form</a>
     </div>
-    <div id="current_forms">
-        <h4>Current Forms</h4>
-        <table class="table">
+    <h4>Current Forms</h4>
+    <table class="table table-hover table-condensed">
+        <tr>
+            <th>Name</th>
+            <th>Submission URL</th>
+            <th style="text-align: center;">System Form</th>
+            <th style="text-align: center;">Active</th>
+            <th style="text-align: center;">Actions</th>
+            <th></th>
+        </tr>
+        {% for custom_form in all_forms %}
             <tr>
-                <th>Name</th>
-                <th>Submission URL</th>
-                <th style="text-align: center;">System Form</th>
-                <th style="text-align: center;">Active</th>
-                <th style="text-align: center;">Actions</th>
-                <th></th>
+                <td>
+                    {{ custom_form.get('display_name') }}
+                </td>
+                <td>
+                    {{ custom_form.get('submission_url') }}
+                </td>
+                <td style="text-align: center;">
+                    {% if custom_form.get('system_form') %}
+                        <span class="fa fa-check"></span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    {% if custom_form.get('active') %}
+                        <span class="fa fa-check-circle-o"></span>
+                    {% else %}
+                        <span class="fa fa-ban"></span>
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    <a href="/admin/forms/{{ custom_form.get('_id') }}" data-toggle="modal" data-target="#edit_custom_form" class="tooltip-title" title="Edit Custom Form"><span class="fa fa-pencil"></span></a>
+                    {% if custom_form.get('active') %}
+                        <a href="/admin/forms/deactivate/{{ custom_form.get('_id') }}" class="tooltip-title" title="Deactivate Custom Form"><span class="fa fa-ban"></span></a>
+                    {% else %}
+                        <a href="/admin/forms/activate/{{ custom_form.get('_id') }}" class="tooltip-title" title="Activate Custom Form"><span class="fa fa-check-circle-o"></span></a>
+                    {% endif %}
+                    {% if not custom_form.get('system_form') %}
+                        <a href="/admin/forms/delete/{{ custom_form.get('_id') }}" class="tooltip-title" title="Delete Custom Form"><span class="fa fa-trash-o"></span></a>
+                    {% else %}
+                        <a class="tooltip-title" title="Unable to delete System Form"><span class="fa fa-minus"></span></a>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/admin/forms/fields/{{ custom_form.get('_id') }}" class="btn btn-info">Manage Fields</a>
+                </td>
             </tr>
-            {% for custom_form in all_forms %}
-                <tr>
-                    <td>
-                        {{ custom_form.get('display_name') }}
-                    </td>
-                    <td>
-                        {{ custom_form.get('submission_url') }}
-                    </td>
-                    <td style="text-align: center;">
-                        {% if custom_form.get('system_form') %}
-                            <i class="icon-ok"></i>
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td style="text-align: center;">
-                        {% if custom_form.get('active') %}
-                            <i class="icon-ok-circle"></i>
-                        {% else %}
-                            <i class="icon-ban-circle"></i>
-                        {% endif %}
-                    </td>
-                    <td style="text-align: center;">
-                        <a href="/admin/forms/{{ custom_form.get('_id') }}" data-toggle="modal" data-target="#edit_custom_form" class="tooltip-title" title="Edit Custom Form"><i class="icon-pencil"></i></a>
-                        {% if custom_form.get('active') %}
-                            <a href="/admin/forms/deactivate/{{ custom_form.get('_id') }}" class="tooltip-title" title="Deactivate Custom Form"><i class="icon-ban-circle"></i></a>
-                        {% else %}
-                            <a href="/admin/forms/activate/{{ custom_form.get('_id') }}" class="tooltip-title" title="Activate Custom Form"><i class="icon-ok-circle"></i></a>
-                        {% endif %}
-                        {% if not custom_form.get('system_form') %}
-                            <a href="/admin/forms/delete/{{ custom_form.get('_id') }}" class="tooltip-title" title="Delete Custom Form"><i class="icon-trash"></i></a>
-                        {% else %}
-                            <a class="tooltip-title" title="Unable to delete System Form"><i class="icon-minus"></i></a>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="/admin/forms/fields/{{ custom_form.get('_id') }}" class="btn btn-info">Manage Fields</a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </table>
-    </div>
+        {% endfor %}
+    </table>
 
-    <div id="add_custom_form" class="modal hide">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            <h4>Add Custom Form</h4>
-        </div>
-        <div class="modal-body">
-            <form method="POST" action="" class="form-horizontal" id="add_form">
-                {{ form.hidden_tag() }}
-                {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit' ) %}
-                    <div class="control-group{% if field.errors %} error{% endif %}" id="{{ field.name }}_top">
-                        {{ field.label(class="control-label") }}
-                        <div class="controls">
-                            {{ field|safe }}
-                            <span class="{{ field.name }}" style="display: none; color: #B94A48;">Field Required</span>
-                        </div>
-                    </div>
-                {% endfor %}
-            </form>
-        </div>
-        <div class="modal-footer">
-            <input class="btn btn-primary" id="add_form_submit" name="submit" type="submit" form="add_form" value="Submit">
-            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <div id="add_custom_form" class="modal fade" aria-labelledby="AddForm" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4>Add Custom Form</h4>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="" class="form-horizontal" id="add_form">
+                        {{ form.hidden_tag() }}
+                        {% for field in form if (field.widget.input_type != 'hidden' and field.widget.input_type != 'submit' ) %}
+                            <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
+                                {{ field.label(class="col-sm-3 control-label") }}
+                                <div class="col-xs-7">
+                                    {% if field.type == 'TextField' %}
+                                        {{ field(class="form-control", **{'type': 'text'})|safe }}
+                                    {% elif field.type == 'BooleanField' %}
+                                        {{ field(type="checkbox") }}
+                                    {% endif %}
+                                    <span class="form-control-feedback {{ field.name }}" style="display: none; color: #B94A48; float: right; margin: -28px 0 0 0;">Field Required</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <input class="btn btn-primary" id="add_form_submit" name="submit" type="submit" form="add_form" value="Submit">
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="edit_custom_form" class="modal hide">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            <h4>Edit Custom Form</h4>
-        </div>
-        <div class="modal-body">
-        </div>
-        <div class="modal-footer">
-            <input class="btn btn-primary" id="edit_form_submit" name="submit" type="submit" form="edit_form" value="Submit">
-            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <div id="edit_custom_form" class="modal fade" aria-labelledby="EditForm" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4>Edit Custom Form</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <input class="btn btn-primary" id="edit_form_submit" name="submit" type="submit" form="edit_form" value="Submit">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
 {% endblock %}
 {% block jquery %}
-    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-tooltip.js') }}"></script>
-    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap-modal.js') }}"></script>
     <script>
         $(document).ready(function() {
             $('.tooltip-title').tooltip();
@@ -110,12 +124,12 @@
 
         function validate_field(field_name, error, span) {
             if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0) {
-                $('#' + error).removeClass('error');
+                $('#' + error).removeClass('has-error');
                 $('span.' + span).hide();
                 return true;
             }
             else {
-                $('#' + error).addClass('error');
+                $('#' + error).addClass('has-error');
                 $('span.' + span).show();
                 return false;
             }
@@ -134,21 +148,8 @@
             });
         });
 
-        $('#edit_form_submit').click(function() {
-            $("#edit_form").unbind('submit').bind('submit', function(e){
-                var url = validate_field('edit_form #submission_url', 'edit_submission_url_top', 'edit_submission_url')
-                var name = validate_field('edit_form #name', 'edit_name_top', 'edit_name')
-                if ( url & name ) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
-            });
-        });
-        
-        $('body').on('hidden', '.modal', function () {
-            $(this).removeData('modal');
+        $('body').on('hidden.bs.modal', '.modal', function () {
+            $(this).removeData();
         });
     </script>
 {% endblock %}

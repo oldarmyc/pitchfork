@@ -1,0 +1,104 @@
+{% extends "_base.html" %}
+{% block title %} - {{ title }}{% endblock %}
+{% block addHeaders %}
+    <style>
+        input[type=text] {
+            width: 525px;
+        }
+
+        .dl-horizontal dt {
+            text-align: left;
+            width: 140px;
+        }
+
+        .dl-horizontal dd {
+            margin-left: 140px;
+        }
+
+        .col-sm-1 {
+            width: 150px;
+        }
+
+        .col-sm-offset-1 {
+            margin-left: 150px;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+	<h3>{{ title }}</h3>
+    <h4>Globals</h4>
+    <form method="POST" action="{{ post_url }}" class="form-horizontal" role="form">
+        {{ form.hidden_tag() }}
+        {% for field in form if field.widget.input_type not in ['hidden', 'submit'] %}
+            <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
+                {{ field.label(class="col-sm-1 control-label") }}
+                <div class="col-xs-3">
+                    {% if field.type == 'TextField' or field.type == 'TextAreaField'  %}
+                        {{ field(class="form-control", **{'type': 'text'})|safe }}
+                    {% elif field.type == 'BooleanField' %}
+                        {{ field(type="checkbox") }}
+                    {% else %}
+                        {{ field(class="form-control") }}
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <span class="form-control-feedback">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="form-group">
+            <div class="col-sm-offset-1 col-xs-2">
+                {% for field in form if (field.widget.input_type == 'submit') %}
+                    {{ field(class="btn btn-primary") }}
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+    {% if product %}
+        <h4>Current Settings</h4>
+        <dl class="dl-horizontal">
+            <dt>Title:</dt>
+            <dd>
+                {{ product.title }}
+            </dd>
+            <dt>Product URL:</dt>
+            <dd>
+                {{ product.app_url }}
+            </dd>
+            <dt>DB Name:</dt>
+            <dd>
+                {{ product.db_name }}
+            </dd>
+            <dt>US Endpoint:</dt>
+            <dd>
+                {{ product.us_api }}
+            </dd>
+            <dt>UK Endpoint:</dt>
+            <dd>
+                {{ product.uk_api }}
+            </dd>
+            <dt>Base Doc URL:</dt>
+            <dd>
+                {{ product.doc_url }}
+            </dd>
+            <dt>Require DC:</dt>
+            <dd>
+                {% if product.require_dc %}
+                    <span class="fa fa-check text-success"></span>
+                {% else %}
+                    <span class="fa fa-minus text-danger"></span>
+                {% endif %}
+            </dd>
+            <dt>Active:</dt>
+            <dd>
+                {% if product.active %}
+                    <span class="fa fa-check text-success"></span>
+                {% else %}
+                    <span class="fa fa-minus text-danger"></span>
+                {% endif %}
+            </dd>
+        </dl>
+    {% endif %}
+{% endblock %}
+{% block jquery %}
+{% endblock %}
