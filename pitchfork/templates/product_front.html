@@ -73,7 +73,11 @@
                 }
             });
             $("#data_center").change();
-            scroll_if_anchor(window.location.hash);
+            {% if session.get('username') %}
+                scroll_if_anchor(window.location.hash, 45);
+            {% else %}
+                scroll_if_anchor(window.location.hash, 0);
+            {% endif %}
         });
 	</script>
 {% endblock %}
