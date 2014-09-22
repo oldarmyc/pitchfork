@@ -63,6 +63,7 @@
         var restrict_dcs = '{{ restrict_dcs|lower }}';
         var testing = '{{ testing|lower }}';
         $(document).ready(function(){
+            $('.prod-popover').popover();
             $('.tooltip-title').tooltip();
             $(window).scroll(function(){
                 if ( $(this).scrollTop() > 100 ) {
@@ -72,6 +73,7 @@
                 }
             });
             $("#data_center").change();
+            scroll_if_anchor(window.location.hash);
         });
 	</script>
 {% endblock %}
