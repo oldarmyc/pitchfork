@@ -64,7 +64,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 1,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/cloud_backup',
                         'display_name': 'Backup',
@@ -73,7 +73,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 2,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/big_data',
                         'display_name': 'Big Data',
@@ -82,7 +82,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 3,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/block_storage',
                         'display_name': 'Block Storage',
@@ -91,7 +91,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 4,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/databases',
                         'display_name': 'Databases',
@@ -100,7 +100,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 5,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/dns',
                         'display_name': 'DNS',
@@ -109,7 +109,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 6,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/cloud_feeds',
                         'display_name': 'Feeds',
@@ -118,7 +118,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 7,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/fg_servers',
                         'display_name': 'First Gen Servers',
@@ -127,7 +127,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 8,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/identity',
                         'display_name': 'Identity',
@@ -136,7 +136,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 9,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/images',
                         'display_name': 'Images',
@@ -145,7 +145,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 10,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/load_balancers',
                         'display_name': 'Load Balancers',
@@ -154,7 +154,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 11,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/monitoring',
                         'display_name': 'Monitoring',
@@ -163,7 +163,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 12,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/networks',
                         'display_name': 'Networks',
@@ -172,7 +172,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 13,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/ng_servers',
                         'display_name': 'Next Gen Servers',
@@ -181,7 +181,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 14,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/orchestration',
                         'display_name': 'Orchestration',
@@ -190,7 +190,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 15,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/queues',
                         'display_name': 'Queues',
@@ -199,7 +199,7 @@ def check_and_initialize():
                         'active': True,
                         'parent_order': 2,
                         'order': 16,
-                        'view_permissions': 'logged_in'
+                        'view_permissions': 'all'
                     }, {
                         'url': '/autoscale/manage',
                         'display_name': 'Autoscale',
