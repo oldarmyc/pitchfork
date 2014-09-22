@@ -653,17 +653,17 @@ def check_and_initialize():
                     'autoscale',
                     'cloud_backup',
                     'big_data',
-                    'cbs',
-                    'cloud_db',
-                    'cloud_dns',
+                    'block_storage',
+                    'databases',
+                    'dns',
                     'cloud_feeds',
                     'fg_servers',
-                    'cloud_identity',
+                    'identity',
                     'images',
                     'load_balancers',
                     'monitoring',
                     'ng_servers',
-                    'cloud_networks',
+                    'networks',
                     'orchestration',
                     'queues'
                 ],
@@ -705,7 +705,7 @@ def check_and_initialize():
                         'cbd-devguide/content/overview.html'
                     )
                 },
-                'cbs': {
+                'block_storage': {
                     'app_url': '/block_storage',
                     'title': 'Block Storage',
                     'db_name': 'cbs',
@@ -743,7 +743,7 @@ def check_and_initialize():
                         'rcbu-devguide/content/overview.html'
                     )
                 },
-                'cloud_db': {
+                'databases': {
                     'app_url': '/databases',
                     'title': 'Databases',
                     'db_name': 'cloud_db',
@@ -762,7 +762,7 @@ def check_and_initialize():
                         'v1.0/cdb-devguide/content/overview.html'
                     )
                 },
-                'cloud_dns': {
+                'dns': {
                     'app_url': '/dns',
                     'title': 'DNS',
                     'db_name': 'cloud_dns',
@@ -779,7 +779,7 @@ def check_and_initialize():
                         'v1.0/cdns-devguide/content/overview.html'
                     )
                 },
-                'cloud_identity': {
+                'identity': {
                     'app_url': '/identity',
                     'title': 'Identity',
                     'db_name': 'cloud_identity',
@@ -813,7 +813,7 @@ def check_and_initialize():
                         'v1.0/feeds-devguide/content/overview.html'
                     )
                 },
-                'cloud_networks': {
+                'networks': {
                     'app_url': '/networks',
                     'title': 'Networks',
                     'db_name': 'cloud_networks',
