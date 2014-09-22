@@ -6,7 +6,7 @@ $('.scrollup').click(function(){
 $('.toc').click(function(e) {
     e.preventDefault();
     var target = $(this).attr('href');
-    $('html, body').animate({ scrollTop: $(target).offset().top - 200}, 600);
+    $('html, body').animate({ scrollTop: $(target).offset().top - 160}, 600);
 });
 
 $('.testing-button').on('click', function() {
@@ -41,7 +41,7 @@ $('.code-blocks-wrapper #toggle_results').click(function(e){
     var results = $(this).data('results');
     $('#api_results_wrapper_' + title).toggle('slow', function() {
         if ( $('#api_results_wrapper_' + title).is(':visible') === false) {
-            // $('html, body').animate({ scrollTop: $('#' + title).offset().top - 60}, 10);
+            // $('html, body').animate({ scrollTop: $('#' + title).offset().top - 160}, 10);
         }
     });
     e.stopPropagation();
