@@ -25,20 +25,6 @@ $('.active-button').on('click', function() {
     window.location = '/' + temp_path[1] + '/';
 });
 
-$('.panel-title #toggle_details').click(function(e) {
-    var loop = $(this).data('loop');
-    var title = $(this).data('title');
-    var button = $(this);
-    $('.' + title).toggle('slow', function() {
-        if ( $('.' + title).is(':hidden') ) {
-            button.text('Call Details');
-        } else {
-            button.text('Hide Details');
-        }
-    });
-    e.stopPropagation();
-});
-
 $('.code-blocks-wrapper #toggle_results').click(function(e){
     var loop = $(this).data('loop');
     var title = $(this).data('title');
@@ -135,6 +121,22 @@ function formatXml(xml) {
         pad += indent;
     });
     return escapeHTML(formatted);
+}
+
+function setup_toggle_details() {
+    $('.panel-title #toggle_details').click(function(e) {
+        var loop = $(this).data('loop');
+        var title = $(this).data('title');
+        var button = $(this);
+        $('.' + title).toggle('slow', function() {
+            if ( $('.' + title).is(':hidden') ) {
+                button.text('Call Details');
+            } else {
+                button.text('Hide Details');
+            }
+        });
+        e.stopPropagation();
+    });
 }
 
 function send_api_call(send_to, data) {
