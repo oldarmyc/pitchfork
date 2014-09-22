@@ -73,6 +73,8 @@
         $(document).ready(function() {
             $("#data_center").change();
             $('.prod-popover').popover();
+            setup_toggle_details();
+            setup_api_call_submit();
         });
 
         $('.search-button').on('click', function() {
@@ -84,6 +86,8 @@
                 contentType: "application/json",
                 success: function(data){
                     $('#api_call_items').html(data);
+                    setup_toggle_details();
+                    setup_api_call_submit();
                 },
                 error: function(data) {
                     $('#api_call_items').html('<strong>There was an error with the request</strong>');
