@@ -26,6 +26,8 @@ Mocking is available to allow for the call to be built out using the parameters 
 
 **Note:** You do not have to login to the application in order to use the Mock capability for any product
 
+View the public version at [https://cloud-api.info](https://cloud-api.info "Pitchfork Application")
+
 #### Want to run it locally?
 All you need is Python 2.7, Mongodb, and a web browser
 
@@ -73,3 +75,23 @@ After you have saved the config file and your mongo database is up and running, 
 python runapp.py
 ````
 Browse to http://localhost:5000 to view the application and login using your Cloud credentials
+
+#### Upgrading
+
+To upgrade an existing install to work with the recent changes do the following:
+
+````
+git pull origin master
+pip install -r requirements
+````
+
+Log into mongodb. The command below assumes the database is named pitchfork.
+
+````
+use pitchfork
+db.settings.remove()
+db.api_settings.remove()
+db.reporting.remove()
+````
+
+Browse to the home page and after it loads refresh the page. The refresh will force the app to repopulate the settings, reporting, and api_settings collections automatically to work with the new changes.
