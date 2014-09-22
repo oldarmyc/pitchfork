@@ -31,11 +31,16 @@ def check_and_initialize():
                     ' Application</p><div class="center">'
                     'For improvements or suggestions please go to GitHub and '
                     'submit an <a href="https://github.com/rackerlabs/'
-                    'pitchfork/issues/new" target="_blank" title="Submit'
-                    ' a GitHub issue">issue</a></div><div id="issue_feedback"'
-                    ' class="center"></div>'
+                    'pitchfork/issues/new" class="tooltip-title" '
+                    'target="_blank" title="Submit a GitHub issue">issue</a>'
+                    '</div><div id="issue_feedback" class="center"></div>'
                 ),
-                'application_footer': '&copy; Rackspace, US',
+                'application_footer': (
+                    'This site is not officially supported by Rackspace. '
+                    'Source is available on <a href="https://github.com/'
+                    'rackerlabs/pitchfork/" class="tooltip-title" '
+                    'target="_blank" title="Pitchfork Repository">github</a>'
+                ),
                 'administrators': [
                     {
                         'admin': current_app.config.get(
