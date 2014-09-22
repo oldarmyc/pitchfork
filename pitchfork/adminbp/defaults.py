@@ -626,7 +626,7 @@ def check_and_initialize():
                             '/history',
                             '/search',
                             '/<product>/',
-                            '/<product>/api_call/process',
+                            '/<product>/api/call/process',
                             '/admin/logout/'
                         ]
                     }, {
@@ -637,7 +637,7 @@ def check_and_initialize():
                             '/',
                             '/search',
                             '/<product>/',
-                            '/<product>/api_call/process',
+                            '/<product>/api/call/process',
                             '/admin/login'
                         ]
                     },
