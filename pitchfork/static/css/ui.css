@@ -95,8 +95,13 @@ select#data_center {
     /*margin: -14px 100px 0 0;*/
 }
 
+.dl-horizontal {
+    margin-left: 6px;
+}
+
 .dl-horizontal dt {
-    width: 70px;
+    width: 83px;
+    text-align: left;
 }
 
 .dl-horizontal dd {
