@@ -99,6 +99,7 @@
                             {% endif %}
                         {% endfor %}
                     </div>
+                </div>
             {% else %}
                 <div class="col-md-3">
                     {% if field.type == 'TextField' or field.type == 'TextAreaField'  %}
@@ -115,8 +116,10 @@
                         <span class="form-control-feedback" style="width: 230px;">{{ error }}</span>
                     {% endfor %}
             {% endif %}
-            {% if show_link == 1 or (show_link != 1 and loop.last) %}
+            {% if show_link == 1 %}
                     </div>
+                </div>
+            {% elif  show_link != 1 and loop.last %}
                 </div>
             {% endif %}
         {% endfor %}
