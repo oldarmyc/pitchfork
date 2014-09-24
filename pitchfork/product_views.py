@@ -228,7 +228,7 @@ class ProductsView(FlaskView):
             title = 'Edit API Call'
             edit = True
             post_url = "/%s/manage/api/edit/%s" % (product, api_id)
-            form = global_helper.generate_edit_call_form(
+            form, count = global_helper.generate_edit_call_form(
                 found_product,
                 found_call,
                 api_id

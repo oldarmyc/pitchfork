@@ -139,7 +139,7 @@ def generate_edit_call_form(product, call, call_id):
     form.custom_header_key.data = call.custom_header_key
     form.custom_header_value.data = call.custom_header_value
     form.id.data = call_id
-    return form
+    return form, count
 
 
 def get_vars_for_call(submissions):
@@ -587,7 +587,6 @@ def log_api_call_request(
     api_url,
     title
 ):
-
     if not request.get('api_verb') in ['PUT', 'POST', 'DELETE']:
         rep_body = None
 
