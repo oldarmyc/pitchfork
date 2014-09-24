@@ -90,7 +90,8 @@ def pretty_print_json(string):
 
 @app.template_filter()
 def remove_slash(string):
-    return re.sub('\/', '', string)
+    if string:
+        return re.sub('\/', '', string)
 
 
 @app.context_processor
