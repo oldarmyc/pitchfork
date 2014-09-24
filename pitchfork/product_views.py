@@ -106,7 +106,10 @@ class ProductsView(FlaskView):
                 )
             )
 
-        if not (request.json.get('testing') or request.json.get('mock')):
+        if (
+            request.json.get('mock') is None and
+            request.json.get('testing') == 'false'
+        ):
             global_helper.log_api_call_request(
                 request_headers,
                 response_headers,
