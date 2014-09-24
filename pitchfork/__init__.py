@@ -88,6 +88,11 @@ def pretty_print_json(string):
     )
 
 
+@app.template_filter()
+def remove_slash(string):
+    return re.sub('\/', '', string)
+
+
 @app.context_processor
 def utility_processor():
     def unslug(string):
