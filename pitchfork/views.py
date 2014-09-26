@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from flask import g, render_template, request, redirect
-from flask import url_for, flash, jsonify
+from flask import flash, jsonify
 from flask.ext.classy import FlaskView, route
 from models import Product, Call
 from pitchfork.adminbp.decorators import check_perms
