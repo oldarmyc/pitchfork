@@ -41,7 +41,8 @@ from global_helper import front_page_most_accessed, search_for_calls
 from global_helper import gather_history
 
 
-import product_views  # noqa
+import product_views
+product_views.ProductsView.register(app)
 
 
 @app.template_filter()
