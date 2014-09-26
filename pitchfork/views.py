@@ -39,7 +39,7 @@ class ProductsView(FlaskView):
         found_product = self.retrieve_product(product)
         if type(found_product) is str:
             flash('Product not found, please check the URL and try again')
-            return redirect(url_for('index'))
+            return redirect('/')
 
         api_calls = global_helper.gather_api_calls(
             found_product,
@@ -67,7 +67,7 @@ class ProductsView(FlaskView):
         found_product = self.retrieve_product(product)
         if type(found_product) is str:
             flash('Product not found, please check the URL and try again')
-            return redirect(url_for('index'))
+            return redirect('/')
 
         if request.json.get('testing') or request.json.get('mock'):
             api_call = getattr(g.db, found_product.db_name).find_one(
@@ -82,7 +82,7 @@ class ProductsView(FlaskView):
         """ Change this to a jsonify call and have jquery handle it """
         if not api_call:
             flash('API Call was not found')
-            return redirect(url_for('index'))
+            return redirect('/')
 
         """ Retrieve all of the elements for the call """
         api_url, header, data_package = global_helper.generate_vars_for_call(
@@ -191,7 +191,7 @@ class ProductsView(FlaskView):
                 'Could not find product, please check the URL and try again',
                 'error'
             )
-            return redirect(url_for('index'))
+            return redirect('/')
 
         product_url = "/%s/manage/api" % product
         try:
@@ -219,7 +219,7 @@ class ProductsView(FlaskView):
         found_product = self.retrieve_product(product)
         if type(found_product) is str:
             flash('Product not found, please check the URL and try again')
-            return redirect(url_for('index'))
+            return redirect('/')
 
         if api_id:
             found_call = self.retrieve_api_call(found_product, api_id)
@@ -350,3 +350,50 @@ class ProductsView(FlaskView):
             return Call(temp_call)
 
         return temp_call
+
+
+class MiscView(FlaskView):
+    route_base = '/'
+
+    def index(self):
+        active_products, data_centers, = [], []
+        api_settings = g.db.api_settings.find_one()
+        if api_settings:
+            active_products = api_settings.get('active_products')
+
+        most_accessed = global_helper.front_page_most_accessed(active_products)
+        if api_settings:
+            data_centers = api_settings.get('dcs')
+
+        return render_template(
+            'index.html',
+            api_settings=api_settings,
+            active_products=active_products,
+            most_accessed=most_accessed,
+            data_centers=data_centers
+        )
+
+    @route('/search', methods=['POST'])
+    def search(self):
+        search_string = request.json.get('search_string')
+        api_results = global_helper.search_for_calls(search_string)
+        return render_template(
+            '_api_call_template.html',
+            call_loop=api_results
+        )
+
+    @route('/history')
+    @check_perms(request)
+    def history(self):
+        active_products = None
+        api_settings = g.db.api_settings.find_one()
+        if api_settings:
+            active_products = api_settings.get('active_products')
+
+        history = global_helper.gather_history()
+        return render_template(
+            'history.html',
+            history=history,
+            api_settings=api_settings,
+            active_products=active_products
+        )
