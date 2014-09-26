@@ -24,7 +24,9 @@ def check_and_initialize():
         current_app.logger.debug('Settings are empty...initializing')
         g.db.settings.insert(
             {
-                'application_title': current_app.name.title(),
+                'application_title': current_app.config.get(
+                    'APP_NAME', 'Pitchfork'
+                ),
                 'application_email': current_app.config.get('APP_EMAIL'),
                 'application_well': (
                     '<p class="lead">Rackspace Cloud - API Interactive Website'
