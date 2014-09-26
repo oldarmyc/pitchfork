@@ -15,15 +15,17 @@
 from flask import Flask, render_template, g, request
 from happymongo import HapPyMongo
 from config import config
-
-
-import re
-import json
-
-
 from adminbp import bp as admin_bp
 from manage_globals import bp as manage_bp
 from engine import bp as engine_bp
+from global_helper import front_page_most_accessed, search_for_calls
+from global_helper import gather_history
+from inspect import getmembers, isfunction
+
+
+import context_functions
+import product_views
+import template_filters
 
 
 app = Flask(__name__)
