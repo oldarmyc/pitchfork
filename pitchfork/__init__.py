@@ -44,53 +44,10 @@ custom_filters = {
 app.jinja_env.filters.update(custom_filters)
 app.context_processor(context_functions.utility_processor)
 
+views.ProductsView.register(app)
+views.MiscView.register(app)
+
 
 @app.before_request
 def before_request():
     g.db = db
-
-
-@app.route('/')
-def index():
-    active_products, data_centers, = [], []
-    api_settings = db.api_settings.find_one()
-    if api_settings:
-        active_products = api_settings.get('active_products')
-
-    most_accessed = front_page_most_accessed(active_products)
-    if api_settings:
-        data_centers = api_settings.get('dcs')
-
-    return render_template(
-        'index.html',
-        api_settings=api_settings,
-        active_products=active_products,
-        most_accessed=most_accessed,
-        data_centers=data_centers
-    )
-
-
-@app.route('/search', methods=['POST'])
-def search():
-    search_string = request.json.get('search_string')
-    api_results = search_for_calls(search_string)
-    return render_template(
-        '_api_call_template.html',
-        call_loop=api_results
-    )
-
-
-@app.route('/history')
-def history():
-    active_products = None
-    api_settings = g.db.api_settings.find_one()
-    if api_settings:
-        active_products = api_settings.get('active_products')
-
-    history = gather_history()
-    return render_template(
-        'history.html',
-        history=history,
-        api_settings=api_settings,
-        active_products=active_products
-    )
