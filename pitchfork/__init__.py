@@ -12,39 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import Flask, g
-from happymongo import HapPyMongo
-from config import config
-from adminbp import bp as admin_bp
-from manage_globals import bp as manage_bp
-from engine import bp as engine_bp
-from inspect import getmembers, isfunction
+import setup_application
 
 
-import context_functions
-import views
-import template_filters
-
-
-app = Flask(__name__)
-app.config.from_object(config)
-app.register_blueprint(admin_bp, url_prefix='/admin')
-app.register_blueprint(manage_bp, url_prefix='/manage')
-app.register_blueprint(engine_bp, url_prefix='/engine')
-
-# Setup DB based on the app name
-mongo, db = HapPyMongo(config)
-custom_filters = {
-    name: function for name, function in getmembers(template_filters)
-    if isfunction(function)
-}
-app.jinja_env.filters.update(custom_filters)
-app.context_processor(context_functions.utility_processor)
-
-views.ProductsView.register(app)
-views.MiscView.register(app)
-
-
-@app.before_request
-def before_request():
-    g.db = db
+app, db = setup_application.create_app()
