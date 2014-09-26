@@ -14,3 +14,4 @@ python-dateutil
 requests
 isoweek
 flask-classy
+selenium
