@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pitchfork import app
 from flask import g, render_template, request, redirect
 from flask import url_for, flash, jsonify
 from flask.ext.classy import FlaskView, route
@@ -351,6 +350,3 @@ class ProductsView(FlaskView):
             return Call(temp_call)
 
         return temp_call
-
-
-ProductsView.register(app)
