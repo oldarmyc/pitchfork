@@ -34,87 +34,15 @@ app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(manage_bp, url_prefix='/manage')
 app.register_blueprint(engine_bp, url_prefix='/engine')
 
-
 # Setup DB based on the app name
 mongo, db = HapPyMongo(config)
-
-
-from global_helper import front_page_most_accessed, search_for_calls
-from global_helper import gather_history
-
-
-import product_views
 product_views.ProductsView.register(app)
-
-
-@app.template_filter()
-def nl2br(value):
-    if value:
-        _newline_re = re.compile(r'(?:\r\n|\r|\n)')
-        return _newline_re.sub('<br>', value)
-
-
-@app.template_filter()
-def tab2spaces(value):
-    if value:
-        text = re.sub('\t', '&nbsp;' * 4, value)
-        return text
-
-
-@app.template_filter()
-def unslug(value):
-    text = re.sub('_', ' ', value)
-    return text
-
-
-@app.template_filter()
-def slug(value):
-    text = re.sub('\s+', '_', value)
-    return text
-
-
-@app.template_filter()
-def check_regex(value):
-    if re.match('variable', value):
-        return True
-    else:
-        return False
-
-
-@app.template_filter()
-def pretty_print_json(string):
-    return json.dumps(
-        string,
-        sort_keys=False,
-        indent=4,
-        separators=(',', ':')
-    )
-
-
-@app.template_filter()
-def remove_slash(string):
-    if string:
-        return re.sub('\/', '', string)
-
-
-@app.context_processor
-def utility_processor():
-    def unslug(string):
-        return re.sub('_', ' ', string)
-
-    def parse_field_data(value):
-        choices = re.sub('\r\n', ',', value)
-        return choices.split(',')
-
-    def slugify(data):
-        temp_string = re.sub(' +', ' ', str(data.strip()))
-        return re.sub(' ', '_', temp_string)
-
-    return dict(
-        parse_field_data=parse_field_data,
-        unslug=unslug,
-        slugify=slugify
-    )
+custom_filters = {
+    name: function for name, function in getmembers(template_filters)
+    if isfunction(function)
+}
+app.jinja_env.filters.update(custom_filters)
+app.context_processor(context_functions.utility_processor)
 
 
 @app.before_request
