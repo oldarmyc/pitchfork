@@ -193,4 +193,4 @@ def data_type_actions(key, action, value):
         return redirect(work.get('redirect'))
     else:
         flash('Invalid data key given so no action taken', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
