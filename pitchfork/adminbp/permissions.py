@@ -39,6 +39,7 @@ def role_has_access(path):
     if session.get('username'):
         if is_admin():
             return True, True
+
         elif session.get('role'):
             settings = g.db.settings.find_one(
                 {
