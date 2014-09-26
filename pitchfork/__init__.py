@@ -13,6 +13,4 @@
 # limitations under the License.
 
 import setup_application
-
-
 app, db = setup_application.create_app()
