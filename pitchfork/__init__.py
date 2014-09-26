@@ -12,19 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import Flask, render_template, g, request
+from flask import Flask, g
 from happymongo import HapPyMongo
 from config import config
 from adminbp import bp as admin_bp
 from manage_globals import bp as manage_bp
 from engine import bp as engine_bp
-from global_helper import front_page_most_accessed, search_for_calls
-from global_helper import gather_history
 from inspect import getmembers, isfunction
 
 
 import context_functions
-import product_views
+import views
 import template_filters
 
 
@@ -36,7 +34,6 @@ app.register_blueprint(engine_bp, url_prefix='/engine')
 
 # Setup DB based on the app name
 mongo, db = HapPyMongo(config)
-product_views.ProductsView.register(app)
 custom_filters = {
     name: function for name, function in getmembers(template_filters)
     if isfunction(function)
