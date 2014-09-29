@@ -102,6 +102,7 @@ pip install nose coverage selenium
 ````
 
 Selenium by default uses PhantomJS driver to run the browser tests. You can change the driver by editing the tests/test_selenium.py file and commenting out the PhantomJS line and uncommenting the Firefox driver line.
+
 **Note:** If you do not have the PhantomJS driver and the driver is not changed the tests will be skipped
 ````
 def setUpClass(cls):
