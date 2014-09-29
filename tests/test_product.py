@@ -1,33 +1,29 @@
-import pitchfork
+from pitchfork import setup_application
+from uuid import uuid4
+from bson.objectid import ObjectId
+
+
 import unittest
-import happymongo
 import json
 import urlparse
 import re
 import mock
 
 
-from uuid import uuid4
-from bson.objectid import ObjectId
-
-
 class ProductTests(unittest.TestCase):
     def setUp(self):
-        pitchfork.app.config['TESTING'] = True
-        if not re.search('_test', pitchfork.app.config['MONGO_DATABASE']):
-            test_db = '%s_test' % pitchfork.app.config['MONGO_DATABASE']
-            pitchfork.app.config['MONGO_DATABASE'] = test_db
-
-        self.app = pitchfork.app.test_client()
-        pitchfork.mongo, pitchfork.db = happymongo.HapPyMongo(pitchfork.app)
-        self.app.get('/')
+        self.app, self.db = setup_application.create_app('True')
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.client = self.app.test_client()
+        self.client.get('/')
 
     def teardown_app_data(self):
-        pitchfork.db.sessions.remove()
-        pitchfork.db.settings.remove()
-        pitchfork.db.forms.remove()
-        pitchfork.db.api_settings.remove()
-        pitchfork.db.autoscale.remove()
+        self.db.sessions.remove()
+        self.db.settings.remove()
+        self.db.forms.remove()
+        self.db.api_settings.remove()
+        self.db.autoscale.remove()
 
     def setup_user_login(self, sess):
         sess['username'] = 'test'
@@ -57,7 +53,7 @@ class ProductTests(unittest.TestCase):
         if tested:
             data['tested'] = 'True'
 
-        insert = pitchfork.db.autoscale.insert(data)
+        insert = self.db.autoscale.insert(data)
         return insert
 
     def setup_useable_api_call_with_variables(self):
@@ -81,8 +77,7 @@ class ProductTests(unittest.TestCase):
                 }
             ]
         }
-
-        insert = pitchfork.db.autoscale.insert(data)
+        insert = self.db.autoscale.insert(data)
         return insert
 
     def retrieve_csrf_token(self, data, variable=None):
@@ -109,7 +104,7 @@ class ProductTests(unittest.TestCase):
     """ Product Management Autoscale - Perms Test """
 
     def test_pf_autoscale_manage_admin_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -126,8 +121,8 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_admin_perms_no_settings(self):
-        pitchfork.db.api_settings.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.api_settings.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -144,7 +139,7 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_user_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -165,7 +160,7 @@ class ProductTests(unittest.TestCase):
     """ Functional Tests """
 
     def test_pf_autoscale_manage_add_update(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -192,7 +187,7 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after add data'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         autoscale = api_settings.get('autoscale')
         updated = False
         if autoscale.get('title') == 'Test':
@@ -202,7 +197,7 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_add_update_disable(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -228,7 +223,7 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after data update'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         autoscale = api_settings.get('autoscale')
         updated = False
         if autoscale.get('title') == 'Test':
@@ -244,7 +239,7 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_add_bad_data(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -268,17 +263,18 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after add bad data'
         )
-        calls = pitchfork.db.autoscale.find()
+        calls = self.db.autoscale.find()
         assert calls.count() == 0, 'Call added when it should not have been'
         self.teardown_app_data()
 
     """ Product API Management Autoscale - Perms Test """
 
     def test_pf_autoscale_manage_api_admin_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
+            c.get('/')
             response = c.get('/autoscale/manage/api')
 
         assert response._status_code == 200, (
@@ -292,7 +288,7 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_user_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -313,7 +309,7 @@ class ProductTests(unittest.TestCase):
     """ API Add """
 
     def test_pf_autoscale_manage_api_add_admin_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -330,7 +326,7 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_user_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -350,7 +346,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_add_admin_post_dupe_title(self):
         self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -375,13 +371,13 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Bad message when submitting duplicate title'
         )
-        calls = pitchfork.db.autoscale.find()
+        calls = self.db.autoscale.find()
         assert calls.count() == 1, 'Found to many calls in database'
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_admin_post_dupe_url(self):
         self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -406,13 +402,13 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Bad message when submitting duplicate url and verb'
         )
-        calls = pitchfork.db.autoscale.find()
+        calls = self.db.autoscale.find()
         assert calls.count() == 1, 'Found to many calls in database'
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_admin_post_good(self):
-        pitchfork.db.autoscale.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.autoscale.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -438,18 +434,18 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Bad message when submitting good call'
         )
-        found_call = pitchfork.db.autoscale.find()
+        found_call = self.db.autoscale.find()
         assert found_call.count() == 1, 'Could not find added api call'
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_admin_post_no_db(self):
-        pitchfork.db.autoscale.remove()
-        pitchfork.db.api_settings.update(
+        self.db.autoscale.remove()
+        self.db.api_settings.update(
             {}, {
                 '$set': {'autoscale.db_name': None}
             }
         )
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -476,7 +472,7 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Bad message when submitting call without DB'
         )
-        found_call = pitchfork.db.autoscale.find()
+        found_call = self.db.autoscale.find()
         assert found_call.count() == 0, 'No calls should have been found'
         self.teardown_app_data()
 
@@ -484,7 +480,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_edit_user_perms(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -506,7 +502,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_edit_admin_perms(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -526,8 +522,8 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_edit_admin_perms_with_vars(self):
         self.setup_useable_api_call_with_variables()
-        call = pitchfork.db.autoscale.find_one()
-        with pitchfork.app.test_client() as c:
+        call = self.db.autoscale.find_one()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -554,8 +550,8 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_edit_admin_bad_post(self):
         self.setup_useable_api_call()
-        call = pitchfork.db.autoscale.find_one()
-        with pitchfork.app.test_client() as c:
+        call = self.db.autoscale.find_one()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -583,7 +579,7 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Invalid HTML found when browsing to edit'
         )
-        check_call = pitchfork.db.autoscale.find_one()
+        check_call = self.db.autoscale.find_one()
         assert call == check_call, (
             'Call was edited when it was not supposed to'
         )
@@ -591,7 +587,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_edit_admin_good_post(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -621,7 +617,7 @@ class ProductTests(unittest.TestCase):
         assert response._status_code == 200, (
             'Invalid response code %s' % response._status_code
         )
-        calls = pitchfork.db.autoscale.find_one(
+        calls = self.db.autoscale.find_one(
             {
                 'title': 'Test Update Call'
             }
@@ -633,7 +629,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_mark_tested(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -647,13 +643,13 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Invalid response found after marking tested'
         )
-        check_call = pitchfork.db.autoscale.find_one({'_id': ObjectId(api_id)})
+        check_call = self.db.autoscale.find_one({'_id': ObjectId(api_id)})
         assert check_call.get('tested'), 'API call was not saved as tested'
         self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_mark_untested(self):
         api_id = self.setup_useable_api_call(True)
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -667,7 +663,7 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Invalid response found after marking untested'
         )
-        check_call = pitchfork.db.autoscale.find_one({'_id': ObjectId(api_id)})
+        check_call = self.db.autoscale.find_one({'_id': ObjectId(api_id)})
         assert not check_call.get('tested'), (
             'API call was not marked as untested'
         )
@@ -677,7 +673,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_delete_valid(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -691,7 +687,7 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Invalid response found after deleting call'
         )
-        api_call = pitchfork.db.autoscale.find()
+        api_call = self.db.autoscale.find()
         self.assertEquals(
             api_call.count(),
             0,
@@ -701,9 +697,9 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_manage_api_delete_invalid(self):
         api_id = self.setup_useable_api_call()
-        pitchfork.db.autoscale.remove()
+        self.db.autoscale.remove()
         self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -717,7 +713,7 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Invalid response found after invalid deletion'
         )
-        api_call = pitchfork.db.autoscale.find()
+        api_call = self.db.autoscale.find()
         self.assertEquals(
             api_call.count(),
             1,
@@ -728,7 +724,7 @@ class ProductTests(unittest.TestCase):
     """ Testing Product front """
 
     def test_pf_autoscale_api_admin_perms_testing(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -745,8 +741,8 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_api_admin_perms_testing_no_settings(self):
-        pitchfork.db.api_settings.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.api_settings.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -767,7 +763,7 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_api_user_perms_testing(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -788,7 +784,7 @@ class ProductTests(unittest.TestCase):
     """ Front product View """
 
     def test_pf_autoscale_api_admin_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -805,7 +801,7 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_api_user_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -822,8 +818,8 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_api_admin_perms_no_settings(self):
-        pitchfork.db.api_settings.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.api_settings.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -841,8 +837,8 @@ class ProductTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_autoscale_api_user_perms_no_settings(self):
-        pitchfork.db.api_settings.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.api_settings.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -863,7 +859,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_post_call(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -915,7 +911,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_post_call_testing(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -968,7 +964,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_post_call_testing_uk(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1021,7 +1017,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_post_call_bad_response(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1073,7 +1069,7 @@ class ProductTests(unittest.TestCase):
 
     def test_pf_autoscale_post_call_with_data(self):
         api_id = self.setup_useable_api_call_with_variables()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1125,8 +1121,6 @@ class ProductTests(unittest.TestCase):
             'No response data package was received'
         )
         self.teardown_app_data()
-
-    """ End Autoscale """
 
 if __name__ == '__main__':
     unittest.main()

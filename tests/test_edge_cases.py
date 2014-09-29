@@ -1,33 +1,29 @@
-import pitchfork
+from pitchfork import setup_application
+from uuid import uuid4
+
+
 import unittest
-import happymongo
 import json
 import urlparse
 import re
 import mock
 
 
-from uuid import uuid4
-
-
 class EdgeCasesTests(unittest.TestCase):
     def setUp(self):
-        pitchfork.app.config['TESTING'] = True
-        if not re.search('_test', pitchfork.app.config['MONGO_DATABASE']):
-            test_db = '%s_test' % pitchfork.app.config['MONGO_DATABASE']
-            pitchfork.app.config['MONGO_DATABASE'] = test_db
-
-        self.app = pitchfork.app.test_client()
-        pitchfork.mongo, pitchfork.db = happymongo.HapPyMongo(pitchfork.app)
-        self.app.get('/')
+        self.app, self.db = setup_application.create_app('True')
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.client = self.app.test_client()
+        self.client.get('/')
 
     def teardown_app_data(self):
-        pitchfork.db.sessions.remove()
-        pitchfork.db.settings.remove()
-        pitchfork.db.forms.remove()
-        pitchfork.db.api_settings.remove()
-        pitchfork.db.cloud_identity.remove()
-        pitchfork.db.queues.remove()
+        self.db.sessions.remove()
+        self.db.settings.remove()
+        self.db.forms.remove()
+        self.db.api_settings.remove()
+        self.db.cloud_identity.remove()
+        self.db.queues.remove()
 
     def setup_user_login(self, sess):
         sess['username'] = 'test'
@@ -89,7 +85,7 @@ class EdgeCasesTests(unittest.TestCase):
         if tested:
             data['tested'] = True
 
-        insert = pitchfork.db.autoscale.insert(data)
+        insert = self.db.autoscale.insert(data)
         return insert
 
     def setup_useable_api_call_with_variables(self):
@@ -187,7 +183,7 @@ class EdgeCasesTests(unittest.TestCase):
                 }
             ]
         }
-        insert = pitchfork.db.autoscale.insert(data)
+        insert = self.db.autoscale.insert(data)
         return insert
 
     def retrieve_csrf_token(self, data, variable=None):
@@ -215,7 +211,7 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_misc_post_call_complex_dict(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -268,7 +264,7 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_misc_post_call_complex_list(self):
         api_id = self.setup_useable_api_call_with_variables()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -329,7 +325,7 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_misc_browse_index_with_calls(self):
         self.setup_useable_api_call(True)
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -344,7 +340,7 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_misc_search_for_valid_call(self):
         self.setup_useable_api_call(True)
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -365,8 +361,8 @@ class EdgeCasesTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_misc_search_for_call_no_data(self):
-        pitchfork.db.api_settings.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.api_settings.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -387,7 +383,7 @@ class EdgeCasesTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_misc_search_for_call_bad_search(self):
-        pitchfork.db.api_settings.update(
+        self.db.api_settings.update(
             {
             }, {
                 '$set': {
@@ -395,7 +391,7 @@ class EdgeCasesTests(unittest.TestCase):
                 }
             }
         )
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -417,7 +413,7 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_misc_post_call_parse_through_html(self):
         api_id = self.setup_useable_api_call_with_variables()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -469,8 +465,8 @@ class EdgeCasesTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_add_call_with_variables(self):
-        pitchfork.db.autoscale.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.autoscale.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -517,7 +513,7 @@ class EdgeCasesTests(unittest.TestCase):
             response.data,
             'Bad message when submitting good call'
         )
-        found_call = pitchfork.db.autoscale.find_one(
+        found_call = self.db.autoscale.find_one(
             {
                 'title': 'Add Call'
             }
@@ -527,8 +523,8 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_process_call_with_bad_call_id(self):
         api_id = self.setup_useable_api_call()
-        pitchfork.db.autoscale.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.autoscale.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -562,8 +558,8 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_process_call_with_bad_product(self):
         api_id = self.setup_useable_api_call()
-        pitchfork.db.autoscale.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.autoscale.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -597,7 +593,7 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_process_mock_call(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -641,8 +637,8 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_manage_api_with_bad_product(self):
         self.setup_useable_api_call()
-        pitchfork.db.autoscale.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.autoscale.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -662,8 +658,8 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_manage_api_add_call_with_bad_product(self):
         self.setup_useable_api_call()
-        pitchfork.db.autoscale.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.autoscale.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -683,8 +679,8 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_manage_api_edit_call_with_bad_call_id(self):
         api_id = self.setup_useable_api_call()
-        pitchfork.db.autoscale.remove()
-        with pitchfork.app.test_client() as c:
+        self.db.autoscale.remove()
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -706,7 +702,7 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_manage_api_bad_action(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -730,7 +726,7 @@ class EdgeCasesTests(unittest.TestCase):
 
     def test_manage_api_bad_product(self):
         api_id = self.setup_useable_api_call()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 

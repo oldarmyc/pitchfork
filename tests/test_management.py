@@ -1,32 +1,28 @@
-import pitchfork
+from pitchfork import setup_application
+from datetime import datetime
+from uuid import uuid4
+
+
 import unittest
-import happymongo
 import json
 import urlparse
 import re
 import mock
 
 
-from datetime import datetime
-from uuid import uuid4
-
-
 class PitchforkTests(unittest.TestCase):
     def setUp(self):
-        pitchfork.app.config['TESTING'] = True
-        if not re.search('_test', pitchfork.app.config['MONGO_DATABASE']):
-            test_db = '%s_test' % pitchfork.app.config['MONGO_DATABASE']
-            pitchfork.app.config['MONGO_DATABASE'] = test_db
-
-        self.app = pitchfork.app.test_client()
-        pitchfork.mongo, pitchfork.db = happymongo.HapPyMongo(pitchfork.app)
-        self.app.get('/')
+        self.app, self.db = setup_application.create_app('True')
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.client = self.app.test_client()
+        self.client.get('/')
 
     def teardown_app_data(self):
-        pitchfork.db.sessions.remove()
-        pitchfork.db.settings.remove()
-        pitchfork.db.forms.remove()
-        pitchfork.db.api_settings.remove()
+        self.db.sessions.remove()
+        self.db.settings.remove()
+        self.db.forms.remove()
+        self.db.api_settings.remove()
 
     def setup_user_login(self, sess):
         sess['username'] = 'test'
@@ -45,7 +41,7 @@ class PitchforkTests(unittest.TestCase):
         sess['cloud_token'] = uuid4().hex
 
     def setup_useable_admin(self):
-        pitchfork.db.settings.update(
+        self.db.settings.update(
             {}, {
                 '$push': {
                     'administrators': {
@@ -80,25 +76,31 @@ class PitchforkTests(unittest.TestCase):
     """ Basic tests """
 
     def test_ui_index(self):
-        result = self.app.get('/')
+        with self.app.test_client() as c:
+            response = c.get('/')
+
         self.assertEqual(
-            result._status_code,
+            response._status_code,
             200,
-            'Invalid response code %s' % result._status_code
+            'Invalid response code %s' % response._status_code
         )
         self.teardown_app_data()
 
     def test_ui_login_get(self):
-        result = self.app.get('/admin/login')
+        with self.app.test_client() as c:
+            response = c.get('/admin/login')
+
         self.assertEquals(
-            result._status_code,
+            response._status_code,
             200,
-            'Invalid response code %s, expected 200' % result._status_code
+            'Invalid response code %s, expected 200' % response._status_code
         )
         self.teardown_app_data()
 
     def test_context_processor_slugify_for_app(self):
-        response = self.app.get('/admin/login')
+        with self.app.test_client() as c:
+            response = c.get('/admin/login')
+
         self.assertIn(
             'Slug_this_PHRASE',
             response.data,
@@ -107,16 +109,18 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_context_processor_unslug_for_app(self):
-        result = self.app.get('/admin/login')
+        with self.app.test_client() as c:
+            response = c.get('/admin/login')
+
         self.assertIn(
             'Unslug Test: unslug this value',
-            result.data,
+            response.data,
             'Unslug data was not correct'
         )
         self.teardown_app_data()
 
     def test_admin_no_login_redirect(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             result = c.get('/admin/settings/general')
 
         assert result._status_code == 302, \
@@ -132,7 +136,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_ui_login_post_bad_data(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             response = c.get('/admin/login')
             token = self.retrieve_csrf_token(response.data)
             data = {
@@ -151,7 +155,7 @@ class PitchforkTests(unittest.TestCase):
     def test_ui_login_post(self):
         today = datetime.now()
         tomorrow = '%s-%s-%s' % (today.year, today.month, today.day + 1)
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             response = c.get('/admin/login')
             token = self.retrieve_csrf_token(response.data)
             with mock.patch('requests.post') as patched_post:
@@ -189,7 +193,7 @@ class PitchforkTests(unittest.TestCase):
     def test_ui_login_post_admin(self):
         today = datetime.now()
         tomorrow = '%s-%s-%s' % (today.year, today.month, today.day + 1)
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             response = c.get('/admin/login')
             token = self.retrieve_csrf_token(response.data)
             with mock.patch('requests.post') as patched_post:
@@ -203,7 +207,7 @@ class PitchforkTests(unittest.TestCase):
                 )
                 data = {
                     'csrf_token': token,
-                    'username': 'oldarmyc',
+                    'username': 'rusty.shackelford',
                     'password': '12345'
                 }
                 response = c.post(
@@ -218,32 +222,32 @@ class PitchforkTests(unittest.TestCase):
                         response._status_code
                     )
                 )
-                result = c.post('/admin/forms')
-                assert result._status_code == 200, (
-                    'Invalid response code %s' % result._status_code
+                response = c.get('/admin/forms')
+                assert response._status_code == 200, (
+                    'Invalid response code %s' % response._status_code
                 )
         self.teardown_app_data()
 
     def test_ui_logout(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
-            result = self.app.get(
+            response = c.get(
                 '/admin/logout/',
                 follow_redirects=True
             )
 
         self.assertIn(
             '<a href="/admin/login">Log In</a>',
-            result.data,
+            response.data,
             'User was not logged out correctly'
         )
         self.teardown_app_data()
 
     def test_login_page_placeholder(self):
-        with pitchfork.app.test_client():
-            response = self.app.get('/admin/login')
+        with self.app.test_client() as c:
+            response = c.get('/admin/login')
 
         self.assertIn(
             'placeholder="API Key"',
@@ -255,7 +259,7 @@ class PitchforkTests(unittest.TestCase):
     """ Admin Manage - Permissions Tests """
 
     def test_ui_admin_perms_admins(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             result = c.get('/admin/settings/admins')
@@ -266,7 +270,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_ui_user_perms_admins(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
             result = c.get('/admin/settings/admins')
@@ -287,7 +291,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_admin_add(self):
         admin_to_add = 'test_user'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -311,7 +315,7 @@ class PitchforkTests(unittest.TestCase):
             'Did not find or incorrect flash message after update'
         )
 
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         admins = settings.get('administrators')
         assert len(admins) == 2, (
             'Incorrect numbers of admins, expected 2 and got %d' % len(admins)
@@ -327,7 +331,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_admin_duplicate_user(self):
         self.setup_useable_admin()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -355,7 +359,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_admin_form_validation_error(self):
         admin_to_add = ''
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/admin/settings/admins')
@@ -381,7 +385,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_admin_successfull_remove(self):
         self.setup_useable_admin()
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -396,12 +400,12 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after removal'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         admins = settings.get('administrators')
         assert len(admins) == 1, (
             'Incorrect numbers of admins, expected 1 and got %d' % len(admins)
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         updated_admins = settings.get('administrators')
         found_admin = True
         for admin in updated_admins:
@@ -413,7 +417,7 @@ class PitchforkTests(unittest.TestCase):
     """ General Settings """
 
     def test_ui_admin_perms_settings(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             result = c.get('/admin/settings/general')
@@ -423,7 +427,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_ui_user_perms_settings(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
             result = c.get('/admin/settings/general')
@@ -445,7 +449,7 @@ class PitchforkTests(unittest.TestCase):
         update_email = 'test@test.com'
         update_footer = 'test footer'
         update_intro = 'test intro'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/admin/settings/general')
@@ -469,7 +473,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after update'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         assert settings.get('application_title') == update_title, (
             'Title was not set correctly on update'
         )
@@ -487,7 +491,7 @@ class PitchforkTests(unittest.TestCase):
     """ Manage Roles - Permissions Tests """
 
     def test_ui_admin_perms_roles(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -498,7 +502,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_ui_user_perms_roles(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
             result = c.get('/admin/settings/roles')
@@ -518,7 +522,7 @@ class PitchforkTests(unittest.TestCase):
     """ Functional Tests """
 
     def test_roles_disable(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -534,7 +538,7 @@ class PitchforkTests(unittest.TestCase):
             'Did not find or incorrect flash message after disable'
         )
 
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         roles = settings.get('roles')
         disabled = False
         for role in roles:
@@ -548,7 +552,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_roles_enable(self):
         toggle_role = 'all'
-        pitchfork.db.settings.update(
+        self.db.settings.update(
             {
                 'roles.name': toggle_role
             }, {
@@ -557,7 +561,7 @@ class PitchforkTests(unittest.TestCase):
                 }
             }
         )
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -572,7 +576,7 @@ class PitchforkTests(unittest.TestCase):
             'Did not find or incorrect flash message after disable'
         )
 
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         roles = settings.get('roles')
         enabled = False
         for role in roles:
@@ -586,7 +590,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_roles_add_role(self):
         add_role = 'Test Role'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -610,7 +614,7 @@ class PitchforkTests(unittest.TestCase):
             'Did not find or incorrect flash message after add'
         )
 
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         roles = settings.get('roles')
         found = False
         for role in roles:
@@ -621,7 +625,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_roles_add_role_existing(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -647,7 +651,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_roles_add_role_bad_data(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -667,7 +671,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_roles_delete_role(self):
         remove_role = 'all'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -681,7 +685,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after delete'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         roles = settings.get('roles')
         role_removed = True
         for role in roles:
@@ -696,7 +700,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_ui_admin_perms_roles_set(self):
         using_role = 'all'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -710,7 +714,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_ui_user_perms_roles_set(self):
         using_role = 'all'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
             result = c.get(
@@ -734,7 +738,7 @@ class PitchforkTests(unittest.TestCase):
     def test_roles_all_add_permissions(self):
         using_role = 'all'
         add_permission = ' /admin/forms'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -760,7 +764,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after submit'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         roles = settings.get('roles')
         has_perm = False
         for role in roles:
@@ -774,7 +778,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_roles_all_add_bad_data(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -799,7 +803,7 @@ class PitchforkTests(unittest.TestCase):
     """ Manage Forms - Permissions Tests """
 
     def test_ui_admin_perms_forms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -811,7 +815,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_ui_user_perms_forms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
             result = c.get('/admin/forms')
@@ -832,11 +836,11 @@ class PitchforkTests(unittest.TestCase):
 
     def test_custom_forms_render_edit(self):
         using_form = 'login_form'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            form_element = pitchfork.db.forms.find_one({'name': using_form})
+            form_element = self.db.forms.find_one({'name': using_form})
             response = c.get(
                 '/admin/forms/%s' % form_element.get('_id')
             )
@@ -850,8 +854,8 @@ class PitchforkTests(unittest.TestCase):
 
     def test_custom_forms_deactivate_form(self):
         using_form = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': using_form})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': using_form})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -865,7 +869,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after deactivation'
         )
-        form_element = pitchfork.db.forms.find_one({'name': using_form})
+        form_element = self.db.forms.find_one({'name': using_form})
         deactivated = False
         if not form_element.get('active'):
             deactivated = True
@@ -875,8 +879,8 @@ class PitchforkTests(unittest.TestCase):
 
     def test_custom_forms_activate_form(self):
         using_form = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': using_form})
-        pitchfork.db.forms.update(
+        form_element = self.db.forms.find_one({'name': using_form})
+        self.db.forms.update(
             {
                 '_id': form_element.get('_id')
             }, {
@@ -885,7 +889,7 @@ class PitchforkTests(unittest.TestCase):
                 }
             }
         )
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -899,7 +903,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after activation'
         )
-        form_element = pitchfork.db.forms.find_one({'name': using_form})
+        form_element = self.db.forms.find_one({'name': using_form})
         activated = False
         if form_element.get('active'):
             activated = True
@@ -909,7 +913,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_custom_forms_add_new(self):
         form_name = 'Test Form'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -933,13 +937,13 @@ class PitchforkTests(unittest.TestCase):
             'Did not find or incorrect flash message after attempted add'
         )
 
-        found_form = pitchfork.db.forms.find_one({'display_name': form_name})
+        found_form = self.db.forms.find_one({'display_name': form_name})
         assert found_form, 'New form not found after add'
         self.teardown_app_data()
 
     def test_custom_forms_add_dup_name(self):
         dupe_form = 'login_form'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -969,7 +973,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_custom_forms_add_dup_route(self):
         dupe_route = '/admin/login'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1001,7 +1005,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_custom_forms_add_bad_data(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1020,8 +1024,8 @@ class PitchforkTests(unittest.TestCase):
 
     def test_custom_forms_delete_system_form(self):
         delete_form = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': delete_form})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': delete_form})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1035,16 +1039,16 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after attempted delete'
         )
-        form_element = pitchfork.db.forms.find_one({'name': delete_form})
+        form_element = self.db.forms.find_one({'name': delete_form})
         assert form_element, 'Form was deleted when it should not have been'
         self.teardown_app_data()
 
     def test_custom_forms_delete_form(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            pitchfork.db.forms.insert(
+            self.db.forms.insert(
                 {
                     'display_name': 'Test',
                     'name': 'test',
@@ -1053,7 +1057,7 @@ class PitchforkTests(unittest.TestCase):
                     'active': True
                 }
             )
-            form_element = pitchfork.db.forms.find_one({'name': 'test'})
+            form_element = self.db.forms.find_one({'name': 'test'})
             response = c.get(
                 '/admin/forms/delete/%s' % form_element.get('_id'),
                 follow_redirects=True
@@ -1066,7 +1070,7 @@ class PitchforkTests(unittest.TestCase):
         )
 
         form_deleted = True
-        form_element = pitchfork.db.forms.find_one({'name': 'test'})
+        form_element = self.db.forms.find_one({'name': 'test'})
         if form_element:
             form_deleted = False
 
@@ -1076,8 +1080,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_forms_edit(self):
         edit_form = 'login_form'
         change_name = 'Edit Form'
-        form_element = pitchfork.db.forms.find_one({'name': edit_form})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': edit_form})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1103,7 +1107,7 @@ class PitchforkTests(unittest.TestCase):
             'Did not find or incorrect flash message after edit login form'
         )
 
-        form_element = pitchfork.db.forms.find_one(
+        form_element = self.db.forms.find_one(
             {
                 'display_name': change_name
             }
@@ -1113,8 +1117,8 @@ class PitchforkTests(unittest.TestCase):
 
     def test_custom_forms_edit_dup_name(self):
         edit_form = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': edit_form})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': edit_form})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1139,14 +1143,14 @@ class PitchforkTests(unittest.TestCase):
             'Did not find or incorrect flash message after edit login dup name'
         )
 
-        form_element = pitchfork.db.forms.find_one({'name': edit_form})
+        form_element = self.db.forms.find_one({'name': edit_form})
         assert form_element, 'Form name was changed when it should not have'
         self.teardown_app_data()
 
     def test_custom_forms_edit_dup_submit_url(self):
         edit_form = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': edit_form})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': edit_form})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1177,7 +1181,7 @@ class PitchforkTests(unittest.TestCase):
             )
         )
 
-        form_element = pitchfork.db.forms.find_one({'name': edit_form})
+        form_element = self.db.forms.find_one({'name': edit_form})
         form_url = False
         if form_element.get('submission_url') == '/admin/login':
             form_url = True
@@ -1188,9 +1192,9 @@ class PitchforkTests(unittest.TestCase):
     """ Manage Form Fields - Permissions Tests """
 
     def test_ui_admin_perms_form_fields(self):
-        first_form = pitchfork.db.forms.find_one()
+        first_form = self.db.forms.find_one()
         form_id = first_form.get('_id')
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             result = c.get('/admin/forms/fields/%s' % form_id)
@@ -1201,9 +1205,9 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_ui_user_perms_form_fields(self):
-        first_form = pitchfork.db.forms.find_one()
+        first_form = self.db.forms.find_one()
         form_id = first_form.get('_id')
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -1226,8 +1230,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_activate(self):
         field_to_use = 'username'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        pitchfork.db.forms.update(
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        self.db.forms.update(
             {
                 '_id': form_element.get('_id'),
                 'fields.name': field_to_use
@@ -1237,7 +1241,7 @@ class PitchforkTests(unittest.TestCase):
                 }
             }
         )
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1254,7 +1258,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after activate'
         )
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+        form_element = self.db.forms.find_one({'name': form_to_use})
         fields = form_element.get('fields')
         active_field = False
         for field in fields:
@@ -1269,8 +1273,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_dedeactivate(self):
         field_to_use = 'username'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1287,7 +1291,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after deactivated'
         )
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+        form_element = self.db.forms.find_one({'name': form_to_use})
         fields = form_element.get('fields')
         active_field = False
         for field in fields:
@@ -1302,12 +1306,12 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_delete(self):
         field_to_use = 'username'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+            form_element = self.db.forms.find_one({'name': form_to_use})
             response = c.get(
                 '/admin/forms/fields/delete/%s/%s' % (
                     form_element.get('_id'),
@@ -1321,7 +1325,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after delete'
         )
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+        form_element = self.db.forms.find_one({'name': form_to_use})
         fields = form_element.get('fields')
         deleted = True
         for field in fields:
@@ -1335,12 +1339,12 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_delete_bad_field(self):
         field_to_use = 'this-is-bad-field'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+            form_element = self.db.forms.find_one({'name': form_to_use})
             response = c.get(
                 '/admin/forms/fields/delete/%s/%s' % (
                     form_element.get('_id'),
@@ -1359,8 +1363,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_promote(self):
         field_to_use = 'password'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1379,7 +1383,7 @@ class PitchforkTests(unittest.TestCase):
             json.loads(response.data).get('message'),
             'Did not find or incorrect flash message after promoting field'
         )
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+        form_element = self.db.forms.find_one({'name': form_to_use})
         fields = form_element.get('fields')
         promoted = False
         for field in fields:
@@ -1394,8 +1398,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_demote(self):
         field_to_use = 'username'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1415,7 +1419,7 @@ class PitchforkTests(unittest.TestCase):
             'Did not find or incorrect flash message after demoting field'
         )
 
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+        form_element = self.db.forms.find_one({'name': form_to_use})
         fields = form_element.get('fields')
         demoted = False
         for field in fields:
@@ -1430,8 +1434,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_add(self):
         field_to_use = 'field_test'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1459,7 +1463,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after adding field'
         )
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+        form_element = self.db.forms.find_one({'name': form_to_use})
         fields = form_element.get('fields')
         added = False
         for field in fields:
@@ -1473,8 +1477,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_add_dup_name(self):
         field_to_use = 'username'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1502,7 +1506,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after adding field'
         )
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+        form_element = self.db.forms.find_one({'name': form_to_use})
         fields = form_element.get('fields')
         added = True
         if len(fields) > 3:
@@ -1514,11 +1518,11 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_edit_render(self):
         field_to_use = 'username'
         form_to_use = 'login_form'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+            form_element = self.db.forms.find_one({'name': form_to_use})
             response = c.get(
                 '/admin/forms/fields/%s/%s' % (
                     form_element.get('_id'),
@@ -1536,8 +1540,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_edit_submit(self):
         field_to_use = 'username'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1569,7 +1573,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after edit'
         )
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+        form_element = self.db.forms.find_one({'name': form_to_use})
         fields = form_element.get('fields')
         edited = False
         for field in fields:
@@ -1583,8 +1587,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_edit_dup_field_name(self):
         field_to_use = 'username'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1616,7 +1620,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after edit duplicate'
         )
-        form_element = pitchfork.db.forms.find(
+        form_element = self.db.forms.find(
             {
                 'name': form_to_use,
                 'fields.name': field_to_use
@@ -1632,8 +1636,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_edit_invalid_data(self):
         field_to_use = 'username'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1665,7 +1669,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after edit with bad data'
         )
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
+        form_element = self.db.forms.find_one({'name': form_to_use})
         fields = form_element.get('fields')
         added = True
         if len(fields) > 3:
@@ -1677,8 +1681,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_edit_render_select(self):
         field_to_use = 'menu_permissions'
         form_to_use = 'menu_items_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1702,8 +1706,8 @@ class PitchforkTests(unittest.TestCase):
     def test_custom_form_fields_add_choices(self):
         field_to_use = 'field_test'
         form_to_use = 'login_form'
-        form_element = pitchfork.db.forms.find_one({'name': form_to_use})
-        with pitchfork.app.test_client() as c:
+        form_element = self.db.forms.find_one({'name': form_to_use})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1749,7 +1753,7 @@ class PitchforkTests(unittest.TestCase):
     """ Manage Menus - Permissions Tests """
 
     def test_ui_admin_perms_menus(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             result = c.get('/admin/settings/menu')
@@ -1760,7 +1764,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_ui_user_perms_menus(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
             result = c.get('/admin/settings/menu')
@@ -1780,7 +1784,7 @@ class PitchforkTests(unittest.TestCase):
     """ Functional Tests """
 
     def test_menu_items_add_no_parent(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1807,7 +1811,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after add'
         )
-        db_menu_item = pitchfork.db.settings.find(
+        db_menu_item = self.db.settings.find(
             {
                 'menu.display_name': 'Test'
             }
@@ -1817,7 +1821,7 @@ class PitchforkTests(unittest.TestCase):
             1,
             'DB menu item count is incorrect after add'
         )
-        db_top_menu = pitchfork.db.settings.find(
+        db_top_menu = self.db.settings.find(
             {
                 'top_level_menu.slug': 'test'
             }
@@ -1830,7 +1834,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_add_new_parent(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1857,7 +1861,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after add with parent'
         )
-        db_menu_item = pitchfork.db.settings.find(
+        db_menu_item = self.db.settings.find(
             {
                 'menu.display_name': 'Test'
             }
@@ -1867,7 +1871,7 @@ class PitchforkTests(unittest.TestCase):
             1,
             'DB menu item count is incorrect after add with parent'
         )
-        db_top_menu = pitchfork.db.settings.find(
+        db_top_menu = self.db.settings.find(
             {
                 'top_level_menu.slug': 'parent_name'
             }
@@ -1880,7 +1884,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_add_existing_parent(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1910,7 +1914,7 @@ class PitchforkTests(unittest.TestCase):
                 'after add with existing parent'
             )
         )
-        db_menu_item = pitchfork.db.settings.find(
+        db_menu_item = self.db.settings.find(
             {
                 'menu.display_name': 'Test'
             }
@@ -1920,7 +1924,7 @@ class PitchforkTests(unittest.TestCase):
             1,
             'DB menu item count is incorrect after add with existing parent'
         )
-        db_top_menu = pitchfork.db.settings.find_one({})
+        db_top_menu = self.db.settings.find_one({})
         self.assertEquals(
             len(db_top_menu.get('top_level_menu')),
             7,
@@ -1932,7 +1936,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_add_missing_data(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1959,7 +1963,7 @@ class PitchforkTests(unittest.TestCase):
                 'after add with missing data'
             )
         )
-        found = pitchfork.db.settings.find(
+        found = self.db.settings.find(
             {
                 'menu.db_name': 'test'
             }
@@ -1972,7 +1976,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_add_duplicate_name(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2002,7 +2006,7 @@ class PitchforkTests(unittest.TestCase):
                 'after add with duplicate name'
             )
         )
-        found = pitchfork.db.settings.find(
+        found = self.db.settings.find(
             {'menu.db_name': 'general_settings'}
         )
         self.assertEquals(
@@ -2013,7 +2017,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_add_duplicate_parent(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2043,7 +2047,7 @@ class PitchforkTests(unittest.TestCase):
                 'after add with duplicate parent'
             )
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         top_menu = settings.get('top_level_menu')
         count = 0
         for menu in top_menu:
@@ -2057,7 +2061,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_add_duplicate_url(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2087,7 +2091,7 @@ class PitchforkTests(unittest.TestCase):
                 'after add with duplicate URL'
             )
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         top_menu = settings.get('menu')
         count = 0
         for menu in top_menu:
@@ -2101,7 +2105,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_add_blank_parent(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2131,7 +2135,7 @@ class PitchforkTests(unittest.TestCase):
                 'after add with blank parent'
             )
         )
-        menu_item = pitchfork.db.settings.find({'menu.name': 'test'})
+        menu_item = self.db.settings.find({'menu.name': 'test'})
         self.assertEquals(
             menu_item.count(),
             0,
@@ -2140,7 +2144,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_edit_render(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2157,7 +2161,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_edit_render_bad_menu(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2174,7 +2178,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_edit_menu(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2201,7 +2205,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after edit menu item'
         )
-        found = pitchfork.db.settings.find({'menu.display_name': 'Menu Edit'})
+        found = self.db.settings.find({'menu.display_name': 'Menu Edit'})
         self.assertEquals(
             found.count(),
             1,
@@ -2210,7 +2214,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_edit_menu_duplicate_name(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2237,7 +2241,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after edit dupe name'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('menu')
         count = 0
         for menu in menus:
@@ -2252,7 +2256,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_edit_menu_duplicate_url(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2279,7 +2283,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after edit dup url'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('menu')
         count = 0
         for menu in menus:
@@ -2294,7 +2298,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_edit_menu_new_parent(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2321,7 +2325,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after edit new parent'
         )
-        found = pitchfork.db.settings.find(
+        found = self.db.settings.find(
             {
                 'top_level_menu.slug': 'test_parent'
             }
@@ -2334,7 +2338,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_edit_menu_duplicate_parent(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2361,7 +2365,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after edit dup parent'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('top_level_menu')
         count = 0
         for menu in menus:
@@ -2376,7 +2380,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_edit_menu_blank_parent(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2403,7 +2407,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after edit blank parent'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('top_level_menu')
         self.assertEquals(
             len(menus),
@@ -2414,7 +2418,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_menu_items_edit_menu_promote_top_level(self):
         to_use = 'Administrators'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2431,7 +2435,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after top level promote'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('top_level_menu')
         order = False
         for menu in menus:
@@ -2444,7 +2448,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_menu_items_edit_menu_demote_top_level(self):
         to_use = 'System'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2461,7 +2465,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after top level demote'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('top_level_menu')
         order = False
         for menu in menus:
@@ -2474,7 +2478,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_menu_items_edit_menu_promote_menu_item(self):
         to_use = 'manage_roles'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2491,7 +2495,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after top level promote'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('menu')
         order = False
         for menu in menus:
@@ -2504,7 +2508,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_menu_items_edit_menu_demote_menu_item(self):
         to_use = 'manage_roles'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2521,7 +2525,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after top level demote'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('menu')
         order = False
         for menu in menus:
@@ -2534,7 +2538,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_menu_items_edit_menu_enable_menu_item(self):
         to_use = 'manage_roles'
-        pitchfork.db.settings.update(
+        self.db.settings.update(
             {
                 'menu.name': to_use
             }, {
@@ -2543,7 +2547,7 @@ class PitchforkTests(unittest.TestCase):
                 }
             }
         )
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2557,7 +2561,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after menu item enable'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('menu')
         enabled = False
         for menu in menus:
@@ -2570,7 +2574,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_menu_items_edit_menu_disable_menu_item(self):
         to_use = 'manage_roles'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2584,7 +2588,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after menu item enable'
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('menu')
         enabled = False
         for menu in menus:
@@ -2597,7 +2601,7 @@ class PitchforkTests(unittest.TestCase):
 
     def test_menu_items_edit_menu_delete_menu_item(self):
         to_use = 'manage_roles'
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2611,7 +2615,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Did not find or incorrect flash message after menu item enable'
         )
-        found = pitchfork.db.settings.find({'menu.name': to_use})
+        found = self.db.settings.find({'menu.name': to_use})
         self.assertEquals(
             found.count(),
             0,
@@ -2620,7 +2624,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_top_menu_display_html(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2636,7 +2640,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_child_menu_display_html(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2651,7 +2655,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_delete_child_with_parent(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2685,7 +2689,7 @@ class PitchforkTests(unittest.TestCase):
                 'after delete child with parent'
             )
         )
-        db_menu_item = pitchfork.db.settings.find(
+        db_menu_item = self.db.settings.find(
             {
                 'menu.display_name': 'Test'
             }
@@ -2698,7 +2702,7 @@ class PitchforkTests(unittest.TestCase):
                 ' remove child and parent'
             )
         )
-        db_top_menu = pitchfork.db.settings.find(
+        db_top_menu = self.db.settings.find(
             {
                 'top_level_menu.slug': 'parent_name'
             }
@@ -2714,7 +2718,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_delete_child_with_parent_order_is_front(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2761,7 +2765,7 @@ class PitchforkTests(unittest.TestCase):
                 'after delete child with parent'
             )
         )
-        db_menu_item = pitchfork.db.settings.find(
+        db_menu_item = self.db.settings.find(
             {
                 'menu.display_name': 'Test'
             }
@@ -2773,7 +2777,7 @@ class PitchforkTests(unittest.TestCase):
                 'DB menu item count is incorrect after remove child and parent'
             )
         )
-        db_top_menu = pitchfork.db.settings.find(
+        db_top_menu = self.db.settings.find(
             {
                 'top_level_menu.slug': 'parent_name'
             }
@@ -2789,7 +2793,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_menu_items_delete_top_with_parent_and_children_behind(self):
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         top_level_add = [
             {
                 'slug': 'test',
@@ -2802,7 +2806,7 @@ class PitchforkTests(unittest.TestCase):
             }
         ]
         for item in top_level_add:
-            pitchfork.db.settings.update(
+            self.db.settings.update(
                 {
                     '_id': settings.get('_id')
                 }, {
@@ -2843,7 +2847,7 @@ class PitchforkTests(unittest.TestCase):
             }
         ]
         for item in add_menus:
-            pitchfork.db.settings.update(
+            self.db.settings.update(
                 {
                     '_id': settings.get('_id')
                 }, {
@@ -2853,7 +2857,7 @@ class PitchforkTests(unittest.TestCase):
                 }
             )
 
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2871,9 +2875,9 @@ class PitchforkTests(unittest.TestCase):
                 'after delete child with parent'
             )
         )
-        settings = pitchfork.db.settings.find_one()
+        settings = self.db.settings.find_one()
         menus = settings.get('menu')
-        db_top_order = pitchfork.db.settings.find_one(
+        db_top_order = self.db.settings.find_one(
             {
                 'top_level_menu.order': 9
             }
@@ -2885,7 +2889,7 @@ class PitchforkTests(unittest.TestCase):
         assert top_level_find, (
             'Found wrong order in top levels as it should be eight'
         )
-        db_menu_order = pitchfork.db.settings.find_one(
+        db_menu_order = self.db.settings.find_one(
             {
                 'menu.parent_order': 9
             }
@@ -2917,7 +2921,7 @@ class PitchforkTests(unittest.TestCase):
     """ Misc API Browse tests """
 
     def test_pf_history(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -2931,7 +2935,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_search(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -2956,7 +2960,7 @@ class PitchforkTests(unittest.TestCase):
     """ Datacenters Management - Perms Test """
 
     def test_pf_manage_dcs_admin_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -2973,7 +2977,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_manage_dcs_user_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -2994,7 +2998,7 @@ class PitchforkTests(unittest.TestCase):
     """ Functional Tests """
 
     def test_pf_manage_dcs_add(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3016,7 +3020,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after add'
         )
-        found_add = pitchfork.db.api_settings.find_one(
+        found_add = self.db.api_settings.find_one(
             {
                 'dcs.name': 'Test'
             }
@@ -3025,8 +3029,8 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_manage_dcs_add_no_dcs(self):
-        pitchfork.db.api_settings.update({}, {'$unset': {'dcs': 1}})
-        with pitchfork.app.test_client() as c:
+        self.db.api_settings.update({}, {'$unset': {'dcs': 1}})
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3048,7 +3052,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after add'
         )
-        found_add = pitchfork.db.api_settings.find_one(
+        found_add = self.db.api_settings.find_one(
             {
                 'dcs.name': 'Test'
             }
@@ -3057,7 +3061,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_manage_dcs_add_dupe(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3080,7 +3084,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after add duplicate'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         dcs = api_settings.get('dcs')
         count = 0
         for dc in dcs:
@@ -3095,7 +3099,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_manage_dcs_add_bad_data(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3121,7 +3125,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_manage_dcs_remove(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3135,7 +3139,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after remove'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         dcs = api_settings.get('dcs')
         count = 0
         for dc in dcs:
@@ -3152,7 +3156,7 @@ class PitchforkTests(unittest.TestCase):
     """ Verbs Management - Perms Test """
 
     def test_pf_verbs_admin_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3169,7 +3173,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_verbs_user_perms(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -3190,7 +3194,7 @@ class PitchforkTests(unittest.TestCase):
     """ Functional Tests """
 
     def test_pf_verbs_add(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3212,7 +3216,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after add'
         )
-        found_add = pitchfork.db.api_settings.find_one(
+        found_add = self.db.api_settings.find_one(
             {
                 'verbs.name': 'TEST'
             }
@@ -3221,7 +3225,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_verbs_add_dupe(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3243,7 +3247,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after add duplicate'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         verbs = api_settings.get('verbs')
         count = 0
         for verb in verbs:
@@ -3258,7 +3262,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_verbs_add_bad_data(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3285,7 +3289,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_verbs_remove(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3299,7 +3303,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after remove'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         verbs = api_settings.get('verbs')
         count = 0
         for verb in verbs:
@@ -3314,7 +3318,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_verbs_deactivate(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3328,7 +3332,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after deactivate'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         verbs = api_settings.get('verbs')
         deactivated = False
         for verb in verbs:
@@ -3340,7 +3344,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_verbs_activate(self):
-        pitchfork.db.api_settings.update(
+        self.db.api_settings.update(
             {
                 'verbs.name': 'GET'
             }, {
@@ -3349,7 +3353,7 @@ class PitchforkTests(unittest.TestCase):
                 }
             }
         )
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3363,7 +3367,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after activate'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         verbs = api_settings.get('verbs')
         activated = False
         for verb in verbs:
@@ -3375,7 +3379,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_bad_key_for_actions(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3389,7 +3393,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after bad key'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         verbs = api_settings.get('verbs')
         count = 0
         for verb in verbs:
@@ -3404,7 +3408,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_bad_action_for_actions(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3418,7 +3422,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after bad action'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         verbs = api_settings.get('verbs')
         count = 0
         for verb in verbs:
@@ -3433,7 +3437,7 @@ class PitchforkTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_pf_bad_dat_element_for_actions(self):
-        with pitchfork.app.test_client() as c:
+        with self.app.test_client() as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -3447,7 +3451,7 @@ class PitchforkTests(unittest.TestCase):
             response.data,
             'Incorrect flash message after bad data'
         )
-        api_settings = pitchfork.db.api_settings.find_one()
+        api_settings = self.db.api_settings.find_one()
         verbs = api_settings.get('verbs')
         count = 0
         for verb in verbs:
