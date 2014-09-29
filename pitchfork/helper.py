@@ -20,7 +20,7 @@ from models import Variable
 import re
 import requests
 import json
-import global_forms
+import forms
 import pymongo
 import datetime
 
@@ -84,20 +84,20 @@ def gather_api_calls(product, testing):
 
 
 def add_fields_to_form(count):
-    class F(global_forms.ApiCall):
+    class F(forms.ApiCall):
         pass
 
     for i in range(count):
         setattr(
             F,
             'variable_%i' % i,
-            global_forms.fields.FormField(global_forms.CallVariables)
+            forms.fields.FormField(forms.CallVariables)
         )
 
     setattr(
         F,
         'submit',
-        global_forms.fields.SubmitField('Submit')
+        forms.fields.SubmitField('Submit')
     )
     return F()
 
