@@ -17,8 +17,16 @@ class SeleniumTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        service_args = [
+            '--proxy=127.0.0.1:5010',
+            '--proxy-type=http'
+        ]
         try:
-            cls.client = webdriver.PhantomJS(service_log_path=os.path.devnull)
+            cls.client = webdriver.PhantomJS(
+                service_log_path=os.path.devnull,
+                service_args=service_args,
+                port=5010
+            )
             # cls.client = webdriver.Firefox()
         except:
             pass
