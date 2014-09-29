@@ -14,7 +14,6 @@ import template_filters
 
 def create_app(testing=None):
     app = Flask(__name__)
-
     if testing:
         config.TESTING = True
         config.MONGO_DATABASE = '%s_test' % config.MONGO_DATABASE
