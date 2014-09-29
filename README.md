@@ -126,4 +126,4 @@ Run tests with coverage
 ````
 nosetests --with-coverage --cover-erase --cover-package pitchfork
 ````
-**Note:** Selenium tests use port 5010 when running.
+**Note:** Selenium tests uses port 5000 when running.
