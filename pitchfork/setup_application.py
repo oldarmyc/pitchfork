@@ -43,8 +43,6 @@ def create_app(testing=None):
     app.register_blueprint(engine_bp, url_prefix='/engine')
 
     mongo, db = HapPyMongo(config)
-    views.ProductsView.register(app)
-    views.MiscView.register(app)
 
     custom_filters = {
         name: function for name, function in getmembers(template_filters)
@@ -56,5 +54,8 @@ def create_app(testing=None):
     @app.before_request
     def before_request():
         g.db = db
+
+    views.ProductsView.register(app)
+    views.MiscView.register(app)
 
     return app, db
