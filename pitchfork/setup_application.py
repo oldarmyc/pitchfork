@@ -22,8 +22,9 @@ from engine import bp as engine_bp
 
 
 import context_functions
-import views
 import template_filters
+import views
+import re
 
 
 def create_app(testing=None):
