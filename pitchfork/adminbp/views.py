@@ -1341,7 +1341,7 @@ def login():
 
     if results:
         permissions.set_permissions_for_application(session.get('username'))
-        return redirect(url_for('index'))
+        return redirect('/')
     else:
         return render_template(
             'admin/login.html',
@@ -1355,4 +1355,4 @@ def login():
 @bp.route('/logout/')
 def logout():
     session.clear()
-    return redirect(url_for('index'))
+    return redirect('/')

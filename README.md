@@ -77,7 +77,6 @@ python runapp.py
 Browse to http://localhost:5000 to view the application and login using your Cloud credentials
 
 #### Upgrading
-
 To upgrade an existing install to work with the recent changes do the following:
 
 ````
@@ -95,3 +94,37 @@ db.reporting.remove()
 ````
 
 Browse to the home page and after it loads refresh the page. The refresh will force the app to repopulate the settings, reporting, and api_settings collections automatically to work with the new changes.
+
+#### Testing
+The application unit tests can be run with nose and selenium. To install the requirements to run test do the following in your virtual environment
+````
+pip install nose coverage selenium
+````
+
+Selenium by default uses PhantomJS driver to run the browser tests. You can change the driver by editing the tests/test_selenium.py file and commenting out the PhantomJS line and uncommenting the Firefox driver line.
+
+**Note:** If you do not have the PhantomJS driver and the driver is not changed the tests will be skipped
+````
+def setUpClass(cls):
+    try:
+        cls.client = webdriver.PhantomJS(service_log_path=os.path.devnull)
+        # cls.client = webdriver.Firefox()
+    except:
+        pass
+````
+Documentation for selenium can be found here: http://selenium-python.readthedocs.org/en/latest/
+
+Once you are ready to run the tests do the following.
+Run tests only
+````
+nosetests
+````
+Run tests with verbosity to see what tests are being run
+````
+nosetests -v
+````
+Run tests with coverage
+````
+nosetests --with-coverage --cover-erase --cover-package pitchfork
+````
+**Note:** Selenium tests uses port 5000 when running.

@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pitchfork import app
 from flask import g, render_template, request, redirect
-from flask import url_for, flash, jsonify
+from flask import flash, jsonify
 from flask.ext.classy import FlaskView, route
 from models import Product, Call
 from pitchfork.adminbp.decorators import check_perms
 from bson.objectid import ObjectId
 
 
-import global_helper
-import global_forms
+import helper
+import forms
 import pymongo
 
 
@@ -40,13 +39,13 @@ class ProductsView(FlaskView):
         found_product = self.retrieve_product(product)
         if type(found_product) is str:
             flash('Product not found, please check the URL and try again')
-            return redirect(url_for('index'))
+            return redirect('/')
 
-        api_calls = global_helper.gather_api_calls(
+        api_calls = helper.gather_api_calls(
             found_product,
             testing_calls
         )
-        restrict_dcs, data_centers = global_helper.check_for_product_dcs(
+        restrict_dcs, data_centers = helper.check_for_product_dcs(
             found_product
         )
         return render_template(
@@ -68,7 +67,7 @@ class ProductsView(FlaskView):
         found_product = self.retrieve_product(product)
         if type(found_product) is str:
             flash('Product not found, please check the URL and try again')
-            return redirect(url_for('index'))
+            return redirect('/')
 
         if request.json.get('testing') or request.json.get('mock'):
             api_call = getattr(g.db, found_product.db_name).find_one(
@@ -83,10 +82,10 @@ class ProductsView(FlaskView):
         """ Change this to a jsonify call and have jquery handle it """
         if not api_call:
             flash('API Call was not found')
-            return redirect(url_for('index'))
+            return redirect('/')
 
         """ Retrieve all of the elements for the call """
-        api_url, header, data_package = global_helper.generate_vars_for_call(
+        api_url, header, data_package = helper.generate_vars_for_call(
             found_product,
             api_call,
             request
@@ -98,7 +97,7 @@ class ProductsView(FlaskView):
             request_headers = header
         else:
             request_headers, response_headers, response_body, response_code = (
-                global_helper.process_api_request(
+                helper.process_api_request(
                     api_url,
                     request.json.get('api_verb'),
                     data_package,
@@ -110,7 +109,7 @@ class ProductsView(FlaskView):
             request.json.get('mock') is None and
             request.json.get('testing') == 'false'
         ):
-            global_helper.log_api_call_request(
+            helper.log_api_call_request(
                 request_headers,
                 response_headers,
                 response_body,
@@ -141,11 +140,11 @@ class ProductsView(FlaskView):
             title = "%s Manage Settings" % product.title()
             post_url = "/%s/manage" % product
             product_data = None
-            form = global_forms.ManageProduct()
+            form = forms.ManageProduct()
         else:
             title = "%s Manage Settings" % product_data.title
             post_url = "%s/manage" % product_data.app_url
-            form = global_forms.ManageProduct(obj=product_data)
+            form = forms.ManageProduct(obj=product_data)
 
         if request.method == 'POST' and form.validate_on_submit():
             to_save = Product(request.form.to_dict())
@@ -192,7 +191,7 @@ class ProductsView(FlaskView):
                 'Could not find product, please check the URL and try again',
                 'error'
             )
-            return redirect(url_for('index'))
+            return redirect('/')
 
         product_url = "/%s/manage/api" % product
         try:
@@ -220,7 +219,7 @@ class ProductsView(FlaskView):
         found_product = self.retrieve_product(product)
         if type(found_product) is str:
             flash('Product not found, please check the URL and try again')
-            return redirect(url_for('index'))
+            return redirect('/')
 
         if api_id:
             found_call = self.retrieve_api_call(found_product, api_id)
@@ -231,14 +230,14 @@ class ProductsView(FlaskView):
             title = 'Edit API Call'
             edit = True
             post_url = "/%s/manage/api/edit/%s" % (product, api_id)
-            form, count = global_helper.generate_edit_call_form(
+            form, count = helper.generate_edit_call_form(
                 found_product,
                 found_call,
                 api_id
             )
         else:
             post_url = "/%s/manage/api/add" % product
-            form = global_helper.add_fields_to_form(count)
+            form = helper.add_fields_to_form(count)
             for i in range(count):
                 temp = getattr(form, 'variable_%i' % i)
                 temp.form.id_value.data = i
@@ -250,7 +249,7 @@ class ProductsView(FlaskView):
         form.product.data = product
         if request.method == 'POST' and form.validate_on_submit():
             api_call = Call(request.form.to_dict())
-            api_call.variables = global_helper.get_vars_for_call(
+            api_call.variables = helper.get_vars_for_call(
                 list(request.form.iterlists())
             )
             if api_id:
@@ -353,4 +352,48 @@ class ProductsView(FlaskView):
         return temp_call
 
 
-ProductsView.register(app)
+class MiscView(FlaskView):
+    route_base = '/'
+
+    def index(self):
+        active_products, data_centers, = [], []
+        api_settings = g.db.api_settings.find_one()
+        if api_settings:
+            active_products = api_settings.get('active_products')
+
+        most_accessed = helper.front_page_most_accessed(active_products)
+        if api_settings:
+            data_centers = api_settings.get('dcs')
+
+        return render_template(
+            'index.html',
+            api_settings=api_settings,
+            active_products=active_products,
+            most_accessed=most_accessed,
+            data_centers=data_centers
+        )
+
+    @route('/search', methods=['POST'])
+    def search(self):
+        search_string = request.json.get('search_string')
+        api_results = helper.search_for_calls(search_string)
+        return render_template(
+            '_api_call_template.html',
+            call_loop=api_results
+        )
+
+    @route('/history')
+    @check_perms(request)
+    def history(self):
+        active_products = None
+        api_settings = g.db.api_settings.find_one()
+        if api_settings:
+            active_products = api_settings.get('active_products')
+
+        history = helper.gather_history()
+        return render_template(
+            'history.html',
+            history=history,
+            api_settings=api_settings,
+            active_products=active_products
+        )

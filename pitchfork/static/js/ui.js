@@ -25,17 +25,19 @@ $('.active-button').on('click', function() {
     window.location = '/' + temp_path[1] + '/';
 });
 
-$('.code-blocks-wrapper #toggle_results').click(function(e){
-    var loop = $(this).data('loop');
-    var title = $(this).data('title');
-    var results = $(this).data('results');
-    $('#api_results_wrapper_' + title).toggle('slow', function() {
-        // if ( $('#api_results_wrapper_' + title).is(':visible') === false) {
-        //     $('html, body').animate({ scrollTop: $('#' + title).offset().top - 160}, 10);
-        // }
+function toggle_results() {
+    $('.code-blocks-wrapper #toggle_results').click(function(e){
+        var loop = $(this).data('loop');
+        var title = $(this).data('title');
+        var results = $(this).data('results');
+        $('#api_results_wrapper_' + title).toggle('slow', function() {
+            // if ( $('#api_results_wrapper_' + title).is(':visible') === false) {
+            //     $('html, body').animate({ scrollTop: $('#' + title).offset().top - 160}, 10);
+            // }
+        });
+        e.stopPropagation();
     });
-    e.stopPropagation();
-});
+}
 
 $('#data_center').on('change', function () {
     $(this).removeClass('error');

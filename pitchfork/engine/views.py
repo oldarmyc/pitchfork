@@ -302,7 +302,7 @@ def view_item_details(item_id):
         )
     else:
         flash('Item could not be found to display', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
 
 
 @bp.route('/generate', methods=['POST'])

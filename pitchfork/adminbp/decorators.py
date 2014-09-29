@@ -30,7 +30,7 @@ def check_perms(route):
                         'permissions to access this page',
                         'error'
                     )
-                    return redirect(url_for('index'))
+                    return redirect('/')
                 else:
                     flash('Please login to the Application', 'error')
                     return redirect(
