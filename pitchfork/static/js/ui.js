@@ -248,7 +248,7 @@ function setup_api_call_submit() {
             });
             var message = "You must provide the following data before the request can be sent:<br /><br />";
             var dc_check = false;
-            if ( require_dc && form_value != 'Mock API Call' ) {
+            if (require_dc === 'true' && form_value != 'Mock API Call') {
                 if ( validate_field('data_center') ) {
                     sending['data_center'] = $('#data_center').val();
                     sending['ddi'] = $('#ddi').val().trim();
