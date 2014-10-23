@@ -450,12 +450,14 @@ def process_api_request(url, verb, data, headers):
             response = getattr(requests, verb.lower())(
                 url,
                 headers=headers,
-                data=json.dumps(data)
+                data=json.dumps(data),
+                verify=False
             )
         else:
             response = getattr(requests, verb.lower())(
                 url,
-                headers=headers
+                headers=headers,
+                verify=False
             )
     except Exception as e:
         return (
