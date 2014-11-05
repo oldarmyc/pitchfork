@@ -484,13 +484,15 @@ class SeleniumTests(unittest.TestCase):
                 self.client.page_source,
                 'Did not find correct error message displayed with no Region'
             )
-
-            print self.client.page_source
-
             error_close = self.client.find_element_by_class_name(
                 'bootbox-close-button'
             )
-            error_close.click()
+
+            print error_close
+
+            if error_close:
+                error_close.click()
+
             dc_select.select_by_visible_text('DFW')
             send.click()
             time.sleep(1)
@@ -589,54 +591,57 @@ class SeleniumTests(unittest.TestCase):
     #         'Could not find untested call icon'
     #     )
     #
-    # def test_pf_front_generate_report_li_admin(self):
-    #     self.setup_user_logged_in(True)
-    #     self.setup_call_history()
-    #     self.client.get('http://localhost:5000/engine/')
-    #     self.assertIn(
-    #         'Application Reporting',
-    #         self.client.page_source,
-    #         'Could not find appropriate title on page'
-    #     )
-    #     generate = self.client.find_element_by_id('generate_report')
-    #     generate.click()
-    #     time.sleep(1)
-    #     self.assertIn(
-    #         'Query Results - (1)',
-    #         self.client.page_source,
-    #         'Did not find correct results on page'
-    #     )
-    #     history_item = self.db.history.find_one()
-    #     self.assertIn(
-    #         '/engine/view/%s' % str(history_item.get('_id')),
-    #         self.client.page_source,
-    #         'Did not find appropriate link to view details for history'
-    #     )
-    #     work_details = self.client.find_element_by_id('view_work_details')
-    #     assert not work_details.is_displayed(), (
-    #         'Modal is shown for some reason and should not be'
-    #     )
-    #     # info = self.client.find_element_by_xpath(
-    #     #     '/html/body/div[2]/div[3]/div[1]/div[3]/'
-    #     #     'table/tbody/tr[1]/td[9]/a[1]'
-    #     # )
-    #     # info.click()
-    #     # time.sleep(1)
-    #     # assert work_details.is_displayed(), (
-    #     #     'Details for call should be shown and were not'
-    #     # )
-    #     # self.assertIn(
-    #     #     'https://dfw.autoscale.api.rackspace.com/v1/123456/groups',
-    #     #     self.client.page_source,
-    #     #     'Could not find request URL in call details'
-    #     # )
-    #     # close_icon = self.client.find_element_by_class_name('close')
-    #     # close_icon.click()
-    #     # time.sleep(1)
-    #     # assert not work_details.is_displayed(), (
-    #     #     'Modal is still seend after close was initiated'
-    #     # )
-    #
+    def test_pf_front_generate_report_li_admin(self):
+        self.setup_user_logged_in(True)
+        self.setup_call_history()
+        self.client.get('http://localhost:5000/engine/')
+        self.assertIn(
+            'Application Reporting',
+            self.client.page_source,
+            'Could not find appropriate title on page'
+        )
+        generate = self.client.find_element_by_id('generate_report')
+        generate.click()
+        time.sleep(1)
+        self.assertIn(
+            'Query Results - (1)',
+            self.client.page_source,
+            'Did not find correct results on page'
+        )
+        history_item = self.db.history.find_one()
+        self.assertIn(
+            '/engine/view/%s' % str(history_item.get('_id')),
+            self.client.page_source,
+            'Did not find appropriate link to view details for history'
+        )
+        work_details = self.client.find_element_by_id('view_work_details')
+        assert not work_details.is_displayed(), (
+            'Modal is shown for some reason and should not be'
+        )
+        info = self.client.find_element_by_xpath(
+            '/html/body/div[2]/div[3]/div[1]/div[3]/'
+            'table/tbody/tr[1]/td[9]/a[1]'
+        )
+        info.click()
+        time.sleep(1)
+
+        print self.client.page_source
+
+        assert work_details.is_displayed(), (
+            'Details for call should be shown and were not'
+        )
+        self.assertIn(
+            'https://dfw.autoscale.api.rackspace.com/v1/123456/groups',
+            self.client.page_source,
+            'Could not find request URL in call details'
+        )
+        close_icon = self.client.find_element_by_class_name('close')
+        close_icon.click()
+        time.sleep(1)
+        assert not work_details.is_displayed(), (
+            'Modal is still seend after close was initiated'
+        )
+
     # def test_pf_user_login_search(self):
     #     self.setup_user_logged_in()
     #     self.setup_database(True)
