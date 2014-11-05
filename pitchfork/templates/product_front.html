@@ -55,9 +55,9 @@
     <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
 	<script>
         var global_count = 0;
-        var endpoints = '{{ api_settings.get_endpoints()|tojson }}';
-        endpoints = JSON.parse(endpoints);
-
+        var endpoints = JSON.parse(
+            '{{ api_settings.get_endpoints()|tojson }}'
+        );
         var require_region = '{{ require_region|lower }}';
         var restrict_regions = '{{ restrict_regions|lower }}';
         var testing = '{{ testing|lower }}';
