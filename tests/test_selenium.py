@@ -631,92 +631,92 @@ class SeleniumTests(unittest.TestCase):
             'Modal is still seend after close was initiated'
         )
 
-    # def test_pf_user_login_search(self):
-    #     self.setup_user_logged_in()
-    #     self.setup_database(True)
-    #     self.client.get('http://localhost:5000/')
-    #     time.sleep(1)
-    #     search = self.client.find_element_by_id('search_api')
-    #     search_button = self.client.find_element_by_class_name('search-button')
-    #     search.send_keys('test call')
-    #     search_button.click()
-    #     time.sleep(1)
-    #     self.assertIn(
-    #         'Autoscale - Test Call',
-    #         self.client.page_source,
-    #         'Could not find call after search for it'
-    #     )
-    #
-    #     self.client.find_element_by_class_name('prod-popover').click()
-    #     self.assertTrue(
-    #         self.client.find_element_by_class_name(
-    #             'popover-content'
-    #         ).is_displayed(),
-    #         'Link popover was not displayed correctly after click'
-    #     )
-    #     self.client.find_element_by_class_name('prod-popover').click()
-    #     try:
-    #         self.client.find_element_by_class_name('popover-content')
-    #         assert False, (
-    #             'Popover was found and should have been hidden by click'
-    #         )
-    #     except:
-    #         pass
-    #
-    #     details = self.client.find_element_by_id('api_call_inner')
-    #     assert not details.is_displayed(), 'Details element should not be seen'
-    #     details_button = self.client.find_element_by_class_name(
-    #         'toggle-element-1'
-    #     )
-    #     details_button.click()
-    #     time.sleep(1)
-    #     self.assertEquals(
-    #         details_button.text,
-    #         'Hide Details',
-    #         'Button text did not change after show'
-    #     )
-    #     assert details.is_displayed(), (
-    #         'Details are not disaplayed as they should have been'
-    #     )
-    #     assert self.client.find_element_by_id(
-    #         'test_call-autoscale_form'
-    #     ).is_displayed(), 'Form not displayed properly'
-    #
-    #     mock = self.client.find_element_by_xpath(
-    #         "//form[@id='test_call-autoscale_form']/input[7]"
-    #     )
-    #     mock_results = self.client.find_element_by_class_name(
-    #         'code-blocks-wrapper'
-    #     )
-    #     assert not mock_results.is_displayed(), (
-    #         'Call results should not be displayed yet'
-    #     )
-    #     mock.click()
-    #     time.sleep(1)
-    #     assert mock_results.is_displayed(), (
-    #         'Call results should be displayed and are not'
-    #     )
-    #     self.assertIn(
-    #         'https://{region}',
-    #         mock_results.text,
-    #         'Could not find request URL in mock return'
-    #     )
-    #     self.assertIn(
-    #         '"Content-Type": "application/json"',
-    #         mock_results.text,
-    #         'Could not find request headers content type'
-    #     )
-    #     hide_results = self.client.find_element_by_id('toggle_results')
-    #     self.assertIn(
-    #         hide_results.text,
-    #         'Hide Results',
-    #         'Incorrect wording on hide results button'
-    #     )
-    #     hide_results.click()
-    #     time.sleep(1)
-    #     assert not mock_results.is_displayed(), (
-    #         'Call results should be displayed and are not'
-    #     )
+    def test_pf_user_login_search(self):
+        self.setup_user_logged_in()
+        self.setup_database(True)
+        self.client.get('http://localhost:5000/')
+        time.sleep(1)
+        search = self.client.find_element_by_id('search_api')
+        search_button = self.client.find_element_by_class_name('search-button')
+        search.send_keys('test call')
+        search_button.click()
+        time.sleep(1)
+        self.assertIn(
+            'Autoscale - Test Call',
+            self.client.page_source,
+            'Could not find call after search for it'
+        )
+
+        self.client.find_element_by_class_name('prod-popover').click()
+        self.assertTrue(
+            self.client.find_element_by_class_name(
+                'popover-content'
+            ).is_displayed(),
+            'Link popover was not displayed correctly after click'
+        )
+        self.client.find_element_by_class_name('prod-popover').click()
+        try:
+            self.client.find_element_by_class_name('popover-content')
+            assert False, (
+                'Popover was found and should have been hidden by click'
+            )
+        except:
+            pass
+
+        details = self.client.find_element_by_id('api_call_inner')
+        assert not details.is_displayed(), 'Details element should not be seen'
+        details_button = self.client.find_element_by_class_name(
+            'toggle-element-1'
+        )
+        details_button.click()
+        time.sleep(1)
+        self.assertEquals(
+            details_button.text,
+            'Hide Details',
+            'Button text did not change after show'
+        )
+        assert details.is_displayed(), (
+            'Details are not disaplayed as they should have been'
+        )
+        assert self.client.find_element_by_id(
+            'test_call-autoscale_form'
+        ).is_displayed(), 'Form not displayed properly'
+
+        mock = self.client.find_element_by_xpath(
+            "//form[@id='test_call-autoscale_form']/input[7]"
+        )
+        mock_results = self.client.find_element_by_class_name(
+            'code-blocks-wrapper'
+        )
+        assert not mock_results.is_displayed(), (
+            'Call results should not be displayed yet'
+        )
+        mock.click()
+        time.sleep(1)
+        assert mock_results.is_displayed(), (
+            'Call results should be displayed and are not'
+        )
+        self.assertIn(
+            'https://{region}',
+            mock_results.text,
+            'Could not find request URL in mock return'
+        )
+        self.assertIn(
+            '"Content-Type": "application/json"',
+            mock_results.text,
+            'Could not find request headers content type'
+        )
+        hide_results = self.client.find_element_by_id('toggle_results')
+        self.assertIn(
+            hide_results.text,
+            'Hide Results',
+            'Incorrect wording on hide results button'
+        )
+        hide_results.click()
+        time.sleep(1)
+        assert not mock_results.is_displayed(), (
+            'Call results should be displayed and are not'
+        )
 
 if __name__ == "__main__":
     unittest.main()
