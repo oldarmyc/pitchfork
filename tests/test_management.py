@@ -2964,13 +2964,13 @@ class PitchforkTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/manage/regions')
 
         assert response._status_code == 200, (
             'Invalid response code %s' % response._status_code
         )
         self.assertIn(
-            'Manage Data Centers',
+            'Manage Regions',
             response.data,
             'Did not find correct HTML on page'
         )
@@ -2981,7 +2981,7 @@ class PitchforkTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
-            result = c.get('/manage/dcs')
+            result = c.get('/manage/regions')
 
         assert result._status_code == 302, (
             'Invalid response code %s' % result._status_code
@@ -3002,7 +3002,7 @@ class PitchforkTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/manage/regions')
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
@@ -3010,19 +3010,19 @@ class PitchforkTests(unittest.TestCase):
                 'abbreviation': 'TEST'
             }
             response = c.post(
-                '/manage/dcs',
+                '/manage/regions',
                 data=data,
                 follow_redirects=True
             )
 
         self.assertIn(
-            'DC successfully added to system',
+            'Region successfully added to system',
             response.data,
             'Incorrect flash message after add'
         )
         found_add = self.db.api_settings.find_one(
             {
-                'dcs.name': 'Test'
+                'regions.name': 'Test'
             }
         )
         assert found_add, 'DC not found after add'
@@ -3034,7 +3034,7 @@ class PitchforkTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/manage/regions')
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
@@ -3042,19 +3042,19 @@ class PitchforkTests(unittest.TestCase):
                 'abbreviation': 'TEST'
             }
             response = c.post(
-                '/manage/dcs',
+                '/manage/regions',
                 data=data,
                 follow_redirects=True
             )
 
         self.assertIn(
-            'DC successfully added to system',
+            'Region successfully added to system',
             response.data,
             'Incorrect flash message after add'
         )
         found_add = self.db.api_settings.find_one(
             {
-                'dcs.name': 'Test'
+                'regions.name': 'Test'
             }
         )
         assert found_add, 'DC not found after add'
@@ -3065,7 +3065,7 @@ class PitchforkTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/manage/regions')
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
@@ -3074,18 +3074,18 @@ class PitchforkTests(unittest.TestCase):
             }
 
             response = c.post(
-                '/manage/dcs',
+                '/manage/regions',
                 data=data,
                 follow_redirects=True
             )
 
         self.assertIn(
-            'DC Dallas is already setup, no need to add it again',
+            'Region Dallas is already setup, no need to add it again',
             response.data,
             'Incorrect flash message after add duplicate'
         )
         api_settings = self.db.api_settings.find_one()
-        dcs = api_settings.get('dcs')
+        dcs = api_settings.get('regions')
         count = 0
         for dc in dcs:
             if dc.get('name') == 'Dallas':
@@ -3103,13 +3103,13 @@ class PitchforkTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/manage/regions')
             data = {
                 'name': 'Test',
                 'abbreviation': 'TEST'
             }
             response = c.post(
-                '/manage/dcs',
+                '/manage/regions',
                 data=data,
                 follow_redirects=True
             )
@@ -3130,7 +3130,7 @@ class PitchforkTests(unittest.TestCase):
                 self.setup_admin_login(sess)
 
             response = c.get(
-                '/manage/dcs/delete/Dallas',
+                '/manage/regions/delete/Dallas',
                 follow_redirects=True
             )
 
@@ -3140,7 +3140,7 @@ class PitchforkTests(unittest.TestCase):
             'Incorrect flash message after remove'
         )
         api_settings = self.db.api_settings.find_one()
-        dcs = api_settings.get('dcs')
+        dcs = api_settings.get('regions')
         count = 0
         for dc in dcs:
             if dc.get('name') == 'Dallas':
@@ -3198,7 +3198,7 @@ class PitchforkTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/manage/verbs')
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
@@ -3229,7 +3229,7 @@ class PitchforkTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/manage/verbs')
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
@@ -3266,7 +3266,7 @@ class PitchforkTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
-            response = c.get('/manage/dcs')
+            response = c.get('/manage/verbs')
             data = {
                 'name': 'GET',
                 'active': True
