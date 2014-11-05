@@ -6,7 +6,7 @@ services:
 
 script:
   - sudo apt-get update > /dev/null
-  - "sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y libsasl2-dev libssl-dev rsyslog phantomjs > /dev/null"
+  - "sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y libsasl2-dev libssl-dev rsyslog > /dev/null"
   - sudo /usr/sbin/rsyslogd > /dev/null
   - pip install -r requirements.txt > /dev/null
   - pip install nose coverage flake8 selenium mock > /dev/null
