@@ -55,10 +55,14 @@
     <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
 	<script>
         var global_count = 0;
+        var endpoints = '{{ api_settings.get_endpoints()|tojson }}';
+        endpoints = JSON.parse(endpoints);
+
         var require_region = '{{ require_region|lower }}';
         var restrict_regions = '{{ restrict_regions|lower }}';
         var testing = '{{ testing|lower }}';
         var user = '{{ session.get("username") }}';
+
         $(document).ready(function(){
             $('.prod-popover').popover();
             $('.tooltip-title').tooltip();
