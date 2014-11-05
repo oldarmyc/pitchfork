@@ -1,3 +1,5 @@
+[![Build Status](http://drone.cloud-api.info/github.com/rackerlabs/pitchfork/status.svg?branch=master)](http://drone.cloud-api.info/github.com/rackerlabs/pitchfork)
+
 Pitchfork
 =========
 
