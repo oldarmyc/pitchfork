@@ -72,26 +72,27 @@ def define_available_verbs():
     )
 
 
-@bp.route('/dcs', methods=['GET', 'POST'])
+@bp.route('/regions', methods=['GET', 'POST'])
 @check_perms(request)
-def define_available_dcs():
+def define_available_regions():
     api_settings = g.db.api_settings.find_one()
-    form = forms.DCSet()
+    form = forms.RegionSet()
     if request.method == 'POST' and form.validate_on_submit():
         abbreviation = request.form.get('abbreviation').upper()
-        dc = request.form.get('name').title()
-        if api_settings.get('dcs'):
+        region = request.form.get('name').title()
+        if api_settings.get('regions'):
             if g.db.api_settings.find_one(
                 {
-                    'dcs.name': dc
+                    'regions.name': region
                 }
             ):
                 flash(
-                    'DC %s is already setup, no need to add it again' % dc,
+                    'Region %s is already setup, no '
+                    'need to add it again' % region,
                     'error'
                 )
                 return render_template(
-                    'manage/manage_dcs.html',
+                    'manage/manage_regions.html',
                     form=form,
                     api_settings=api_settings
                 )
@@ -101,32 +102,32 @@ def define_available_dcs():
                     '_id': api_settings.get('_id')
                 }, {
                     '$push': {
-                        'dcs': {
-                            'name': dc,
+                        'regions': {
+                            'name': region,
                             'abbreviation': abbreviation
                         }
                     }
                 }
             )
-            flash('DC successfully added to system', 'success')
+            flash('Region successfully added to system', 'success')
         else:
             g.db.api_settings.update(
                 {
                     '_id': api_settings.get('_id')
                 }, {
                     '$set': {
-                        'dcs': [
+                        'regions': [
                             {
-                                'name': dc,
+                                'name': region,
                                 'abbreviation': abbreviation
                             }
                         ]
                     }
                 }
             )
-            flash('DC successfully added to system', 'success')
+            flash('Region successfully added to system', 'success')
 
-        return redirect(url_for('manage_globals.define_available_dcs'))
+        return redirect(url_for('manage_globals.define_available_regions'))
     else:
         if request.method == 'POST':
             flash(
@@ -136,7 +137,7 @@ def define_available_dcs():
             )
 
         return render_template(
-            'manage/manage_dcs.html',
+            'manage/manage_regions.html',
             form=form,
             api_settings=api_settings
         )
@@ -152,9 +153,9 @@ def data_type_actions(key, action, value):
             'change': 'verbs.$.active',
             'redirect': '/manage/verbs'
         },
-        'dcs': {
-            'search': 'dcs.name',
-            'redirect': '/manage/dcs'
+        'regions': {
+            'search': 'regions.name',
+            'redirect': '/manage/regions'
         }
     }
     if maps.get(key):
