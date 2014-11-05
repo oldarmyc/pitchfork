@@ -484,13 +484,13 @@ class SeleniumTests(unittest.TestCase):
                 self.client.page_source,
                 'Did not find correct error message displayed with no DC'
             )
-            error_close = self.client.find_element_by_class_name(
-                'bootbox-close-button'
-            )
-            error_close.click()
-            dc_select.select_by_visible_text('DFW')
-            send.click()
-            time.sleep(1)
+            # error_close = self.client.find_element_by_class_name(
+            #     'bootbox-close-button'
+            # )
+            # error_close.click()
+            # dc_select.select_by_visible_text('DFW')
+            # send.click()
+            # time.sleep(1)
             assert send_results.is_displayed(), (
                 'Call results should be displayed and are not'
             )
