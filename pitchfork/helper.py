@@ -32,32 +32,35 @@ def get_timestamp():
     return datetime.datetime.now(UTC)
 
 
-def check_for_product_dcs(product):
-    restrict_dcs, data_centers = False, []
+def check_for_product_regions(product):
+    restrict_regions, regions = False, []
     api_settings = g.db.api_settings.find_one()
     if api_settings:
-        data_centers = api_settings.get('dcs')
-        if product.require_dc:
-            restrict_dcs = check_url_endpoints(
+        regions = api_settings.get('regions')
+        if not regions:
+            regions = api_settings.get('dcs')
+
+        if product.require_region:
+            restrict_regions = check_url_endpoints(
                 product.us_api,
                 product.uk_api
             )
-            if restrict_dcs:
-                data_centers = [
+            if restrict_regions:
+                regions = [
                     {'abbreviation': 'US'},
                     {'abbreviation': 'UK'}
                 ]
 
-    return restrict_dcs, data_centers
+    return restrict_regions, regions
 
 
 def check_url_endpoints(us, uk):
     us_find = re.findall('\{(.+?)\}', us)
     uk_find = re.findall('\{(.+?)\}', uk)
-    if 'data_center' in us_find:
+    if 'region' in us_find:
         return False
 
-    if 'data_center' in uk_find:
+    if 'region' in uk_find:
         return False
 
     return True
@@ -199,12 +202,12 @@ def generate_vars_for_call(product, call, request):
 def generate_api_url_for_call(product, request):
     data_center = request.json.get('data_center')
     if data_center in ['uk', 'lon']:
-        dc_url = product.uk_api
+        region_url = product.uk_api
     else:
-        dc_url = product.us_api
+        region_url = product.us_api
 
     temp_url = "%s%s" % (
-        dc_url,
+        region_url,
         request.json.get('api_url')
     )
     if request.json.get('mock'):
