@@ -84,7 +84,7 @@ function display_message(response_message, alert_class) {
 }
 
 function validate_field(field_name) {
-    if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0 & $.trim($('#' + field_name).val()) != 'none' ) {
+    if ( $.trim($('#' + field_name).val()) !== '' & $('#' + field_name).val().length !== 0 & $.trim($('#' + field_name).val()) !== 'none' ) {
         return true;
     }
     else {
@@ -107,7 +107,7 @@ function formatXml(xml) {
         if (node.match( /.+<\/\w[^>]*>$/ )) {
             indent = 0;
         } else if (node.match( /^<\/\w/ )) {
-            if (pad != 0) {
+            if (pad !== 0) {
                 pad -= 2;
             }
         } else if (node.match( /^<\w[^>]*[^\/]>.*$/ )) {
