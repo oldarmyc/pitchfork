@@ -57,11 +57,9 @@ $('#region').on('change', function () {
     }
     if (require_region === 'true') {
         if ( $('#region').val() == 'us' ) {
-            $('span.api-call-endpoint').text("{{ api_settings.us_api }}");
+            $('.api-call-endpoint').text(endpoints.us_api);
         } else if ( $('#region').val() == 'uk' ) {
-            $('span.api-call-endpoint').text("{{ api_settings.uk_api }}");
-        } else {
-            $('span.api-call-endpoint').text("{{ api_settings.us_api }}");
+            $('.api-call-endpoint').text(endpoints.uk_api);
         }
     }
 });
