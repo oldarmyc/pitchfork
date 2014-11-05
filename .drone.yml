@@ -12,5 +12,5 @@ script:
   - pip install nose coverage flake8 mock > /dev/null
   - flake8 .
   - cp pitchfork/config/config.example.py pitchfork/config/config.py
-  - cp tests/test_selenium.py tests/no_web_tests
+  - rm tests/test_selenium.py
   - nosetests -v --cover-erase --with-coverage --cover-package=pitchfork
