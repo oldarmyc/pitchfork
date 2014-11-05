@@ -39,7 +39,7 @@ class SeleniumTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         if cls.client:
-            cls.client.close()
+            cls.client.quit()
             cls.app_context.pop()
 
     def setUp(self):
