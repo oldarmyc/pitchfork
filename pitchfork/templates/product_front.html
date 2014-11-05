@@ -55,8 +55,8 @@
     <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
 	<script>
         var global_count = 0;
-        var require_dc = '{{ require_dc|lower }}';
-        var restrict_dcs = '{{ restrict_dcs|lower }}';
+        var require_region = '{{ require_region|lower }}';
+        var restrict_regions = '{{ restrict_regions|lower }}';
         var testing = '{{ testing|lower }}';
         var user = '{{ session.get("username") }}';
         $(document).ready(function(){
@@ -73,7 +73,7 @@
                 }
             });
 
-            $("#data_center").change();
+            $("#region").change();
             if (user != 'None') {
                 scroll_if_anchor(window.location.hash, 45);
             } else {

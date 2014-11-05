@@ -67,11 +67,11 @@
     <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
     <script>
         var global_count = 0;
-        var require_dc = 'true';
-        var restrict_dcs = '{{ restrict_dcs|lower }}';
+        var require_region = 'true';
+        var restrict_regions = '{{ restrict_regions|lower }}';
         var testing = 'false';
         $(document).ready(function() {
-            $("#data_center").change();
+            $("#region").change();
             $('.prod-popover').popover();
             $('.tooltip-title').tooltip();
             setup_toggle_details();
