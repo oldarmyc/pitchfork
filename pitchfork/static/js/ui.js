@@ -39,7 +39,7 @@ function toggle_results() {
     });
 }
 
-$('#data_center').on('change', function () {
+$('#region').on('change', function () {
     $(this).removeClass('error');
     if ($(this).val() == 'none') {
         $(this).addClass('empty');
@@ -50,18 +50,18 @@ $('#data_center').on('change', function () {
     $('.code-block').text('None');
     $('.code-blocks-wrapper').hide();
     if (global_count > 1) {
-        display_message('Responses have been cleared as the data does not apply to the new data center', 'info');
+        display_message('Responses have been cleared as the data does not apply to the new region', 'info');
     }
     else {
         global_count += 1;
     }
-    if (require_dc === 'true') {
-        if ( $('#data_center').val() == 'us' ) {
-            $('span.api-call-endpoint').text("{{ api_settings.us_api }}")
-        } else if ( $('#data_center').val() == 'uk' ) {
-            $('span.api-call-endpoint').text("{{ api_settings.uk_api }}")
+    if (require_region === 'true') {
+        if ( $('#region').val() == 'us' ) {
+            $('span.api-call-endpoint').text("{{ api_settings.us_api }}");
+        } else if ( $('#region').val() == 'uk' ) {
+            $('span.api-call-endpoint').text("{{ api_settings.uk_api }}");
         } else {
-            $('span.api-call-endpoint').text("{{ api_settings.us_api }}")
+            $('span.api-call-endpoint').text("{{ api_settings.us_api }}");
         }
     }
 });
@@ -84,7 +84,7 @@ function display_message(response_message, alert_class) {
 }
 
 function validate_field(field_name) {
-    if ( $.trim($('#' + field_name).val()) != '' & $('#' + field_name).val().length != 0 & $.trim($('#' + field_name).val()) != 'none' ) {
+    if ( $.trim($('#' + field_name).val()) !== '' & $('#' + field_name).val().length !== 0 & $.trim($('#' + field_name).val()) !== 'none' ) {
         return true;
     }
     else {
@@ -107,7 +107,7 @@ function formatXml(xml) {
         if (node.match( /.+<\/\w[^>]*>$/ )) {
             indent = 0;
         } else if (node.match( /^<\/\w/ )) {
-            if (pad != 0) {
+            if (pad !== 0) {
                 pad -= 2;
             }
         } else if (node.match( /^<\w[^>]*[^\/]>.*$/ )) {
@@ -247,38 +247,34 @@ function setup_api_call_submit() {
                 sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
             });
             var message = "You must provide the following data before the request can be sent:<br /><br />";
-            var dc_check = false;
-            if (require_dc === 'true' && form_value != 'Mock API Call') {
-                if ( validate_field('data_center') ) {
-                    sending['data_center'] = $('#data_center').val();
-                    sending['ddi'] = $('#ddi').val().trim();
-                    dc_check = true;
+            var region_check = false;
+            if (require_region === 'true' && form_value !== 'Mock API Call') {
+                if ( validate_field('region') ) {
+                    sending.region = $('#region').val();
+                    sending.ddi = $('#ddi').val().trim();
+                    region_check = true;
                 } else {
-                    $('#data_center').addClass('error');
-                    if (restrict_dcs === 'true') {
-                        message += "<span class='text-danger'>Region</span>";
-                    } else {
-                        message += "<span class='text-danger'>Data Center</span>";
-                    }
+                    $('#region').addClass('error');
+                    message += "<span class='text-danger'>Region</span>";
                 }
-            } else if (require_dc === 'true') {
-                if ($('#data_center').length > 0 && $('#data_center').val() != 'None') {
-                    sending['data_center'] = $('#data_center').val();
-                    sending['ddi'] = $('#ddi').val().trim();
+            } else if (require_region === 'true') {
+                if ($('#region').length > 0 && $('#region').val() != 'None') {
+                    sending.region = $('#region').val();
+                    sending.ddi = $('#ddi').val().trim();
                 }
             } else {
-                dc_check = true;
-                sending['ddi'] = $('#ddi').val().trim();
+                region_check = true;
+                sending.ddi = $('#ddi').val().trim();
             }
-            if (dc_check) {
-                sending['testing'] = testing;
+            if (region_check) {
+                sending.testing = testing;
                 validated = true;
             }
             if (form_value == 'Mock API Call') {
                 validated = true;
-                sending['mock'] = true;
-                sending['data_center'] = '{data_center}';
-                sending['ddi'] = '{ddi}';
+                sending.mock = true;
+                sending.region = '{region}';
+                sending.ddi = '{ddi}';
             }
             if (validated) {
                 process_display_api_call(

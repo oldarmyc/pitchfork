@@ -39,7 +39,7 @@ class SeleniumTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         if cls.client:
-            cls.client.close()
+            cls.client.quit()
             cls.app_context.pop()
 
     def setUp(self):
@@ -256,7 +256,7 @@ class SeleniumTests(unittest.TestCase):
             'Call results should be displayed and are not'
         )
         self.assertIn(
-            'https://{data_center}',
+            'https://{region}',
             mock_results.text,
             'Could not find request URL in mock return'
         )
@@ -419,7 +419,7 @@ class SeleniumTests(unittest.TestCase):
             'Call results should be displayed and are not'
         )
         self.assertIn(
-            'https://{data_center}',
+            'https://{region}',
             mock_results.text,
             'Could not find request URL in mock return'
         )
@@ -464,8 +464,8 @@ class SeleniumTests(unittest.TestCase):
                 'toggle-element-1'
             )
             details_button.click()
-            dc_select = Select(self.client.find_element_by_id('data_center'))
-            dc_select.select_by_visible_text('Select Data Center')
+            dc_select = Select(self.client.find_element_by_id('region'))
+            dc_select.select_by_visible_text('Select Region')
             time.sleep(1)
             send = self.client.find_element_by_xpath(
                 "//form[@id='test_call-autoscale_form']/input[6]"
@@ -482,7 +482,7 @@ class SeleniumTests(unittest.TestCase):
                 'You must provide the following data '
                 'before the request can be sent',
                 self.client.page_source,
-                'Did not find correct error message displayed with no DC'
+                'Did not find correct error message displayed with no Region'
             )
             error_close = self.client.find_element_by_class_name(
                 'bootbox-close-button'
@@ -518,9 +518,9 @@ class SeleniumTests(unittest.TestCase):
             dc_select.select_by_visible_text('ORD')
             self.assertIn(
                 'Responses have been cleared as the data '
-                'does not apply to the new data center',
+                'does not apply to the new region',
                 self.client.page_source,
-                'Did not DC clearing message as expected'
+                'Did not get Region clearing message as expected'
             )
             send.click()
             time.sleep(1)
@@ -558,7 +558,7 @@ class SeleniumTests(unittest.TestCase):
             'Could not find correct manage title on page'
         )
         self.assertIn(
-            'https://{data_center}.autoscale',
+            'https://{region}.autoscale',
             self.client.page_source,
             'Could not find URI for autoscale in manage'
         )
@@ -634,7 +634,8 @@ class SeleniumTests(unittest.TestCase):
     def test_pf_user_login_search(self):
         self.setup_user_logged_in()
         self.setup_database(True)
-        self.client.get('/')
+        self.client.get('http://localhost:5000/')
+        time.sleep(1)
         search = self.client.find_element_by_id('search_api')
         search_button = self.client.find_element_by_class_name('search-button')
         search.send_keys('test call')
@@ -696,7 +697,7 @@ class SeleniumTests(unittest.TestCase):
             'Call results should be displayed and are not'
         )
         self.assertIn(
-            'https://{data_center}',
+            'https://{region}',
             mock_results.text,
             'Could not find request URL in mock return'
         )

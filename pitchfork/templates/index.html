@@ -38,17 +38,17 @@
                 <h3>Most Accessed Calls</h3>
                 <div id="global_vars">
                     <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
-                    <label class="region-dc-label">Data Center:</label>
-                    <select id="data_center" name="data_center">
-                        <option value="none" selected="selected">Select Data Center</option>
-                        {% for option in data_centers %}
+                    <label class="region-label">Region:</label>
+                    <select id="region" name="region">
+                        <option value="none" selected="selected">Select Region</option>
+                        {% for option in regions %}
                             <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
                         {% endfor %}
                     </select>
                 </div>
             {% else %}
                 <input id="ddi" name="ddi" type="hidden" value="None"></input>
-                <input id="data_center" name="data_center" type="hidden" value="None"></input>
+                <input id="region" name="region" type="hidden" value="None"></input>
             {% endif %}
             <div id="api_call_items">
                 {% if most_accessed is string %}
@@ -67,11 +67,11 @@
     <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
     <script>
         var global_count = 0;
-        var require_dc = 'true';
-        var restrict_dcs = '{{ restrict_dcs|lower }}';
+        var require_region = 'true';
+        var restrict_regions = '{{ restrict_regions|lower }}';
         var testing = 'false';
         $(document).ready(function() {
-            $("#data_center").change();
+            $("#region").change();
             $('.prod-popover').popover();
             $('.tooltip-title').tooltip();
             setup_toggle_details();

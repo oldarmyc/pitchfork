@@ -22,7 +22,7 @@ class VerbSet(Form):
     submit = fields.SubmitField('Submit')
 
 
-class DCSet(Form):
+class RegionSet(Form):
     name = fields.TextField('Name:', validators=[validators.required()])
     abbreviation = fields.TextField(
         'Abbreviation:',

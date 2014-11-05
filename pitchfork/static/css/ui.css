@@ -47,7 +47,7 @@ a.product {
     right: 40px;
 }
 
-.region-dc-label {
+.region-label {
     padding: 10px;
 }
 
@@ -62,7 +62,7 @@ input[type="text"] {
     line-height: 1.42857;
 }
 
-select#data_center {
+select#region {
     width: 200px;
 }
 

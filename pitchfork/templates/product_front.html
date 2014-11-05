@@ -11,15 +11,11 @@
         {% if session.get('username') %}
             <div id="global_vars">
                 <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
-                {% if require_dc %}
-                    <label class="region-dc-label">{% if restrict_dcs %}Region{% else %}Data Center{% endif %}:</label>
-                    <select id="data_center" name="data_center">
-                        {% if restrict_dcs %}
-                            <option value="none" selected="selected">Select Region</option>
-                        {% else %}
-                            <option value="none" selected="selected">Select Data Center</option>
-                        {% endif %}
-                        {% for option in data_centers %}
+                {% if require_region %}
+                    <label class="region-label">Region:</label>
+                    <select id="region" name="region">
+                        <option value="none" selected="selected">Select Region</option>
+                        {% for option in regions %}
                             <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
                         {% endfor %}
                     </select>
@@ -59,8 +55,8 @@
     <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
 	<script>
         var global_count = 0;
-        var require_dc = '{{ require_dc|lower }}';
-        var restrict_dcs = '{{ restrict_dcs|lower }}';
+        var require_region = '{{ require_region|lower }}';
+        var restrict_regions = '{{ restrict_regions|lower }}';
         var testing = '{{ testing|lower }}';
         var user = '{{ session.get("username") }}';
         $(document).ready(function(){
@@ -77,7 +73,7 @@
                 }
             });
 
-            $("#data_center").change();
+            $("#region").change();
             if (user != 'None') {
                 scroll_if_anchor(window.location.hash, 45);
             } else {

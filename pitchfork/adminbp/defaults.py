@@ -678,13 +678,13 @@ def check_and_initialize():
                     'app_url': '/autoscale',
                     'title': 'Autoscale',
                     'db_name': 'autoscale',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.autoscale.api.'
+                        'https://{region}.autoscale.api.'
                         'rackspacecloud.com/v1.0/'
                     ),
                     'uk_api': (
-                        'https://{data_center}.autoscale.api.'
+                        'https://{region}.autoscale.api.'
                         'rackspacecloud.com/v1.0/'
                     ),
                     'active': True,
@@ -697,13 +697,13 @@ def check_and_initialize():
                     'app_url': '/big_data',
                     'title': 'Big Data',
                     'db_name': 'big_data',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.bigdata.api.'
+                        'https://{region}.bigdata.api.'
                         'rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'uk_api': (
-                        'https://{data_center}.bigdata.api.'
+                        'https://{region}.bigdata.api.'
                         'rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'active': True,
@@ -716,13 +716,13 @@ def check_and_initialize():
                     'app_url': '/block_storage',
                     'title': 'Block Storage',
                     'db_name': 'cbs',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.blockstorage.api.'
+                        'https://{region}.blockstorage.api.'
                         'rackspacecloud.com/v1/{ddi}'
                     ),
                     'uk_api': (
-                        'https://{data_center}.blockstorage.api.'
+                        'https://{region}.blockstorage.api.'
                         'rackspacecloud.com/v1/{ddi}'
                     ),
                     'active': True,
@@ -735,13 +735,13 @@ def check_and_initialize():
                     'app_url': '/cloud_backup',
                     'title': 'Backup',
                     'db_name': 'cloud_backup',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.backup.api.'
+                        'https://{region}.backup.api.'
                         'rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'uk_api': (
-                        'https://{data_center}.backup.api.'
+                        'https://{region}.backup.api.'
                         'rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'active': True,
@@ -754,13 +754,13 @@ def check_and_initialize():
                     'app_url': '/databases',
                     'title': 'Databases',
                     'db_name': 'cloud_db',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.databases.api.'
+                        'https://{region}.databases.api.'
                         'rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'uk_api': (
-                        'https://{data_center}.databases.api.'
+                        'https://{region}.databases.api.'
                         'rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'active': True,
@@ -773,7 +773,7 @@ def check_and_initialize():
                     'app_url': '/dns',
                     'title': 'DNS',
                     'db_name': 'cloud_dns',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
                         'https://dns.api.rackspacecloud.com/v1.0/{ddi}'
                     ),
@@ -790,7 +790,7 @@ def check_and_initialize():
                     'app_url': '/identity',
                     'title': 'Identity',
                     'db_name': 'cloud_identity',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
                         'https://identity.api.rackspacecloud.com/v2.0'
                     ),
@@ -807,12 +807,12 @@ def check_and_initialize():
                     'app_url': '/cloud_feeds',
                     'title': 'Cloud Feeds',
                     'db_name': 'cloud_feeds',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.feeds.api.rackspacecloud.com'
+                        'https://{region}.feeds.api.rackspacecloud.com'
                     ),
                     'uk_api': (
-                        'https://{data_center}.feeds.api.rackspacecloud.com'
+                        'https://{region}.feeds.api.rackspacecloud.com'
                     ),
                     'active': True,
                     'doc_url': (
@@ -824,13 +824,13 @@ def check_and_initialize():
                     'app_url': '/networks',
                     'title': 'Networks',
                     'db_name': 'cloud_networks',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.servers.api.'
+                        'https://{region}.servers.api.'
                         'rackspacecloud.com/v2/{ddi}'
                     ),
                     'uk_api': (
-                        'https://{data_center}.servers.api.'
+                        'https://{region}.servers.api.'
                         'rackspacecloud.com/v2/{ddi}'
                     ),
                     'active': True,
@@ -843,7 +843,7 @@ def check_and_initialize():
                     'app_url': '/fg_servers',
                     'title': 'First Gen Servers',
                     'db_name': 'fg_servers',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
                         'https://servers.api.rackspacecloud.com/v1.0/{ddi}'
                     ),
@@ -860,13 +860,13 @@ def check_and_initialize():
                     'app_url': '/images',
                     'title': 'Images',
                     'db_name': 'images',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.images.api.'
+                        'https://{region}.images.api.'
                         'rackspacecloud.com/v2/{ddi}'
                     ),
                     'uk_api': (
-                        'https://{data_center}.images.api.'
+                        'https://{region}.images.api.'
                         'rackspacecloud.com/v2/{ddi}'
                     ),
                     'active': True,
@@ -879,13 +879,13 @@ def check_and_initialize():
                     'app_url': '/load_balancers',
                     'title': 'Load Balancers',
                     'db_name': 'load_balancers',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.loadbalancers.api.'
+                        'https://{region}.loadbalancers.api.'
                         'rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'uk_api': (
-                        'https://{data_center}.loadbalancers.api.'
+                        'https://{region}.loadbalancers.api.'
                         'rackspacecloud.com/v1.0/{ddi}'
                     ),
                     'active': True,
@@ -914,13 +914,13 @@ def check_and_initialize():
                     'app_url': '/ng_servers',
                     'title': 'Next Gen Servers',
                     'db_name': 'ng_servers',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.servers.api.'
+                        'https://{region}.servers.api.'
                         'rackspacecloud.com/v2/{ddi}'
                     ),
                     'uk_api': (
-                        'https://{data_center}.servers.api.'
+                        'https://{region}.servers.api.'
                         'rackspacecloud.com/v2/{ddi}'
                     ),
                     'active': True,
@@ -933,13 +933,13 @@ def check_and_initialize():
                     'app_url': '/orchestration',
                     'title': 'Orchestration',
                     'db_name': 'orchestration',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.orchestration.api.'
+                        'https://{region}.orchestration.api.'
                         'rackspacecloud.com/v1/{ddi}'
                     ),
                     'uk_api': (
-                        'https://{data_center}.orchestration.api.'
+                        'https://{region}.orchestration.api.'
                         'rackspacecloud.com/v1/{ddi}'
                     ),
                     'active': True,
@@ -952,13 +952,13 @@ def check_and_initialize():
                     'app_url': '/queues',
                     'title': 'Queues',
                     'db_name': 'queues',
-                    'require_dc': True,
+                    'require_region': True,
                     'us_api': (
-                        'https://{data_center}.queues.api.'
+                        'https://{region}.queues.api.'
                         'rackspacecloud.com/v1'
                     ),
                     'uk_api': (
-                        'https://{data_center}.queues.api.'
+                        'https://{region}.queues.api.'
                         'rackspacecloud.com/v1'
                     ),
                     'active': True,
@@ -967,7 +967,7 @@ def check_and_initialize():
                         'cq-devguide/content/overview.html'
                     )
                 },
-                'dcs': [
+                'regions': [
                     {
                         'abbreviation': 'DFW',
                         'name': 'Dallas'
@@ -1382,7 +1382,7 @@ def check_and_initialize():
                 'field_display': 'SelectField',
                 'field_display_data': '',
                 'field_display_label': '',
-                'field_name': 'data_center',
+                'field_name': 'region',
                 'graphable': True,
                 'searchable': True
             }

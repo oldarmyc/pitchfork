@@ -102,12 +102,12 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def setup_useable_report_field(self, disable=None):
         data = {
-            'description': 'data_center',
+            'description': 'region',
             'data_type': 'text',
             'field_display_data': '',
             'graphable': True,
             'field_display': 'SelectField',
-            'field_name': 'data_center',
+            'field_name': 'region',
             'submit': 'Submit'
         }
         if disable:
@@ -487,13 +487,13 @@ class PitchforkEngineTests(unittest.TestCase):
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
-                'description': 'data_center',
+                'description': 'region',
                 'data_type': 'text',
                 'field_display_data': '',
                 'graphable': True,
                 'searchable': True,
                 'field_display': 'SelectField',
-                'field_name': 'data_center',
+                'field_name': 'region',
                 'submit': 'Submit'
             }
             response = c.post(
@@ -528,7 +528,7 @@ class PitchforkEngineTests(unittest.TestCase):
             token = self.retrieve_csrf_token(response.data)
             data = {
                 'csrf_token': token,
-                'description': 'data_center',
+                'description': 'region',
                 'data_type': 'text',
                 'field_display_data': '',
                 'graphable': True,
@@ -565,13 +565,13 @@ class PitchforkEngineTests(unittest.TestCase):
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             data = {
-                'description': 'data_center',
+                'description': 'region',
                 'data_type': 'text',
                 'field_display_data': '',
                 'graphable': True,
                 'searchable': True,
                 'field_display': 'SelectField',
-                'field_name': 'data_center',
+                'field_name': 'region',
                 'submit': 'Submit'
             }
             response = c.post(
@@ -616,7 +616,7 @@ class PitchforkEngineTests(unittest.TestCase):
                 'graphable': True,
                 'searchable': True,
                 'field_display': 'SelectField',
-                'field_name': 'data_center',
+                'field_name': 'region',
                 'submit': 'Submit'
             }
             response = c.post(
@@ -809,8 +809,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': use_today,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': use_date
             }
@@ -871,8 +871,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': use_date
             }
@@ -932,8 +932,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': use_date,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -991,8 +991,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1051,8 +1051,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1110,8 +1110,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1174,8 +1174,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': use_today,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': use_date
             }
@@ -1235,8 +1235,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': use_date,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1296,8 +1296,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': use_date
             }
@@ -1356,8 +1356,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1417,8 +1417,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': use_date
             }
@@ -1481,8 +1481,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': use_today,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': use_date
             }
@@ -1540,8 +1540,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': use_date,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1596,8 +1596,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1654,8 +1654,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1774,8 +1774,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': end_time,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1836,8 +1836,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': end_time,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -1898,7 +1898,7 @@ class PitchforkEngineTests(unittest.TestCase):
                     'id': '53e50582192a8b6a41d06d3f',
                     'title': 'Retrieve Feed Catalog'
                 },
-                'data_center': 'dfw',
+                'region': 'dfw',
                 'product': 'Cloud Feeds',
                 'request': {
                     'url': 'https://dfw.feeds.api.rackspacecloud.com/123456/',
@@ -1941,7 +1941,7 @@ class PitchforkEngineTests(unittest.TestCase):
                     'id': '53e50582192a8b6a41d06d3f',
                     'title': 'Retrieve Feed Catalog'
                 },
-                'data_center': 'dfw',
+                'region': 'dfw',
                 'product': 'Cloud Feeds',
                 'request': {
                     'url': 'https://dfw.feeds.api.rackspacecloud.com/123456/',
@@ -1980,8 +1980,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': end_time,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': '2013-12-20'
             }
@@ -2044,8 +2044,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': end_time,
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': ''
             }
@@ -2110,8 +2110,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': start_time
             }
@@ -2173,8 +2173,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 'Completed At-end': '',
                 'csrf_token': token,
                 'search_on': 'DFW',
-                'graph_key': 'data_center',
-                'key': 'data_center',
+                'graph_key': 'region',
+                'key': 'region',
                 'Appname': '',
                 'Completed At-start': start_time
             }
@@ -2280,7 +2280,7 @@ class PitchforkEngineTests(unittest.TestCase):
             response = c.get('/engine/')
             token = self.retrieve_csrf_token(response.data)
             data = {
-                'data_center': 'DFW',
+                'region': 'DFW',
                 'Completed At-end': '2014-04-01',
                 'csrf_token': token,
                 'Completed At-start': '2014-03-01',

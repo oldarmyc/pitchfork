@@ -22,7 +22,7 @@ class Product:
         self.title = product.get('title')
         self.us_api = product.get('us_api')
         self.uk_api = product.get('uk_api')
-        self.require_dc = bool(product.get('require_dc'))
+        self.require_region = bool(product.get('require_region'))
         self.doc_url = product.get('doc_url')
         self.active = bool(product.get('active'))
         self.db_name = product.get('db_name')
