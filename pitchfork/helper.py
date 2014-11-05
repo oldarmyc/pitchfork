@@ -542,7 +542,8 @@ def search_for_calls(search_string):
         if len(products) > 0:
             for product in products:
                 product_details = g.db.api_settings.find_one({}, {product: 1})
-                search_results = getattr(g.db, product).find(
+                product_db = product_details.get(product).get('db_name')
+                search_results = getattr(g.db, product_db).find(
                     {
                         'tested': True,
                         '$or': [
@@ -560,7 +561,6 @@ def search_for_calls(search_string):
                         ]
                     }
                 ).limit(3)
-
                 for item in search_results:
                     item['app_link'] = product_details.get(product).get(
                         'app_url'
