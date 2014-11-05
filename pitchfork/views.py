@@ -45,19 +45,19 @@ class ProductsView(FlaskView):
             found_product,
             testing_calls
         )
-        restrict_dcs, data_centers = helper.check_for_product_dcs(
+        restrict_regions, regions = helper.check_for_product_regions(
             found_product
         )
         return render_template(
             'product_front.html',
             api_calls=api_calls,
             api_settings=found_product,
-            data_centers=data_centers,
+            regions=regions,
             title=found_product.title,
             api_process='/%s/api/call/process' % product,
             testing=testing_calls,
-            require_dc=found_product.require_dc,
-            restrict_dcs=restrict_dcs
+            require_region=found_product.require_region,
+            restrict_regions=restrict_regions
         )
 
     """ Product API Call Fire """
@@ -356,21 +356,23 @@ class MiscView(FlaskView):
     route_base = '/'
 
     def index(self):
-        active_products, data_centers, = [], []
+        active_products, regions, = [], []
         api_settings = g.db.api_settings.find_one()
         if api_settings:
             active_products = api_settings.get('active_products')
 
         most_accessed = helper.front_page_most_accessed(active_products)
         if api_settings:
-            data_centers = api_settings.get('dcs')
+            regions = api_settings.get('regions')
+            if not regions:
+                regions = api_settings.get('dcs')
 
         return render_template(
             'index.html',
             api_settings=api_settings,
             active_products=active_products,
             most_accessed=most_accessed,
-            data_centers=data_centers
+            regions=regions
         )
 
     @route('/search', methods=['POST'])
