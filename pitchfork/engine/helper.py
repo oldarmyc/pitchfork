@@ -60,12 +60,17 @@ def generate_field_choices(all_items, field):
         if len(test) > 1:
             data = choice.get(test[0]).get(test[1])
         else:
-            data = choice.get(field)
+            if field == 'region':
+                data = choice.get(field)
+                if not data:
+                    data = choice.get('data_center')
+            else:
+                data = choice.get(field)
 
         if data and data not in temp:
             temp.append(data)
 
-    if field == 'data_center':
+    if field == 'region':
         temp_choices = [
             (item, item.upper()) for item in temp
         ]
@@ -254,7 +259,7 @@ def generate_reporting_query(request):
 
 
 def generate_reporting_trend_query(request):
-    label_keys = ['data_center']
+    label_keys = ['region']
     query = generate_reporting_query(request)
     key = request.json.get('graph_key')
     value = request.json.get('search_on')
@@ -293,7 +298,12 @@ def generate_graph_data(results):
                     temp_data_val = 'None'
 
             else:
-                temp_data_val = item.get(key)
+                if key == 'region':
+                    temp_data_val = item.get(key)
+                    if not temp_data_val:
+                        temp_data_val = item.get('data_center')
+                else:
+                    temp_data_val = item.get(key)
 
             try:
                 data[key][temp_data_val] += 1
@@ -301,7 +311,7 @@ def generate_graph_data(results):
                 data[key][temp_data_val] = 1
 
     plot_data = {}
-    label_keys = ['data_center']
+    label_keys = ['region']
     for key, value in data.iteritems():
         sorted_data = sorted(value.items(), key=itemgetter(1), reverse=True)
         points, labels = [], []
