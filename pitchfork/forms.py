@@ -39,7 +39,7 @@ class ManageProduct(Form):
         validators=[validators.required()]
     )
     doc_url = fields.TextField('Docs URL:', validators=[validators.required()])
-    require_dc = fields.BooleanField('Require DC:')
+    require_region = fields.BooleanField('Require Region:')
     active = fields.BooleanField('Active to Use:')
     submit = fields.SubmitField('Submit')
 
