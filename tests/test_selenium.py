@@ -487,16 +487,10 @@ class SeleniumTests(unittest.TestCase):
             error_close = self.client.find_element_by_class_name(
                 'bootbox-close-button'
             )
-
-            print dir(error_close)
             error_close.click()
-
             dc_select.select_by_visible_text('DFW')
             send.click()
             time.sleep(1)
-
-            print self.client.page_source
-
             assert send_results.is_displayed(), (
                 'Call results should be displayed and are not'
             )
@@ -622,12 +616,9 @@ class SeleniumTests(unittest.TestCase):
         )
         info.click()
         time.sleep(1)
-
-        # print self.client.page_source
-        #
-        # assert work_details.is_displayed(), (
-        #     'Details for call should be shown and were not'
-        # )
+        assert work_details.is_displayed(), (
+            'Details for call should be shown and were not'
+        )
         self.assertIn(
             'https://dfw.autoscale.api.rackspace.com/v1/123456/groups',
             self.client.page_source,
