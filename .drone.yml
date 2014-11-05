@@ -9,7 +9,8 @@ script:
   - "sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y libsasl2-dev libssl-dev rsyslog > /dev/null"
   - sudo /usr/sbin/rsyslogd > /dev/null
   - pip install -r requirements.txt > /dev/null
-  - pip install nose coverage flake8 selenium mock > /dev/null
+  - pip install nose coverage flake8 mock > /dev/null
   - flake8 .
   - cp pitchfork/config/config.example.py pitchfork/config/config.py
+  - cp tests/test_selenium tests/no_web_tests
   - nosetests -v --cover-erase --with-coverage --cover-package=pitchfork
