@@ -31,7 +31,7 @@
                 <tr>
                     <th>Name</th>
                     <th>DDI</th>
-                    <th>DC</th>
+                    <th>Region</th>
                     <th>Product</th>
                     <th>Completed</th>
                     <th>Call Run</th>
@@ -50,7 +50,11 @@
                             {{ item.get('ddi') }}
                         </td>
                         <td class="cell-center">
-                            {{ item.get('data_center')|upper }}
+                            {% if item.get('data_center') %}
+                                {{ item.get('data_center')|upper }}
+                            {% else %}
+                                {{ item.get('region', '-')|upper }}
+                            {% endif %}
                         </td>
                         <td>
                             {{ item.get('product') }}
