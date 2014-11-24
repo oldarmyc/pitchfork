@@ -317,6 +317,11 @@ def recursive_dict_object(
                                 _temp_store.append(item.strip())
 
                             sub_list.append(_temp_store)
+                        elif var_type == 'text/integer':
+                            try:
+                                sub_list.append(int(_value.strip()))
+                            except:
+                                sub_list.append(_value.strip())
                         else:
                             sub_list.append(_value.strip())
 
@@ -357,6 +362,13 @@ def recursive_dict_object(
                                 _temp_store.append(item.strip())
 
                             temp_dict[str(_pkey_value)] = _temp_store
+                        elif var_type == 'text/integer':
+                            try:
+                                temp_dict[str(_pkey_value)] = int(
+                                    _value.strip()
+                                )
+                            except:
+                                temp_dict[str(_pkey_value)] = _value.strip()
                         else:
                             temp_dict[str(_pkey_value)] = _value.strip()
                     else:
