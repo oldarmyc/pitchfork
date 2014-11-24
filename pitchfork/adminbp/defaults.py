@@ -1037,7 +1037,7 @@ def check_and_initialize():
                         'required': True,
                         'active': True,
                         'order': 2,
-                        'label': 'API Key or Password:'
+                        'label': 'API Key:'
                     }, {
                         'default_value': '',
                         'field_type': 'SubmitField',
