@@ -15,6 +15,9 @@
 from flask import g, session
 from dateutil import tz
 from models import Variable
+from pygments import highlight
+from pygments.lexers import JsonLexer, XmlLexer
+from pygments.formatters import HtmlFormatter
 
 
 import re
@@ -193,7 +196,15 @@ def generate_vars_for_call(product, call, request):
         if request.json.get('mock'):
             data_package = json.loads(call.get('data_object'))
         else:
-            data_package = process_api_data_request(call, request.json)
+            """
+                Find escaped newlines and replace them with a non escaped
+                newline in the raw string. Doing this in order to handle JSON
+                escaped newlines from the request form so that it can be
+                encoded again for the API request correctly
+            """
+            temp_data = re.sub(r'\\\\n', r'\\n', request.data)
+            data_request = json.loads(temp_data)
+            data_package = process_api_data_request(call, data_request)
 
     header = create_custom_header(call, request.json)
     return api_url, header, data_package
@@ -459,7 +470,7 @@ def create_custom_header(api_call, request):
     return header
 
 
-def process_api_request(url, verb, data, headers):
+def process_api_request(url, verb, data, headers, html_convert=True):
     try:
         if data:
             response = getattr(requests, verb.lower())(
@@ -499,9 +510,15 @@ def process_api_request(url, verb, data, headers):
             'application/xml' in content_type or
             'application/atom+xml' in content_type
         ):
-            content = response.content
+            if html_convert:
+                content = pretty_format_data(response.content, True)
+            else:
+                content = response.content
         else:
-            content = json.loads(response.content)
+            if html_convert:
+                content = pretty_format_data(json.loads(response.content))
+            else:
+                content = json.loads(response.content)
     except:
         temp = re.findall('<body>(.+?)<\/body>', response.content, re.S)
         if temp:
@@ -516,7 +533,31 @@ def process_api_request(url, verb, data, headers):
                 response.status_code
             )
 
+    if html_convert:
+        headers = pretty_format_data(headers)
+        response_headers = pretty_format_data(response_headers)
+
     return headers, response_headers, content, response.status_code
+
+
+def pretty_format_data(data, content_type=False):
+    if data:
+        if content_type:
+            return highlight(data, XmlLexer(), HtmlFormatter())
+        else:
+            return highlight(
+                json.dumps(data, indent=4),
+                JsonLexer(),
+                HtmlFormatter()
+            )
+
+
+def pretty_format_url(url):
+    if url:
+        temp_url = '<pre><span class="nt">%s</span></pre>' % url
+        temp_url = re.sub('{', '<span class="s2">{', temp_url)
+        temp_url = re.sub('}', '}</span>', temp_url)
+        return temp_url
 
 
 def front_page_most_accessed(active_products):
