@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import re
-import json
+import helper
 
 
 def nl2br(value):
