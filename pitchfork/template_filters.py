@@ -46,7 +46,7 @@ def check_regex(value):
 
 
 def pretty_print_json(data):
-    if data and type(data) is dict:
+    if data and (type(data) is dict or type(data) is list):
         return helper.pretty_format_data(data)
     else:
         return data
