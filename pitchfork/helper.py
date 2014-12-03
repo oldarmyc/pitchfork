@@ -196,7 +196,15 @@ def generate_vars_for_call(product, call, request):
         if request.json.get('mock'):
             data_package = json.loads(call.get('data_object'))
         else:
-            data_package = process_api_data_request(call, request.json)
+            """
+                Find escaped newlines and replace them with a non escaped
+                newline in the raw string. Doing this in order to handle JSON
+                escaped newlines from the request form so that it can be
+                encoded again for the API request correctly
+            """
+            temp_data = re.sub(r'\\\\n', r'\\n', request.data)
+            data_request = json.loads(temp_data)
+            data_package = process_api_data_request(call, data_request)
 
     header = create_custom_header(call, request.json)
     return api_url, header, data_package
