@@ -94,7 +94,7 @@ class ProductsView(FlaskView):
         """ Send off the request and retrieve the data elements """
         if request.json.get('mock'):
             response_headers, response_body, response_code = None, None, None
-            request_headers = header
+            request_headers = helper.pretty_format_data(header)
         else:
             request_headers, response_headers, response_body, response_code = (
                 helper.process_api_request(
@@ -127,8 +127,8 @@ class ProductsView(FlaskView):
             response_headers=response_headers,
             response_body=response_body,
             response_code=response_code,
-            api_url=api_url,
-            data_package=data_package
+            api_url=helper.pretty_format_url(api_url),
+            data_package=helper.pretty_format_data(data_package)
         )
 
     """ Product Management """
