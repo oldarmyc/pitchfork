@@ -462,7 +462,7 @@ def create_custom_header(api_call, request):
     return header
 
 
-def process_api_request(url, verb, data, headers):
+def process_api_request(url, verb, data, headers, html_convert=True):
     try:
         if data:
             response = getattr(requests, verb.lower())(
@@ -502,9 +502,15 @@ def process_api_request(url, verb, data, headers):
             'application/xml' in content_type or
             'application/atom+xml' in content_type
         ):
-            content = response.content
+            if html_convert:
+                content = pretty_format_data(response.content, True)
+            else:
+                content = response.content
         else:
-            content = json.loads(response.content)
+            if html_convert:
+                content = pretty_format_data(json.loads(response.content))
+            else:
+                content = json.loads(response.content)
     except:
         temp = re.findall('<body>(.+?)<\/body>', response.content, re.S)
         if temp:
@@ -518,6 +524,10 @@ def process_api_request(url, verb, data, headers):
             content = "No content recieved. Status Code: %s" % str(
                 response.status_code
             )
+
+    if html_convert:
+        headers = pretty_format_data(headers)
+        response_headers = pretty_format_data(response_headers)
 
     return headers, response_headers, content, response.status_code
 
