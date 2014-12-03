@@ -45,13 +45,15 @@ def check_regex(value):
         return False
 
 
-def pretty_print_json(string):
-    return json.dumps(
-        string,
-        sort_keys=False,
-        indent=4,
-        separators=(',', ':')
-    )
+def pretty_print_json(data):
+    if data and type(data) is dict:
+        return helper.pretty_format_data(data)
+    else:
+        return data
+
+
+def pretty_print_url(url):
+    return helper.pretty_format_url(url)
 
 
 def remove_slash(string):
