@@ -522,6 +522,26 @@ def process_api_request(url, verb, data, headers):
     return headers, response_headers, content, response.status_code
 
 
+def pretty_format_data(data, content_type=False):
+    if data:
+        if content_type:
+            return highlight(data, XmlLexer(), HtmlFormatter())
+        else:
+            return highlight(
+                json.dumps(data, indent=4),
+                JsonLexer(),
+                HtmlFormatter()
+            )
+
+
+def pretty_format_url(url):
+    if url:
+        temp_url = '<pre><span class="nt">%s</span></pre>' % url
+        temp_url = re.sub('{', '<span class="s2">{', temp_url)
+        temp_url = re.sub('}', '}</span>', temp_url)
+        return temp_url
+
+
 def front_page_most_accessed(active_products):
     temp_products = []
     if active_products:
