@@ -47,7 +47,6 @@ class SeleniumTests(unittest.TestCase):
             self.skipTest('PhantomJS not available to run browser tests')
         else:
             self.client.get('http://localhost:5000')
-            self.client.get('http://localhost:5000')
 
     def setup_database(self, tested=None, variables=None):
         data = {
