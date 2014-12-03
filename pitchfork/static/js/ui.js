@@ -125,65 +125,19 @@ function process_display_api_call(send_to, data, form_submit, form_value) {
         if (!$('#api_results_wrapper_' + form_submit).is(':visible')) {
             $('#api_results_wrapper_' + form_submit).toggle('slow');
         }
-        $('#api_url_' + form_submit).text(result.api_url);
-        $('#api_headers_' + form_submit).html(
-            '<pre>' +
-            JSON.stringify(result.request_headers, null, 4) +
-            '</pre>'
-        );
+        $('#api_url_' + form_submit).html(result.api_url);
+        $('#api_headers_' + form_submit).html(result.request_headers);
         if (result.data_package) {
             if ( $('#api_body_wrapper_' + form_submit).is(':hidden') ) {
                 $('#api_body_wrapper_' + form_submit).toggle();
             }
-            $('#api_body_' + form_submit).html(
-                '<pre>' +
-                JSON.stringify(result.data_package, null, 4) +
-                '</pre>'
-            );
+            $('#api_body_' + form_submit).html(result.data_package);
         }
         if (form_value != 'Mock API Call') {
             $('.response-headers-' + form_submit).show();
             $('.response-body-' + form_submit).show();
-            $('#api_response_headers_' + form_submit).html(
-                '<pre>' +
-                JSON.stringify(result.response_headers, null, 4) +
-                '</pre>'
-            );
-            var content_type = [];
-            if (result.response_headers['content-type']) {
-                content_type = result.response_headers['content-type'].split(';');
-            }
-            if ( result.response_code >= 400 ) {
-                if (
-                    $.inArray('application/xml', content_type) >= 0 ||
-                    $.inArray('application/atom+xml', content_type) >= 0
-                ) {
-                    $('#api_content_' + form_submit).html(
-                        formatXml(result.response_body)
-                    );
-                } else {
-                    $('#api_content_' + form_submit).html(
-                        '<pre>' +
-                        JSON.stringify(result.response_body, null, 4) +
-                        '</pre>'
-                    );
-                }
-            } else {
-                if (
-                    $.inArray('application/xml', content_type) >= 0 ||
-                    $.inArray('application/atom+xml', content_type) >= 0
-                ) {
-                    $('#api_content_' + form_submit).html(
-                        formatXml(result.response_body)
-                    );
-                } else {
-                    $('#api_content_' + form_submit).html(
-                        '<pre>' +
-                        JSON.stringify(result.response_body, null, 4) +
-                        '</pre>'
-                    );
-                }
-            }
+            $('#api_response_headers_' + form_submit).html(result.response_headers);
+            $('#api_content_' + form_submit).html(result.response_body);
         } else {
             $('.response-headers-' + form_submit).hide();
             $('.response-body-' + form_submit).hide();
