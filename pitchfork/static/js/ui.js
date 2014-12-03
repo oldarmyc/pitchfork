@@ -1,3 +1,4 @@
+
 $('.scrollup').click(function(){
     $('html, body').animate({ scrollTop: 0 }, 600);
     return false;
@@ -89,38 +90,6 @@ function validate_field(field_name) {
         $('#' + field_name).addClass('error');
         return false;
     }
-}
-
-function escapeHTML(data) {
-    return data.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g, '<br />').replace(/\s\s/g, '&nbsp;&nbsp;');
-}
-
-function formatXml(xml) {
-    var formatted = '';
-    var reg = /(>)(<)(\/*)/g;
-    xml = xml.toString().replace(reg, '$1\r\n$2$3');
-    var pad = 0;
-    $.each(xml.split('\r\n'), function(index, node) {
-        var indent = 0;
-        if (node.match( /.+<\/\w[^>]*>$/ )) {
-            indent = 0;
-        } else if (node.match( /^<\/\w/ )) {
-            if (pad !== 0) {
-                pad -= 2;
-            }
-        } else if (node.match( /^<\w[^>]*[^\/]>.*$/ )) {
-            indent = 2;
-        } else {
-            indent = 0;
-        }
-        var padding = '';
-        for (var i = 0; i < pad; i++) {
-            padding += ' ';
-        }
-        formatted += padding + node + '\r\n';
-        pad += indent;
-    });
-    return escapeHTML(formatted);
 }
 
 function setup_toggle_details() {
