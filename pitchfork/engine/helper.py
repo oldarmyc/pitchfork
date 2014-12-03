@@ -642,6 +642,8 @@ def generate_weekly_trend(results, request):
             loop_year = loop_date.year
             if not loop_year == loop_date.isocalendar()[0]:
                 loop_year = loop_date.isocalendar()[0]
+                if not temp_data.get(loop_year):
+                    temp_data[loop_year] = {}
 
             if not temp_data[loop_year].get(loop_date.isocalendar()[1]):
                 temp_data[loop_year][loop_date.isocalendar()[1]] = {
