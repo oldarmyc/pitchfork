@@ -15,6 +15,9 @@
 from flask import g, session
 from dateutil import tz
 from models import Variable
+from pygments import highlight
+from pygments.lexers import JsonLexer, XmlLexer
+from pygments.formatters import HtmlFormatter
 
 
 import re
