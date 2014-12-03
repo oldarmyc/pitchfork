@@ -494,12 +494,11 @@ def generate_monthly_trend(results, request):
     range_to_use = abs(
         relativedelta.relativedelta(loop_start, loop_end).months
     )
-    if range_to_use == 0:
-        year_check = abs(
-            relativedelta.relativedelta(loop_start, loop_end).years
-        )
-        if year_check > 0:
-            range_to_use = year_check * 12
+    year_check = abs(
+        relativedelta.relativedelta(loop_start, loop_end).years
+    )
+    if year_check > 0:
+        range_to_use += year_check * 12
 
     for month_add in range(
         0,
