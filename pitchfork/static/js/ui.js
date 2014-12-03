@@ -165,8 +165,9 @@ function setup_api_call_submit() {
                 if (vals[0] === 'app_url_link' && vals[1] != 'None') {
                     send_to = unescape(vals[1].replace(/\+/g, ' ')) + '/api/call/process';
                 }
-                sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
+                sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1]);
             });
+            $("#" + form_submit + "_form").serializeArray().map(function(x){sending[x.name] = x.value;});
             var message = "You must provide the following data before the request can be sent:<br /><br />";
             var region_check = false;
             if (require_region === 'true' && form_value !== 'Mock API Call') {
