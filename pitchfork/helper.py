@@ -655,6 +655,14 @@ def log_api_call_request(
     return
 
 
+def sanitize_data_for_mongo(data):
+    temp_dict = {}
+    for k, v in data.iteritems():
+        temp_dict[k] = re.sub('\.', '&#46;', v)
+
+    return temp_dict
+
+
 def gather_history():
     history = []
     history = g.db.history.find(
