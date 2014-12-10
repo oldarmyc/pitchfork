@@ -648,30 +648,9 @@ def log_api_call_request(
     if not request.get('api_verb') in ['PUT', 'POST', 'DELETE']:
         rep_body = None
 
-    g.db.history.insert(
-        {
-            'response': {
-                'code': rep_code,
-                'headers': rep_headers,
-                'body': rep_body
-            },
-            'request': {
-                'verb': request.get('api_verb'),
-                'url': api_url,
-                'data': data_package
-            },
-            'details': {
-                'id': call.get('_id'),
-                'title': call.get('title'),
-                'description': call.get('short_description'),
-                'doc_url': call.get('doc_url')
-            },
-            'ddi': request.get('ddi'),
-            'data_center': request.get('data_center'),
-            'username': session.get('username'),
-            'completed_at': get_timestamp(),
-            'product': title
-        }
+    sanitize_data = process_api_data_request(
+        call,
+        sanitize_data_for_mongo(request)
     )
     return
 
