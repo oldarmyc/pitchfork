@@ -648,10 +648,11 @@ def log_api_call_request(
     if not request.get('api_verb') in ['PUT', 'POST', 'DELETE']:
         rep_body = None
 
-    sanitize_data = process_api_data_request(
-        call,
-        sanitize_data_for_mongo(request)
-    )
+    if data_package:
+        data_package = process_api_data_request(
+            call,
+            sanitize_data_for_mongo(request)
+        )
     try:
         g.db.history.insert(
             {
@@ -663,7 +664,7 @@ def log_api_call_request(
                 'request': {
                     'verb': request.get('api_verb'),
                     'url': api_url,
-                    'data': sanitize_data
+                    'data': data_package
                 },
                 'details': {
                     'id': call.get('_id'),
