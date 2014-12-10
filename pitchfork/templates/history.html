@@ -118,7 +118,7 @@
                                     {% endif %}
                                     {% if item.get('request').get('data') %}
                                         <h5>Request Data Object</h5>
-                                        <div class="code-block">
+                                        <div class="code-block data-object">
                                             {{ item.get('request').get('data')|pretty_print_json|safe }}
                                         </div>
                                     {% endif %}
