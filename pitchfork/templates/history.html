@@ -172,7 +172,9 @@
 
         function toggle_div(div_id, index) {
             $('#' + div_id).find('.data-object').find('pre').children('span').each(function() {
-                $(this).text($(this).text().replace('&#46;', '.'));
+                $(this).text(
+                    $(this).text().replace(/&#46;/g, '.')
+                );
             });
             $('#' + div_id).toggle('slow', function() {
                 if ( $('#' + div_id).is(':hidden') ) {

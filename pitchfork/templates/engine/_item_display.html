@@ -94,5 +94,10 @@
 <script>
     $(document).ready(function() {
         $('.tooltip-title').tooltip();
+        $('#request_details').find('.data-object').find('pre').children('span').each(function() {
+            $(this).text(
+                $(this).text().replace(/&#46;/g, '.')
+            );
+        });
     })
 </script>
