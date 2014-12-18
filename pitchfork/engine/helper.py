@@ -215,7 +215,7 @@ def generate_reporting_query(request):
                 if field.get('data_type') == 'boolean':
                     query[form_field] = bool(int(data))
                 else:
-                    if form_field == 'request.verb':
+                    if form_field in ['request.verb', 'product']:
                         query[form_field] = data
                     else:
                         query[form_field] = data.lower()
