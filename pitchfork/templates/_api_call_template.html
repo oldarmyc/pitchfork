@@ -53,7 +53,7 @@
                         {% if api_call.get('verb')|lower == 'post' or api_call.get('verb')|lower == 'put' or api_call.get('verb')|lower == 'delete' %}
                             <p class="danger-note text-danger">Note: This action can be destructive, or result in additional charges to a customers account. Please proceed with caution.</p>
                         {% endif %}
-                        {% if api_call.get('variables') %}
+                        {% if api_call.get('variables') or api_call.get('allow_filter') %}
                             <form class="{{ call_fixed_title }}-{{ prod_fixed_title }}_form" id="{{ call_fixed_title }}-{{ prod_fixed_title }}_form" method="POST">
                                 <input id="api_url" name="api_url" type="hidden" value="{{ api_call.get('api_uri') }}">
                                 <input id="api_verb" name="api_verb" type="hidden" value="{{ api_call.get('verb') }}">
@@ -99,6 +99,25 @@
                                             </td>
                                         </tr>
                                     {% endfor %}
+                                    {% if api_call.get('allow_filter') %}
+                                        <tr>
+                                            <td>
+                                                Filter
+                                            </td>
+                                            <td>
+                                                <input id="add_filter" name="add_filter" type="text" placeholder="Filter Parameters">
+                                            </td>
+                                            <td>
+                                                text
+                                            </td>
+                                            <td style="text-align: center;">
+                                                No
+                                            </td>
+                                            <td>
+                                                Filter parameters i.e. limit=100. For multiple parameters separate by a comma.
+                                            </td>
+                                        </tr>
+                                    {% endif %}
                                 </table>
                                 <p style="font-size: 12px;"><span class="text-danger">*</span> Required for API Call</p>
                                 {% if session.get('username') %}

@@ -134,6 +134,7 @@ def generate_edit_call_form(product, call, call_id):
     form.short_description.data = call.short_description
     form.use_data.data = call.use_data
     form.data_object.data = call.data_object
+    form.allow_filter.data = call.allow_filter
     form.doc_url.data = call.doc_url
     form.tested.data = call.tested
     form.remove_token.data = call.remove_token
@@ -246,6 +247,10 @@ def process_api_url(url, request):
             return m.group(1)
 
     api_url = re.sub('(\{(.+?)\})', evaluate_replace, url)
+    temp_filter = request.json.get('add_filter')
+    if temp_filter and len(temp_filter) > 1:
+        temp_filter = re.sub('\?', '', temp_filter)
+        api_url = '%s?%s' % (api_url, temp_filter)
 
     return api_url
 

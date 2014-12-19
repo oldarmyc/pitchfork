@@ -48,6 +48,7 @@ class ProductTests(unittest.TestCase):
             'short_description': 'Test API Call',
             'title': 'Test Call',
             'verb': 'GET',
+            'allow_filter': True,
             'variables': []
         }
         if tested:
@@ -870,7 +871,8 @@ class ProductTests(unittest.TestCase):
                 'api_token': 'test_token',
                 'api_id': str(api_id),
                 'ddi': '123456',
-                'data_center': 'dfw'
+                'data_center': 'dfw',
+                'add_filter': '?limit=100'
             }
             with mock.patch('requests.get') as patched_get:
                 type(patched_get.return_value).content = mock.PropertyMock(
@@ -906,6 +908,11 @@ class ProductTests(unittest.TestCase):
         assert data.get('request_headers'), 'No request headers was received'
         assert data.get('response_code'), (
             'No response status code was received'
+        )
+        self.assertIn(
+            '.autoscale.api.rackspacecloud.com/v1.0/123456/groups?limit=100',
+            data.get('api_url'),
+            'Did not find the limit attached to the end of the URI'
         )
         self.teardown_app_data()
 
