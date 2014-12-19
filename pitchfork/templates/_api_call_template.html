@@ -99,6 +99,25 @@
                                             </td>
                                         </tr>
                                     {% endfor %}
+                                    {% if api_call.get('allow_filter') %}
+                                        <tr>
+                                            <td>
+                                                Filter
+                                            </td>
+                                            <td>
+                                                <input id="add_filter" name="add_filter" type="text" placeholder="Filter Parameters">
+                                            </td>
+                                            <td>
+                                                text
+                                            </td>
+                                            <td style="text-align: center;">
+                                                No
+                                            </td>
+                                            <td>
+                                                Filter parameters i.e. limit=100. For multiple parameters separate by a comma.
+                                            </td>
+                                        </tr>
+                                    {% endif %}
                                 </table>
                                 <p style="font-size: 12px;"><span class="text-danger">*</span> Required for API Call</p>
                                 {% if session.get('username') %}
