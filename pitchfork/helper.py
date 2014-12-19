@@ -134,6 +134,7 @@ def generate_edit_call_form(product, call, call_id):
     form.short_description.data = call.short_description
     form.use_data.data = call.use_data
     form.data_object.data = call.data_object
+    form.allow_filter.data = call.allow_filter
     form.doc_url.data = call.doc_url
     form.tested.data = call.tested
     form.remove_token.data = call.remove_token
