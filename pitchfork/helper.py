@@ -247,6 +247,10 @@ def process_api_url(url, request):
             return m.group(1)
 
     api_url = re.sub('(\{(.+?)\})', evaluate_replace, url)
+    temp_filter = request.json.get('add_filter')
+    if temp_filter and len(temp_filter) > 1:
+        temp_filter = re.sub('\?', '', temp_filter)
+        api_url = '%s?%s' % (api_url, temp_filter)
 
     return api_url
 
