@@ -19,6 +19,7 @@
                 <th>Verb</th>
                 <th>URI</th>
                 <th>Variables</th>
+                <th style="text-align: center;">Filter</th>
                 <th style="text-align: center;">Tested</th>
                 <th></th>
             </tr>
@@ -38,6 +39,11 @@
                             {% for var in api.get('variables') %}
                                 <span {% if var.get('required') %}class="text-danger"><span class="fa fa-start tooltip-title" title="Required Attribute"></span{% endif %}>{{ var.get('variable_name') }}</span><br />
                             {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if api.get('allow_filter') %}
+                            <span class="fa fa-check-circle-o"></span>
                         {% endif %}
                     </td>
                     <td style="text-align: center;">
