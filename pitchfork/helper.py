@@ -547,6 +547,11 @@ def process_api_request(url, verb, data, headers, html_convert=True):
                 temp[0]
             )
             content = re.sub('<\/h1>', '<br />', formatted_content)
+        elif len(response.text) > 5:
+            content = "%s Status Code: %s" % (
+                str(response.text),
+                str(response.status_code)
+            )
         else:
             content = "No content recieved. Status Code: %s" % str(
                 response.status_code
