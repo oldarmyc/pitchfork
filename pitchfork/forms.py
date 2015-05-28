@@ -71,7 +71,7 @@ class CallVariables(Form):
     field_display_data = fields.TextAreaField('Select Data:')
     description = fields.TextField('Short Description:')
     required = fields.BooleanField('Required:')
-    id_value = fields.HiddenField('id_value')
+    id_value = fields.HiddenField('id_value', default=0)
 
 
 class ApiCall(Form):
