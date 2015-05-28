@@ -433,22 +433,36 @@ def process_api_data_request(api_call, json_data):
 
     elif isinstance(temp_json, list):
         for item in temp_json:
-            for key, value in item.iteritems():
-                if value:
-                    temp_dict = recursive_dict_object(
-                        key,
-                        value,
-                        api_call,
-                        json_data,
-                        temp_json,
-                        temp_dict,
-                        req_key,
-                        req_key_value
-                    )
-                if value is None:
-                    temp_dict[str(key)] = None
+            if isinstance(item, dict):
+                for key, value in item.iteritems():
+                    if value:
+                        temp_dict = recursive_dict_object(
+                            key,
+                            value,
+                            api_call,
+                            json_data,
+                            temp_json,
+                            temp_dict,
+                            req_key,
+                            req_key_value
+                        )
+                    if value is None:
+                        temp_dict[str(key)] = None
 
-            temp_list.append(temp_dict)
+                temp_list.append(temp_dict)
+            else:
+                def evaluate_replace(m):
+                    if json_data.get(m.group(2)):
+                        return re.sub(
+                            m.group(1),
+                            json_data.get(m.group(2)).strip(),
+                            m.group(0)
+                        )
+                    else:
+                        return m.group(1)
+
+                value = re.sub('(\{(.+?)\})', evaluate_replace, item)
+                temp_list.append(value)
 
         return temp_list
 
