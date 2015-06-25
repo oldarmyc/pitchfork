@@ -15,3 +15,7 @@ requests
 isoweek
 flask-classy
 pygments
+
+-i http://pypi.eco.rackspace.com/simple
+cloudauth
+cloudadmin
