@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from flask import g, session
 from dateutil import tz
 from models import Variable
 from pygments import highlight
 from pygments.lexers import JsonLexer, XmlLexer
 from pygments.formatters import HtmlFormatter
+from bson.objectid import ObjectId
 
 
 import re
@@ -35,7 +37,7 @@ def get_timestamp():
     return datetime.datetime.now(UTC)
 
 
-def check_for_product_regions(product):
+def check_for_product_regions(product=None):
     restrict_regions, regions = False, []
     api_settings = g.db.api_settings.find_one()
     if api_settings:
@@ -43,7 +45,7 @@ def check_for_product_regions(product):
         if not regions:
             regions = api_settings.get('dcs')
 
-        if product.require_region:
+        if product and product.require_region:
             restrict_regions = check_url_endpoints(
                 product.us_api,
                 product.uk_api
@@ -55,6 +57,14 @@ def check_for_product_regions(product):
                 ]
 
     return restrict_regions, regions
+
+
+def generate_group_choices(product):
+    choices = [('', '')]
+    for group in product.groups:
+        choices.append((group.get('slug'), group.get('name')))
+    choices.append(('add_new_group', 'Add New Group'))
+    return choices
 
 
 def check_url_endpoints(us, uk):
@@ -69,7 +79,32 @@ def check_url_endpoints(us, uk):
     return True
 
 
-def gather_api_calls(product, testing):
+def change_group_order(groups, new_position, old_position, group_slug, db):
+    for group in groups:
+        if group.get('order') == new_position:
+            g.db.api_settings.update(
+                {
+                    '%s.groups.slug' % db: group.get('slug')
+                }, {
+                    '$set': {
+                        '%s.groups.$.order' % db: old_position
+                    }
+                }
+            )
+        elif group.get('slug') == group_slug:
+            g.db.api_settings.update(
+                {
+                    '%s.groups.slug' % db: group.get('slug')
+                }, {
+                    '$set': {
+                        '%s.groups.$.order' % db: new_position
+                    }
+                }
+            )
+    return
+
+
+def gather_api_calls(product, testing, groups):
     if testing:
         query = {
             '$or': [
@@ -81,12 +116,19 @@ def gather_api_calls(product, testing):
         query = {'tested': True}
 
     api_calls = getattr(g.db, product.get_db_name()).find(query).sort(
-        [
-            ('accessed', pymongo.DESCENDING),
-            ('title', pymongo.ASCENDING)
-        ]
+        [('title', pymongo.ASCENDING)]
     )
-    return api_calls
+    calls = {'': []}
+    for group in groups:
+        calls[group.get('slug')] = []
+
+    for call in api_calls:
+        if call.get('group'):
+            calls[call.get('group')].append(call)
+        else:
+            calls[''].append(call)
+
+    return calls
 
 
 def add_fields_to_form(count):
@@ -133,8 +175,8 @@ def generate_edit_call_form(product, call, call_id):
     form.api_uri.data = call.api_uri
     form.short_description.data = call.short_description
     form.use_data.data = call.use_data
-    form.data_object.data = call.data_object
     form.allow_filter.data = call.allow_filter
+    form.data_object.data = call.data_object
     form.doc_url.data = call.doc_url
     form.tested.data = call.tested
     form.remove_token.data = call.remove_token
@@ -145,6 +187,7 @@ def generate_edit_call_form(product, call, call_id):
     form.add_to_header.data = call.add_to_header
     form.custom_header_key.data = call.custom_header_key
     form.custom_header_value.data = call.custom_header_value
+    form.group.data = call.group
     form.id.data = call_id
     return form, count
 
@@ -476,7 +519,7 @@ def create_custom_header(api_call, request):
         header['Content-Type'] = 'application/json'
 
     if not api_call.get('remove_token'):
-        header['X-Auth-Token'] = session.get('cloud_token')
+        header['X-Auth-Token'] = request.get('api_token')
 
     if request.get('mock') and not api_call.get('remove_token'):
         header['X-Auth-Token'] = '{api-token}'
@@ -584,80 +627,6 @@ def pretty_format_url(url):
         return temp_url
 
 
-def front_page_most_accessed(active_products):
-    temp_products = []
-    if active_products:
-        for product in active_products:
-            product_accessed = getattr(g.db, product).find(
-                {
-                    'tested': True
-                }
-            ).sort('accessed', pymongo.DESCENDING).limit(2)
-            product_details = g.db.api_settings.find_one({}, {product: 1})
-            for call in product_accessed:
-                call['app_link'] = product_details.get(product).get('app_url')
-                call['endpoint'] = product_details.get(product).get('us_api')
-                call['prod_title'] = product_details.get(product).get('title')
-                temp_products.append(call)
-
-        sorted_products = reversed(
-            sorted(
-                temp_products,
-                key=lambda k: k.get('accessed')
-            )
-        )
-        return sorted_products
-    else:
-        return []
-
-
-def search_for_calls(search_string):
-    data = []
-    api_settings = g.db.api_settings.find_one()
-    if api_settings:
-        products = api_settings.get('active_products')
-        if len(products) > 0:
-            for product in products:
-                product_details = g.db.api_settings.find_one({}, {product: 1})
-                product_db = product_details.get(product).get('db_name')
-                search_results = getattr(g.db, product_db).find(
-                    {
-                        'tested': True,
-                        '$or': [
-                            {
-                                'title': {
-                                    '$regex': search_string,
-                                    '$options': 'i'
-                                }
-                            }, {
-                                'short_description': {
-                                    '$regex': search_string,
-                                    '$options': 'i'
-                                }
-                            }
-                        ]
-                    }
-                ).limit(3)
-                for item in search_results:
-                    item['app_link'] = product_details.get(product).get(
-                        'app_url'
-                    )
-                    item['endpoint'] = product_details.get(product).get(
-                        'us_api'
-                    )
-                    item['prod_title'] = product_details.get(product).get(
-                        'title'
-                    )
-                    item['_id'] = str(item.get('_id'))
-                    data.append(item)
-        else:
-            return []
-    else:
-        return []
-
-    return data
-
-
 def log_api_call_request(
     req_headers,
     rep_headers,
@@ -697,7 +666,7 @@ def log_api_call_request(
                     'doc_url': call.get('doc_url')
                 },
                 'ddi': request.get('ddi'),
-                'data_center': request.get('data_center'),
+                'data_center': request.get('region'),
                 'username': session.get('username'),
                 'completed_at': get_timestamp(),
                 'product': title
@@ -723,6 +692,28 @@ def gather_history():
         {
             'username': session.get('username')
         }
-    ).sort('completed_at', pymongo.DESCENDING).limit(20)
+    ).sort('completed_at', pymongo.DESCENDING).limit(100)
 
     return history
+
+
+def gather_favorites(only_ids=False):
+    favorites = []
+    user_favorites = g.db.favorites.find_one(
+        {
+            'username': session.get('username')
+        }
+    )
+    if user_favorites:
+        for call in user_favorites.get('favorites'):
+            query = {'_id': ObjectId(call.get('call_id'))}
+            temp_call = getattr(g.db, call.get('db_name')).find_one(query)
+            if temp_call:
+                if only_ids:
+                    favorites.append(call.get('call_id'))
+                else:
+                    temp_call['product-db_name'] = call.get('db_name')
+                    temp_call['product-app_url'] = call.get('app_url')
+                    favorites.append(temp_call)
+
+    return favorites
