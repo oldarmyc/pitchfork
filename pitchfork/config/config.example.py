@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
-
 MONGO_HOST = 'localhost'
 MONGO_PORT = 27017
 MONGO_KWARGS = {'tz_aware': True}
 MONGO_DATABASE = 'pitchfork'
 
-ADMIN = 'cloud_username'
+ADMIN_USERNAME = 'cloud_username'
 ADMIN_NAME = 'Admin Full Name'
+ADMIN_EMAIL = 'Admin Email'
 
 SECRET_KEY = 'secret_key_for_cookie'
-LOG_PATH = os.path.join(os.path.dirname(__file__), 'logs/devel.log')
