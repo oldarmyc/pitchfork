@@ -13,49 +13,59 @@
 # limitations under the License.
 
 from flask import Flask, g
-from inspect import getmembers, isfunction
-from happymongo import HapPyMongo
 from config import config
-from adminbp import bp as admin_bp
-from manage_globals import bp as manage_bp
+from datetime import timedelta
+from happymongo import HapPyMongo
 from engine import bp as engine_bp
+from flask.ext.cloudadmin import Admin
+from flask.ext.cloudauth import CloudAuth
+from inspect import getmembers, isfunction
 
 
-import context_functions
-import template_filters
 import views
-import re
+import logging
+import defaults
+import template_filters
+import template_functions
 
 
-def create_app(testing=None):
+def create_app(db_name=None):
     app = Flask(__name__)
-    if testing:
-        config.TESTING = True
-        m = re.search('_test', config.MONGO_DATABASE)
-        if not m:
-            config.MONGO_DATABASE = '%s_test' % config.MONGO_DATABASE
-
-        config.ADMIN = 'rusty.shackelford'
-
     app.config.from_object(config)
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(manage_bp, url_prefix='/manage')
+    if db_name:
+        config.MONGO_DATABASE = db_name
+
+    Admin(app)
     app.register_blueprint(engine_bp, url_prefix='/engine')
 
     mongo, db = HapPyMongo(config)
+    app.permanent_session_lifetime = timedelta(hours=2)
+    auth = CloudAuth(app, db)
 
     custom_filters = {
         name: function for name, function in getmembers(template_filters)
         if isfunction(function)
     }
     app.jinja_env.filters.update(custom_filters)
-    app.context_processor(context_functions.utility_processor)
+    app.context_processor(template_functions.utility_processor)
+
+    @app.before_first_request
+    def logger():
+        if not app.debug:
+            app.logger.addHandler(logging.StreamHandler())
+            app.logger.setLevel(logging.INFO)
 
     @app.before_request
     def before_request():
-        g.db = db
+        g.db, g.auth = db, auth
 
+    defaults.application_initialize(db, app)
     views.ProductsView.register(app)
     views.MiscView.register(app)
+    views.FeedbackView.register(app)
+    views.GlobalManageView.register(app)
 
-    return app, db
+    if db_name:
+        return app, db
+    else:
+        return app
