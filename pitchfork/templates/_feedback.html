@@ -1,0 +1,20 @@
+<div id="submit_feedback" class="modal fade" aria-labelledby="FeedbackForm" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4>Submit Feedback</h4>
+            </div>
+            <div class="modal-body">
+                {%- set modal = True %}
+                {%- set form_id = 'submit_feedback_form' %}
+                {%- set form = feedback_form %}
+                {%- include 'generic/_form.html' %}
+            </div>
+            <div class="modal-footer">
+                <input class="btn btn-primary" id="submit_feedback_submit" name="submit" type="submit" form="submit_feedback_form" value="Submit">
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,9 @@
+/* Product Settings */
+.product-settings dt {
+    text-align: left;
+    width: 140px;
+}
+
+.product-settings dd {
+    margin-left: 140px;
+}
