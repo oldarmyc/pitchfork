@@ -17,10 +17,11 @@
             <tr>
                 <th>Name</th>
                 <th>Verb</th>
+                <th>Group</th>
                 <th>URI</th>
                 <th>Variables</th>
-                <th style="text-align: center;">Filter</th>
-                <th style="text-align: center;">Tested</th>
+                <th class="center">Filter</th>
+                <th class="center">Tested</th>
                 <th></th>
             </tr>
             {% for api in api_commands %}
@@ -32,6 +33,9 @@
                         {{ api.get('verb') }}
                     </td>
                     <td>
+                        {{ api.get('group') if api.get('group') else '-' }}
+                    </td>
+                    <td>
                         {{ api.get('api_uri') }}
                     </td>
                     <td>
@@ -41,12 +45,12 @@
                             {% endfor %}
                         {% endif %}
                     </td>
-                    <td style="text-align: center;">
+                    <td class="center">
                         {% if api.get('allow_filter') %}
                             <span class="fa fa-check-circle-o"></span>
                         {% endif %}
                     </td>
-                    <td style="text-align: center;">
+                    <td class="center">
                         {% if api.get('tested') %}
                             <a href="{{ product_url }}/unconfirm/{{ api.get('_id') }}" class="tooltip_show" title="Mark as Untested"><span class="fa fa-check-circle-o"></span></a>
                         {% else %}

@@ -2,54 +2,101 @@
 {% block title %} - {{ title }}{% endblock %}
 {% block addHeaders %}
     <link href="{{ url_for('static', filename='css/ui.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/pygments.css') }}" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400italic,600,700,900,600italic' rel='stylesheet' type='text/css'>
 {% endblock %}
 {% block body %}
     <div id="static_div_header">
         <div id="generated_messages_product">&nbsp;</div>
-        <h2>{{ title }}{% if testing %} - Testing API Calls{% else %} - API Calls{% endif %}</h2>
-        {% if session.get('username') %}
+        <h2>
+            {%- if not testing %}<a href="" data-toggle="modal" data-target="#submit_feedback" data-product="{{ api_settings.db_name }}" class="tooltip-title" title="Product Feedback"><span class="fa fa-comments-o"></span></a> {% endif -%}{{ title }}{%- if testing %} - Testing API Calls{% else %} - API Calls{% endif -%}
+        </h2>
+        {%- if session.get('username') %}
             <div id="global_vars">
                 <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
-                {% if require_region %}
+                <input id="token" name="token" type="hidden" value="{{ session.get('token') }}"></input>
+                {%- if require_region %}
                     <label class="region-label">Region:</label>
                     <select id="region" name="region">
                         <option value="none" selected="selected">Select Region</option>
-                        {% for option in regions %}
+                        {%- for option in regions %}
                             <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
-                        {% endfor %}
+                        {% endfor -%}
                     </select>
-                {% endif %}
-                {% if check_if_admin %}
+                {% endif -%}
+                {%- if check_if_admin %}
                     {% if not testing %}
-                        <button class="btn btn-info testing-button">View Testing Calls</button>
+                        <button class="btn btn-default testing-button">View Testing Calls</button>
                     {% else %}
-                        <button class="btn btn-info active-button">View Active Calls</button>
-                    {% endif %}
+                        <button class="btn btn-default active-button">View Active Calls</button>
+                    {% endif -%}
                 {% endif %}
+            </div>
+        {% endif -%}
+    </div>
+    <div class="offset-calls">
+        {% if api_calls %}
+            {%- for group in api_groups %}
+                {%- if group != '' %}
+                    <h3 class="header-group">{{ group.get('name') }}</h3>
+                    {%- set group_key = group.get('slug') %}
+                {% else %}
+                    {%- set group_key = '' %}
+                {% endif -%}
+                {%- set calls = api_calls.get(group_key) %}
+                {%- include '_call_layout.html' %}
+            {% endfor -%}
+        {% else %}
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <strong>Warning!</strong> No API calls were found to display
+                </div>
             </div>
         {% endif %}
     </div>
-    <div class="row offset-calls">
-        <div class="col-md-2">
-            <div class="well">
-                <ul class="nav nav-pills nav-stacked left-nav">
-                    <li class="navbar-header">API Calls</li>
-                    {% for menu in api_calls %}
-                        <li>
-                            <a href="#{{ menu.get('title')|lower|slug }}-{{ title|lower|slug }}" class="toc">{{ menu.get('title') }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
+    <a class="scrollup product">Scroll</a>
+    {%- if not testing and title == "Monitoring" %}
+        <div id="get_hybrid_token_form" class="modal fade" aria-labelledby="TokenForm" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4>Get Hybrid Impersonation Token</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" action="" class="form-horizontal" id="generate_token_form">
+                            {% if not session.get('cloud_token') %}
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="sso_username">SSO Username:</label>
+                                    <div class="col-xs-8">
+                                        <input class="form-control" id="sso_username" type="text" value="" name="sso_username">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="sso_password">SSO Password:</label>
+                                    <div class="col-xs-8">
+                                        <input class="form-control" d="sso_password" type="password" value="" name="sso_password">
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label" for="dedicated_account">Dedicated Account:</label>
+                                <div class="col-xs-8">
+                                    <input class="form-control" id="dedicated_account" type="text" value="" name="dedicated_account">
+                                </div>
+                            </div>
+                        </form>
+                        <div id="token_info">&nbsp;</div>
+                    </div>
+                    <div class="modal-footer">
+                        <input class="btn btn-primary" id="get_hybrid_token_submit" name="submit" type="submit" form="generate_token_form" value="Submit">
+                        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-10">
-            {% set call_loop = api_calls.rewind() %}
-            {% include '_api_call_template.html' %}
-        </div>
-    </div>
-    <a class="scrollup product">Scroll</a>
+    {% endif -%}
+    {%- include '_feedback.html' %}
 {% endblock %}
 {% block jquery %}
     <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
@@ -68,6 +115,7 @@
             $('.prod-popover').popover();
             $('.tooltip-title').tooltip();
             setup_toggle_details();
+            setup_toggle_details_verb();
             setup_api_call_submit();
             toggle_results();
             $(window).scroll(function(){
@@ -84,6 +132,10 @@
             } else {
                 scroll_if_anchor(window.location.hash, 0);
             }
+        });
+
+        $('body').on('hidden.bs.modal', '.modal', function () {
+            $(this).find('form')[0].reset();
         });
 	</script>
 {% endblock %}
