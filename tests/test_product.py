@@ -1,29 +1,39 @@
-from pitchfork import setup_application
+
+from pitchfork.setup_application import create_app
+from pitchfork.config import config
+from datetime import datetime
+from bson import ObjectId
 from uuid import uuid4
-from bson.objectid import ObjectId
 
 
 import unittest
-import json
 import urlparse
-import re
+import json
 import mock
+import re
 
 
 class ProductTests(unittest.TestCase):
     def setUp(self):
-        self.app, self.db = setup_application.create_app('True')
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        self.client = self.app.test_client()
-        self.client.get('/')
+        check_db = re.search('_test', config.MONGO_DATABASE)
+        if not check_db:
+            test_db = '%s_test' % config.MONGO_DATABASE
+        else:
+            test_db = config.MONGO_DATABASE
 
-    def teardown_app_data(self):
+        self.pitchfork, self.db = create_app(test_db)
+        self.app = self.pitchfork.test_client()
+        self.app.get('/')
+
+    def tearDown(self):
         self.db.sessions.remove()
         self.db.settings.remove()
         self.db.forms.remove()
         self.db.api_settings.remove()
         self.db.autoscale.remove()
+        self.db.favorites.remove()
+        self.db.feedback.remove()
+        self.db.history.remove()
 
     def setup_user_login(self, sess):
         sess['username'] = 'test'
@@ -43,13 +53,14 @@ class ProductTests(unittest.TestCase):
 
     def setup_useable_api_call(self, tested=None):
         data = {
-            'api_uri': '{ddi}/groups',
+            'api_uri': '/v1.0/{ddi}/groups',
             'doc_url': 'http://docs.rackspace.com',
             'short_description': 'Test API Call',
             'title': 'Test Call',
             'verb': 'GET',
+            'variables': [],
             'allow_filter': True,
-            'variables': []
+            'group': 'scaling_group'
         }
         if tested:
             data['tested'] = 'True'
@@ -65,6 +76,7 @@ class ProductTests(unittest.TestCase):
             'title': 'Test Call',
             'verb': 'GET',
             'use_data': True,
+            'group': 'scaling_group',
             'data_object': "{\r\n    \"test_var\": \"{test_var_value}\"\r\n}",
             'variables': [
                 {
@@ -80,6 +92,18 @@ class ProductTests(unittest.TestCase):
         }
         insert = self.db.autoscale.insert(data)
         return insert
+
+    def setup_useable_feedback(self):
+        data = {
+            'category': 'deprecated',
+            'feedback': 'test feedback info',
+            'submitted': datetime.now(),
+            'call_id': '528e098b192a8b99f956e5e7',
+            'product_url': '/autoscale',
+            'product_db': 'autoscale',
+            'complete': False
+        }
+        return self.db.feedback.insert(data)
 
     def retrieve_csrf_token(self, data, variable=None):
         temp = re.search('id="csrf_token"(.+?)>', data)
@@ -105,7 +129,7 @@ class ProductTests(unittest.TestCase):
     """ Product Management Autoscale - Perms Test """
 
     def test_pf_autoscale_manage_admin_perms(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -115,15 +139,14 @@ class ProductTests(unittest.TestCase):
             'Invalid response code %s' % response._status_code
         )
         self.assertIn(
-            'Manage Settings</h3>',
+            'Manage Settings',
             response.data,
             'Did not find correct HTML on page'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_admin_perms_no_settings(self):
         self.db.api_settings.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -133,14 +156,13 @@ class ProductTests(unittest.TestCase):
             'Invalid response code %s' % response._status_code
         )
         self.assertIn(
-            'Manage Settings</h3>',
+            'Manage Settings',
             response.data,
             'Did not find correct HTML on page'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_user_perms(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -156,12 +178,11 @@ class ProductTests(unittest.TestCase):
             '/',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     """ Functional Tests """
 
     def test_pf_autoscale_manage_add_update(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -195,10 +216,9 @@ class ProductTests(unittest.TestCase):
             updated = True
 
         assert updated, 'Product was not updated successfully'
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_add_update_disable(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -237,10 +257,9 @@ class ProductTests(unittest.TestCase):
             not_active = True
 
         assert not_active, 'Product was not removed from active products'
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_add_bad_data(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -266,12 +285,66 @@ class ProductTests(unittest.TestCase):
         )
         calls = self.db.autoscale.find()
         assert calls.count() == 0, 'Call added when it should not have been'
-        self.teardown_app_data()
+
+    def test_pf_autoscale_reorder_groups_demote(self):
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            before = self.db.api_settings.find_one(
+                {'autoscale.groups.slug': 'scaling_groups'},
+                {'autoscale.groups.$': 1}
+            )
+            response = c.get(
+                '/autoscale/groups/scaling_groups/demote',
+            )
+
+        assert response.status_code == 200, 'Incorrect status code returned'
+        after = self.db.api_settings.find_one(
+            {'autoscale.groups.slug': 'scaling_groups'},
+            {'autoscale.groups.$': 1}
+        )
+        before_group = before.get('autoscale').get('groups')[0].get('order')
+        after_group = after.get('autoscale').get('groups')[0].get('order')
+        assert before_group + 1 == after_group, 'Incorrect order after demote'
+
+    def test_pf_autoscale_reorder_groups_promote(self):
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            before = self.db.api_settings.find_one(
+                {'autoscale.groups.slug': 'configurations'},
+                {'autoscale.groups.$': 1}
+            )
+            response = c.get(
+                '/autoscale/groups/configurations/promote',
+            )
+
+        assert response.status_code == 200, 'Incorrect status code returned'
+        after = self.db.api_settings.find_one(
+            {'autoscale.groups.slug': 'configurations'},
+            {'autoscale.groups.$': 1}
+        )
+        before_group = before.get('autoscale').get('groups')[0].get('order')
+        after_group = after.get('autoscale').get('groups')[0].get('order')
+        assert before_group - 1 == after_group, 'Incorrect order after demote'
+
+    def test_pf_autoscale_reorder_groups_bad_product(self):
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/bad_product/groups/configurations/promote',
+            )
+
+        assert response.status_code == 400, 'Incorrect status code returned'
 
     """ Product API Management Autoscale - Perms Test """
 
     def test_pf_autoscale_manage_api_admin_perms(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -286,10 +359,9 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Did not find correct HTML on page'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_user_perms(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -305,12 +377,11 @@ class ProductTests(unittest.TestCase):
             '/',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     """ API Add """
 
     def test_pf_autoscale_manage_api_add_admin_perms(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -324,10 +395,9 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Did not find correct HTML on page'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_user_perms(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -343,11 +413,10 @@ class ProductTests(unittest.TestCase):
             '/',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_admin_post_dupe_title(self):
         self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -374,11 +443,10 @@ class ProductTests(unittest.TestCase):
         )
         calls = self.db.autoscale.find()
         assert calls.count() == 1, 'Found to many calls in database'
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_admin_post_dupe_url(self):
         self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -389,7 +457,7 @@ class ProductTests(unittest.TestCase):
                 'title': 'Dupe Call',
                 'doc_url': 'http://docs.rackspace.com',
                 'verb': 'GET',
-                'api_uri': '{ddi}/groups'
+                'api_uri': '/v1.0/{ddi}/groups'
             }
             response = c.post('/autoscale/manage/api/add', data=data)
 
@@ -399,17 +467,16 @@ class ProductTests(unittest.TestCase):
             'Could not find error alert on page'
         )
         self.assertIn(
-            'Duplicate URI and Verb combination',
+            'Duplicate URI, Verb, and Doc combination',
             response.data,
             'Bad message when submitting duplicate url and verb'
         )
         calls = self.db.autoscale.find()
         assert calls.count() == 1, 'Found to many calls in database'
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_add_admin_post_good(self):
         self.db.autoscale.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -422,7 +489,10 @@ class ProductTests(unittest.TestCase):
                 'title': 'Add Call',
                 'doc_url': 'http://docs.rackspace.com',
                 'verb': 'GET',
-                'api_uri': '{ddi}/groups'
+                'api_uri': '/v1.0/{ddi}/groups',
+                'group': 'add_new_group',
+                'new_group': 'Test Group',
+                'product': 'autoscale'
             }
             response = c.post(
                 '/autoscale/manage/api/add',
@@ -435,9 +505,16 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Bad message when submitting good call'
         )
-        found_call = self.db.autoscale.find()
-        assert found_call.count() == 1, 'Could not find added api call'
-        self.teardown_app_data()
+        calls = self.db.autoscale.find()
+        found = self.db.autoscale.find_one()
+        assert calls.count() == 1, 'Incorrect count of calls'
+        assert found.get('group') == 'test_group', (
+            'Group not find or incorrect group'
+        )
+        group = self.db.api_settings.find_one(
+            {'autoscale.groups.slug': 'test_group'}
+        )
+        assert group, 'Could not find added group'
 
     def test_pf_autoscale_manage_api_add_admin_post_no_db(self):
         self.db.autoscale.remove()
@@ -446,7 +523,7 @@ class ProductTests(unittest.TestCase):
                 '$set': {'autoscale.db_name': None}
             }
         )
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -475,13 +552,12 @@ class ProductTests(unittest.TestCase):
         )
         found_call = self.db.autoscale.find()
         assert found_call.count() == 0, 'No calls should have been found'
-        self.teardown_app_data()
 
     """ Edit API Call """
 
     def test_pf_autoscale_manage_api_edit_user_perms(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -499,11 +575,10 @@ class ProductTests(unittest.TestCase):
             '/',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_edit_admin_perms(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -519,12 +594,11 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Invalid HTML found when browsing to edit'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_edit_admin_perms_with_vars(self):
         self.setup_useable_api_call_with_variables()
         call = self.db.autoscale.find_one()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -547,12 +621,11 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Could not find correct Document URL in edit form'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_edit_admin_bad_post(self):
         self.setup_useable_api_call()
         call = self.db.autoscale.find_one()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -584,11 +657,10 @@ class ProductTests(unittest.TestCase):
         assert call == check_call, (
             'Call was edited when it was not supposed to'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_edit_admin_good_post(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -624,13 +696,12 @@ class ProductTests(unittest.TestCase):
             }
         )
         assert calls, 'Could not find updated call'
-        self.teardown_app_data()
 
     """ Set testing for API Call """
 
     def test_pf_autoscale_manage_api_mark_tested(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -646,11 +717,10 @@ class ProductTests(unittest.TestCase):
         )
         check_call = self.db.autoscale.find_one({'_id': ObjectId(api_id)})
         assert check_call.get('tested'), 'API call was not saved as tested'
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_mark_untested(self):
         api_id = self.setup_useable_api_call(True)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -668,13 +738,12 @@ class ProductTests(unittest.TestCase):
         assert not check_call.get('tested'), (
             'API call was not marked as untested'
         )
-        self.teardown_app_data()
 
     """ Delete Call """
 
     def test_pf_autoscale_manage_api_delete_valid(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -694,13 +763,12 @@ class ProductTests(unittest.TestCase):
             0,
             'Invalid api count found %d and should be 0' % api_call.count()
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_manage_api_delete_invalid(self):
         api_id = self.setup_useable_api_call()
         self.db.autoscale.remove()
         self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -720,12 +788,11 @@ class ProductTests(unittest.TestCase):
             1,
             'Invalid api count found %d and should be 1' % api_call.count()
         )
-        self.teardown_app_data()
 
     """ Testing Product front """
 
     def test_pf_autoscale_api_admin_perms_testing(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -739,11 +806,10 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Did not find correct HTML on page'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_api_admin_perms_testing_no_settings(self):
         self.db.api_settings.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -761,10 +827,9 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Did not find correct error message on page'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_api_user_perms_testing(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -780,12 +845,11 @@ class ProductTests(unittest.TestCase):
             '/',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     """ Front product View """
 
     def test_pf_autoscale_api_admin_perms(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -799,10 +863,9 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Did not find correct HTML on page'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_api_user_perms(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -816,11 +879,10 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Did not find correct HTML on page'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_api_admin_perms_no_settings(self):
         self.db.api_settings.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -835,11 +897,10 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Did not find correct HTML on page'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_api_user_perms_no_settings(self):
         self.db.api_settings.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
 
@@ -854,25 +915,24 @@ class ProductTests(unittest.TestCase):
             response.data,
             'Did not find correct HTML on page'
         )
-        self.teardown_app_data()
 
     """ Send Request to process """
 
     def test_pf_autoscale_post_call(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
             data = {
                 'api_verb': 'GET',
                 'testing': False,
-                'api_url': '{ddi}/groups',
+                'api_url': '/v1.0/{ddi}/groups',
                 'api_token': 'test_token',
                 'api_id': str(api_id),
                 'ddi': '123456',
                 'data_center': 'dfw',
-                'add_filter': '?limit=100'
+                'add_filter': 'limit=100'
             }
             with mock.patch('requests.get') as patched_get:
                 type(patched_get.return_value).content = mock.PropertyMock(
@@ -914,11 +974,10 @@ class ProductTests(unittest.TestCase):
             data.get('api_url'),
             'Did not find the limit attached to the end of the URI'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_post_call_testing(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -967,11 +1026,10 @@ class ProductTests(unittest.TestCase):
         assert data.get('response_code'), (
             'No response status code was received'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_post_call_testing_uk(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1020,11 +1078,10 @@ class ProductTests(unittest.TestCase):
         assert data.get('response_code'), (
             'No response status code was received'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_post_call_bad_response(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -1072,17 +1129,16 @@ class ProductTests(unittest.TestCase):
         assert data.get('response_code'), (
             'No response status code was received'
         )
-        self.teardown_app_data()
 
     def test_pf_autoscale_post_call_with_data(self):
         api_id = self.setup_useable_api_call_with_variables()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
             data = {
-                'api_verb': 'GET',
-                'testing': False,
+                'api_verb': 'POST',
+                'testing': 'false',
                 'api_url': '{ddi}/groups',
                 'api_token': 'test_token',
                 'api_id': str(api_id),
@@ -1090,14 +1146,14 @@ class ProductTests(unittest.TestCase):
                 'data_center': 'dfw',
                 'test_var_value': 'Test Group'
             }
-            with mock.patch('requests.get') as patched_get:
-                type(patched_get.return_value).content = mock.PropertyMock(
+            with mock.patch('requests.post') as ppost:
+                type(ppost.return_value).content = mock.PropertyMock(
                     return_value='{"groups_links": [], "groups": []}'
                 )
-                type(patched_get.return_value).status_code = mock.PropertyMock(
+                type(ppost.return_value).status_code = mock.PropertyMock(
                     return_value=200
                 )
-                type(patched_get.return_value).headers = mock.PropertyMock(
+                type(ppost.return_value).headers = mock.PropertyMock(
                     return_value=(
                         '{"via": "1.1 Repose (Repose/2.12)",\
                         "x-response-id": "response_id",\
@@ -1127,7 +1183,257 @@ class ProductTests(unittest.TestCase):
         assert data.get('data_package'), (
             'No response data package was received'
         )
-        self.teardown_app_data()
+        assert self.db.history.count() == 1, (
+            'Could not find call logged in history'
+        )
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_pf_mark_favorite_add(self):
+        api_id = self.setup_useable_api_call(True)
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            data = {'call_id': str(api_id)}
+            response = c.post(
+                '/autoscale/favorites/add',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+            fav_response = c.get('/favorites')
+            prod_response = c.get('/autoscale/')
+
+        data = json.loads(response.data)
+        assert data.get('code') == 200, 'Incorrect response code received'
+        favorites = self.db.favorites.find_one({'username': 'test'})
+        assert favorites, 'No favorites found'
+        assert favorites.get('favorites')[0].get('call_id') == str(api_id), (
+            'Did not find call ID in favorites'
+        )
+        assert fav_response.status_code == 200, 'Incorrect status returned'
+        self.assertIn(
+            'Test Call',
+            fav_response.data,
+            'Could not find call title in favorites'
+        )
+        assert prod_response.status_code == 200, 'Incorrect status found'
+
+    def test_pf_mark_favorite_remove(self):
+        api_id = self.setup_useable_api_call()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            data = {'call_id': str(api_id)}
+            response = c.post(
+                '/autoscale/favorites/add',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+            response = c.post(
+                '/autoscale/favorites/remove',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        data = json.loads(response.data)
+        assert data.get('code') == 200, 'Incorrect response code received'
+        favorites = self.db.favorites.find_one({'username': 'test'})
+        assert favorites, 'No favorites found'
+        assert len(favorites.get('favorites')) == 0, (
+            'Favorites not empty'
+        )
+
+    def test_pf_mark_favorite_remove_no_prior(self):
+        api_id = self.setup_useable_api_call()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            data = {'call_id': str(api_id)}
+            response = c.post(
+                '/autoscale/favorites/remove',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        data = json.loads(response.data)
+        assert data.get('code') == 200, 'Incorrect response code received'
+        favorites = self.db.favorites.find_one({'username': 'test'})
+        assert favorites is None, 'No favorites found'
+
+    def test_pf_mark_favorite_bad_action(self):
+        api_id = self.setup_useable_api_call()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            data = {'call_id': str(api_id)}
+            response = c.post(
+                '/autoscale/favorites/bad_action',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        assert response.status_code == 404, 'Incorrect response code received'
+        favorites = self.db.favorites.find_one({'username': 'test'})
+        assert favorites is None, 'No favorites found'
+
+    def test_pf_mark_favorite_bad_call(self):
+        api_id = self.setup_useable_api_call()
+        self.db.autoscale.remove()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            data = {'call_id': str(api_id)}
+            response = c.post(
+                '/autoscale/favorites/add',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        assert response.status_code == 404, 'Incorrect response code received'
+        favorites = self.db.favorites.find_one({'username': 'test'})
+        assert favorites is None, 'No favorites found'
+
+    def test_pf_mark_favorite_bad_product(self):
+        api_id = self.setup_useable_api_call()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            data = {'call_id': str(api_id)}
+            response = c.post(
+                '/bad_product/favorites/add',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        assert response.status_code == 404, 'Incorrect response code received'
+        favorites = self.db.favorites.find_one({'username': 'test'})
+        assert favorites is None, 'No favorites found'
+
+    """ Feedback """
+
+    def test_pf_feedback_add(self):
+        api_id = self.setup_useable_api_call()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            data = {
+                'call_id': str(api_id),
+                'category': 'doc_link',
+                'feedback': 'Testing feedback',
+                'product_db': 'autoscale'
+            }
+            response = c.post(
+                '/feedback/',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        data = json.loads(response.data)
+        assert data.get('code') == 200, 'Incorrect response code received'
+        feedback = self.db.feedback.find_one()
+        assert feedback, 'No feedback items found'
+        assert feedback.get('call_id') == str(api_id), (
+            'Did not find call ID in feedback'
+        )
+
+    def test_pf_feedback_mark_invalid_item(self):
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            data = {'feedback_id': 'bad_id'}
+            response = c.put(
+                '/feedback/',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        assert response.status_code == 400, 'Incorrect response code received'
+
+    def test_pf_feedback_user_permissions_check(self):
+        feedback_id = self.setup_useable_feedback()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            data = {'feedback_id': str(feedback_id)}
+            response = c.put(
+                '/feedback/',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+
+        assert response.status_code == 404, 'Incorrect response code received'
+        feedback = self.db.feedback.find_one()
+        assert feedback, 'No feedback items found'
+        assert feedback.get('_id') == feedback_id, (
+            'Did not find correct feedback item'
+        )
+        assert feedback.get('complete') is False, (
+            'Feedback marked complete when it should not have been'
+        )
+
+    def test_pf_feedback_mark_complete(self):
+        feedback_id = self.setup_useable_feedback()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            data = {'feedback_id': str(feedback_id)}
+            response = c.put(
+                '/feedback/',
+                data=json.dumps(data),
+                content_type='application/json',
+            )
+
+        data = json.loads(response.data)
+        assert data.get('code') == 200, 'Incorrect response code received'
+        feedback = self.db.feedback.find_one()
+        assert feedback, 'No feedback items found'
+        assert feedback.get('_id') == feedback_id, (
+            'Did not find correct feedback item'
+        )
+        assert feedback.get('complete'), (
+            'Feedback not marked complete as expected'
+        )
+
+    def test_pf_feedback_view(self):
+        self.setup_useable_feedback()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get('/feedback/')
+
+        self.assertIn(
+            'Submitted Feedback',
+            response.data,
+            'Could not load page with feedback'
+        )
+        feedback = self.db.feedback.find_one()
+        self.assertIn(
+            'data-feedback_id="%s"' % feedback.get('_id'),
+            response.data,
+            'Could not find feedback item'
+        )
+
+    def test_pf_feedback_view_user(self):
+        self.setup_useable_feedback()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            response = c.get('/feedback/')
+            assert response.status_code == 302, 'Invalid status code'
+            response = c.get('/feedback/', follow_redirects=True)
+
+        self.assertIn(
+            'You do not have the correct permissions to access this page',
+            response.data,
+            'Could not find error message on bad permissions'
+        )

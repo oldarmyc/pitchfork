@@ -1,4 +1,6 @@
-from pitchfork import setup_application
+
+from pitchfork.setup_application import create_app
+from pitchfork.config import config
 from uuid import uuid4
 
 
@@ -11,13 +13,17 @@ import mock
 
 class EdgeCasesTests(unittest.TestCase):
     def setUp(self):
-        self.app, self.db = setup_application.create_app('True')
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        self.client = self.app.test_client()
-        self.client.get('/')
+        check_db = re.search('_test', config.MONGO_DATABASE)
+        if not check_db:
+            test_db = '%s_test' % config.MONGO_DATABASE
+        else:
+            test_db = config.MONGO_DATABASE
 
-    def teardown_app_data(self):
+        self.pitchfork, self.db = create_app(test_db)
+        self.app = self.pitchfork.test_client()
+        self.app.get('/')
+
+    def tearDown(self):
         self.db.sessions.remove()
         self.db.settings.remove()
         self.db.forms.remove()
@@ -207,11 +213,9 @@ class EdgeCasesTests(unittest.TestCase):
         else:
             return token
 
-    """ Edge Case or Complex tests start """
-
     def test_misc_post_call_complex_dict(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -260,11 +264,10 @@ class EdgeCasesTests(unittest.TestCase):
         assert data.get('data_package'), (
             'No response data package was received'
         )
-        self.teardown_app_data()
 
     def test_misc_post_call_complex_list(self):
         api_id = self.setup_useable_api_call_with_variables()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -321,99 +324,10 @@ class EdgeCasesTests(unittest.TestCase):
         assert data.get('data_package'), (
             'No response data package was received'
         )
-        self.teardown_app_data()
-
-    def test_misc_browse_index_with_calls(self):
-        self.setup_useable_api_call(True)
-        with self.app.test_client() as c:
-            with c.session_transaction() as sess:
-                self.setup_admin_login(sess)
-
-            response = c.get('/')
-
-        self.assertIn(
-            'Autoscale - Test Call',
-            response.data,
-            'Could not find correct call for front most accessed'
-        )
-        self.teardown_app_data()
-
-    def test_misc_search_for_valid_call(self):
-        self.setup_useable_api_call(True)
-        with self.app.test_client() as c:
-            with c.session_transaction() as sess:
-                self.setup_admin_login(sess)
-
-            data = {
-                'search_string': 'Test API'
-            }
-            response = c.post(
-                '/search',
-                data=json.dumps(data),
-                content_type='application/json'
-            )
-
-        self.assertIn(
-            'Autoscale - Test Call',
-            response.data,
-            'Could not find correct html after search'
-        )
-        self.teardown_app_data()
-
-    def test_misc_search_for_call_no_data(self):
-        self.db.api_settings.remove()
-        with self.app.test_client() as c:
-            with c.session_transaction() as sess:
-                self.setup_admin_login(sess)
-
-            data = {
-                'search_string': 'Test API'
-            }
-            response = c.post(
-                '/search',
-                data=json.dumps(data),
-                content_type='application/json'
-            )
-
-        self.assertIn(
-            'No API calls were found to display',
-            response.data,
-            'Could not find correct message after no items'
-        )
-        self.teardown_app_data()
-
-    def test_misc_search_for_call_bad_search(self):
-        self.db.api_settings.update(
-            {
-            }, {
-                '$set': {
-                    'active_products': []
-                }
-            }
-        )
-        with self.app.test_client() as c:
-            with c.session_transaction() as sess:
-                self.setup_admin_login(sess)
-
-            data = {
-                'search_string': 'Test API'
-            }
-            response = c.post(
-                '/search',
-                data=json.dumps(data),
-                content_type='application/json'
-            )
-
-        self.assertIn(
-            'No API calls were found to display',
-            response.data,
-            'Could not find correct message after no active products'
-        )
-        self.teardown_app_data()
 
     def test_misc_post_call_parse_through_html(self):
         api_id = self.setup_useable_api_call_with_variables()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -462,11 +376,10 @@ class EdgeCasesTests(unittest.TestCase):
         assert data.get('data_package'), (
             'No response data package was received'
         )
-        self.teardown_app_data()
 
     def test_pf_add_call_with_variables(self):
         self.db.autoscale.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -519,12 +432,11 @@ class EdgeCasesTests(unittest.TestCase):
             }
         )
         assert found_call, 'Could not find added api call'
-        self.teardown_app_data()
 
     def test_process_call_with_bad_call_id(self):
         api_id = self.setup_useable_api_call()
         self.db.autoscale.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -554,12 +466,11 @@ class EdgeCasesTests(unittest.TestCase):
             '/',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     def test_process_call_with_bad_product(self):
         api_id = self.setup_useable_api_call()
         self.db.autoscale.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -589,11 +500,10 @@ class EdgeCasesTests(unittest.TestCase):
             '/',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     def test_process_mock_call(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -633,12 +543,11 @@ class EdgeCasesTests(unittest.TestCase):
         assert data.get('api_url'), 'API URL was not found'
         assert data.get('request_headers'), 'No request headers received'
         assert data.get('data_package'), 'No data package received'
-        self.teardown_app_data()
 
     def test_manage_api_with_bad_product(self):
         self.setup_useable_api_call()
         self.db.autoscale.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -654,12 +563,11 @@ class EdgeCasesTests(unittest.TestCase):
             '/',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     def test_manage_api_add_call_with_bad_product(self):
         self.setup_useable_api_call()
         self.db.autoscale.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -675,12 +583,11 @@ class EdgeCasesTests(unittest.TestCase):
             '/',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     def test_manage_api_edit_call_with_bad_call_id(self):
         api_id = self.setup_useable_api_call()
         self.db.autoscale.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -698,11 +605,10 @@ class EdgeCasesTests(unittest.TestCase):
             '/autoscale/manage/api',
             'Invalid redirect location %s, expected "/"' % o.path
         )
-        self.teardown_app_data()
 
     def test_manage_api_bad_action(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -722,11 +628,10 @@ class EdgeCasesTests(unittest.TestCase):
             response.data,
             'Found invalid message in return'
         )
-        self.teardown_app_data()
 
     def test_manage_api_bad_product(self):
         api_id = self.setup_useable_api_call()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -746,9 +651,3 @@ class EdgeCasesTests(unittest.TestCase):
             response.data,
             'Found invalid message in return'
         )
-        self.teardown_app_data()
-
-    """ End Misc Tests """
-
-if __name__ == '__main__':
-    unittest.main()
