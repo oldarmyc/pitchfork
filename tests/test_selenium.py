@@ -26,7 +26,6 @@ import time
 import uuid
 import mock
 import json
-import os
 import re
 
 
@@ -36,8 +35,7 @@ class SeleniumTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
-            cls.client = webdriver.PhantomJS(service_log_path=os.path.devnull)
-            # cls.client = webdriver.Firefox()
+            cls.client = webdriver.Firefox()
         except:
             pass
 
@@ -159,8 +157,6 @@ class SeleniumTests(unittest.TestCase):
         self.db.history.insert(data)
 
     def setup_user_logged_in(self, admin=None):
-        today = datetime.now()
-        tomorrow = '%s-%s-%s' % (today.year, today.month, today.day + 1)
         self.client.get('http://localhost:5000/admin/login')
         username = self.client.find_element_by_id('username')
         password = self.client.find_element_by_id('password')
