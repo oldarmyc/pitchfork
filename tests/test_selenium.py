@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
+from fixtures.authenticate import auth_return
 from pitchfork import setup_application
+from pitchfork.config import config
 from datetime import datetime
 
 
@@ -9,7 +11,9 @@ import threading
 import time
 import uuid
 import mock
+import json
 import os
+import re
 
 
 class SeleniumTests(unittest.TestCase):
@@ -18,13 +22,19 @@ class SeleniumTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
-            cls.client = webdriver.PhantomJS(service_log_path=os.path.devnull)
-            # cls.client = webdriver.Firefox()
+            # cls.client = webdriver.PhantomJS(service_log_path=os.path.devnull)
+            cls.client = webdriver.Firefox()
         except:
             pass
 
+        check_db = re.search('_test', config.MONGO_DATABASE)
+        if not check_db:
+            test_db = '%s_test' % config.MONGO_DATABASE
+        else:
+            test_db = config.MONGO_DATABASE
+
         if cls.client:
-            cls.app, cls.db = setup_application.create_app(True)
+            cls.app, cls.db = setup_application.create_app(test_db)
             cls.app_context = cls.app.app_context()
             cls.app_context.push()
 
@@ -75,6 +85,23 @@ class SeleniumTests(unittest.TestCase):
 
         self.db.autoscale.insert(data)
 
+    def setup_useable_admin(self, user=None):
+        if not user:
+            user = 'test1234'
+
+        self.db.settings.update(
+            {}, {
+                '$push': {
+                    'admins': {
+                        'username': user,
+                        'name': 'Test Admin',
+                        'email': 'test@test.com',
+                        'active': True
+                    }
+                }
+            }
+        )
+
     def setup_call_history(self):
         data = {
             'username': 'rusty.shackelford',
@@ -124,6 +151,7 @@ class SeleniumTests(unittest.TestCase):
         username = self.client.find_element_by_id('username')
         password = self.client.find_element_by_id('password')
         if admin:
+            self.setup_useable_admin()
             username.send_keys('rusty.shackelford')
         else:
             username.send_keys('bob.richards')
@@ -131,12 +159,7 @@ class SeleniumTests(unittest.TestCase):
         password.send_keys('%s' % uuid.uuid4().hex)
         with mock.patch('requests.post') as patched_post:
             type(patched_post.return_value).content = mock.PropertyMock(
-                return_value=(
-                    '{"access": {"token": {"RAX-AUTH:authenticatedBy": '
-                    '["APIKEY"], "expires": "%sT04:17:18.880Z", '
-                    '"id": "a359c49c0e6f4b2db32618cc98137a8d", "tenant": '
-                    '{"id": "123456","name": "123456"}}}}' % tomorrow
-                )
+                return_value=json.dumps(auth_return)
             )
             login_button = self.client.find_element_by_id('submit')
             login_button.click()
@@ -144,7 +167,7 @@ class SeleniumTests(unittest.TestCase):
     def tearDown(self):
         self.db.autoscale.remove()
         self.db.history.remove()
-        self.client.get('http://localhost:5000/admin/logout')
+        self.client.get('http://localhost:5000/admin/logout/')
 
     def test_pf_front_not_logged_in(self):
         self.client.get('http://localhost:5000')
@@ -164,12 +187,7 @@ class SeleniumTests(unittest.TestCase):
         )
 
     def test_pf_product_browse_nli_no_calls(self):
-        self.client.get('http://localhost:5000/autoscale')
-        self.assertIn(
-            '<li class="navbar-header">API Calls</li>',
-            self.client.page_source,
-            'Did not find correct side menu header on autoscale'
-        )
+        self.client.get('http://localhost:5000/autoscale/')
         self.assertIn(
             'Autoscale - API Calls',
             self.client.page_source,
@@ -179,8 +197,6 @@ class SeleniumTests(unittest.TestCase):
     def test_pf_product_browse_nli_with_calls(self):
         self.setup_database(True)
         self.client.get('http://localhost:5000/autoscale/')
-        toc = self.client.find_element_by_class_name('toc')
-        assert toc.text == 'Test Call', 'Did not find link on side menu'
         self.assertIn(
             'Test API Call',
             self.client.page_source,
@@ -216,18 +232,26 @@ class SeleniumTests(unittest.TestCase):
 
         details = self.client.find_element_by_id('api_call_inner')
         assert not details.is_displayed(), 'Details element should not be seen'
-        details_button = self.client.find_element_by_class_name(
+        get_button = self.client.find_element_by_class_name(
             'toggle-element-1'
         )
-        details_button.click()
+        details_button = self.client.find_element_by_class_name(
+            'details-btn'
+        )
+        get_button.click()
         time.sleep(1)
         self.assertEquals(
+            get_button.text,
+            'GET',
+            'Button text changed when it should not have'
+        )
+        self.assertEquals(
             details_button.text,
-            'Hide Details',
-            'Button text did not change after show'
+            'Hide',
+            'Button text was not changed when it should have been'
         )
         assert details.is_displayed(), (
-            'Details are not disaplayed as they should have been'
+            'Details are not displayed as they should have been'
         )
         assert self.client.find_element_by_id(
             'test_call-autoscale_form'
@@ -347,7 +371,7 @@ class SeleniumTests(unittest.TestCase):
         )
 
     def test_pf_admin_front_login(self):
-        self.setup_user_logged_in(True)
+        self.setup_user_logged_in('rusty.shackelford')
         self.assertIn(
             '<a href="/history">',
             self.client.page_source,
@@ -359,7 +383,7 @@ class SeleniumTests(unittest.TestCase):
             'Could not find logged in queue in header after login'
         )
         self.assertIn(
-            '/admin/settings/general',
+            '/admin/general/',
             self.client.page_source,
             'Could not find admin menu item after login'
         )
@@ -386,15 +410,23 @@ class SeleniumTests(unittest.TestCase):
 
         details = self.client.find_element_by_id('api_call_inner')
         assert not details.is_displayed(), 'Details element should not be seen'
-        details_button = self.client.find_element_by_class_name(
+        get_button = self.client.find_element_by_class_name(
             'toggle-element-1'
         )
-        details_button.click()
+        details_button = self.client.find_element_by_class_name(
+            'details-btn'
+        )
+        get_button.click()
         time.sleep(1)
         self.assertEquals(
+            get_button.text,
+            'GET',
+            'Button text changed when it should not have'
+        )
+        self.assertEquals(
             details_button.text,
-            'Hide Details',
-            'Button text did not change after show'
+            'Hide',
+            'Button text was not changed when it should have been'
         )
         assert details.is_displayed(), (
             'Details are not disaplayed as they should have been'
@@ -552,7 +584,7 @@ class SeleniumTests(unittest.TestCase):
         self.setup_user_logged_in(True)
         self.client.get('http://localhost:5000/autoscale/manage')
         self.assertIn(
-            '<h4>Current Settings</h4>',
+            'Autoscale Manage Settings',
             self.client.page_source,
             'Could not find correct manage title on page'
         )
@@ -629,93 +661,3 @@ class SeleniumTests(unittest.TestCase):
         assert not work_details.is_displayed(), (
             'Modal is still seend after close was initiated'
         )
-
-    def test_pf_user_login_search(self):
-        self.setup_user_logged_in()
-        self.setup_database(True)
-        self.client.get('http://localhost:5000/')
-        time.sleep(1)
-        search = self.client.find_element_by_id('search_api')
-        search_button = self.client.find_element_by_class_name('search-button')
-        search.send_keys('test call')
-        search_button.click()
-        time.sleep(1)
-        self.assertIn(
-            'Autoscale - Test Call',
-            self.client.page_source,
-            'Could not find call after search for it'
-        )
-
-        self.client.find_element_by_class_name('prod-popover').click()
-        self.assertTrue(
-            self.client.find_element_by_class_name(
-                'popover-content'
-            ).is_displayed(),
-            'Link popover was not displayed correctly after click'
-        )
-        self.client.find_element_by_class_name('prod-popover').click()
-        try:
-            self.client.find_element_by_class_name('popover-content')
-            assert False, (
-                'Popover was found and should have been hidden by click'
-            )
-        except:
-            pass
-
-        details = self.client.find_element_by_id('api_call_inner')
-        assert not details.is_displayed(), 'Details element should not be seen'
-        details_button = self.client.find_element_by_class_name(
-            'toggle-element-1'
-        )
-        details_button.click()
-        time.sleep(1)
-        self.assertEquals(
-            details_button.text,
-            'Hide Details',
-            'Button text did not change after show'
-        )
-        assert details.is_displayed(), (
-            'Details are not disaplayed as they should have been'
-        )
-        assert self.client.find_element_by_id(
-            'test_call-autoscale_form'
-        ).is_displayed(), 'Form not displayed properly'
-
-        mock = self.client.find_element_by_xpath(
-            "//form[@id='test_call-autoscale_form']/input[7]"
-        )
-        mock_results = self.client.find_element_by_class_name(
-            'code-blocks-wrapper'
-        )
-        assert not mock_results.is_displayed(), (
-            'Call results should not be displayed yet'
-        )
-        mock.click()
-        time.sleep(1)
-        assert mock_results.is_displayed(), (
-            'Call results should be displayed and are not'
-        )
-        self.assertIn(
-            'https://{region}',
-            mock_results.text,
-            'Could not find request URL in mock return'
-        )
-        self.assertIn(
-            '"Content-Type": "application/json"',
-            mock_results.text,
-            'Could not find request headers content type'
-        )
-        hide_results = self.client.find_element_by_id('toggle_results')
-        self.assertIn(
-            hide_results.text,
-            'Hide Results',
-            'Incorrect wording on hide results button'
-        )
-        hide_results.click()
-        time.sleep(1)
-        assert not mock_results.is_displayed(), (
-            'Call results should be displayed and are not'
-        )
-
-if __name__ == "__main__":
-    unittest.main()
