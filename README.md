@@ -1,4 +1,4 @@
-[![Build Status](http://drone.cloud-api.info/github.com/rackerlabs/pitchfork/status.svg?branch=master)](http://drone.cloud-api.info/github.com/rackerlabs/pitchfork)
+[![Build Status](https://drone.cloudapi.co/api/badge/github.com/rackerlabs/pitchfork/status.svg?branch=master)](https://drone.cloudapi.co/github.com/rackerlabs/pitchfork)
 
 Pitchfork
 =========
@@ -103,14 +103,13 @@ The application unit tests can be run with nose and selenium. To install the req
 pip install nose coverage selenium
 ````
 
-Selenium by default uses PhantomJS driver to run the browser tests. You can change the driver by editing the tests/test_selenium.py file and commenting out the PhantomJS line and uncommenting the Firefox driver line.
+Selenium was setup to use firefox when the tests are run. However you can update the following to use the driver of your choice.
 
-**Note:** If you do not have the PhantomJS driver and the driver is not changed the tests will be skipped
+**Note:** If you do not have Firefox the tests will be skipped
 ````
 def setUpClass(cls):
     try:
-        cls.client = webdriver.PhantomJS(service_log_path=os.path.devnull)
-        # cls.client = webdriver.Firefox()
+        cls.client = webdriver.Firefox()
     except:
         pass
 ````
