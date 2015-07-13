@@ -8,8 +8,8 @@ script:
   - sudo apt-get update > /dev/null
   - "sudo DEBIAN_FRONTEND='noninteractive' apt-get install -y libsasl2-dev libssl-dev rsyslog > /dev/null"
   - sudo /usr/sbin/rsyslogd > /dev/null
-  - pip install -r requirements.txt
-  - pip install nose coverage flake8 mock > /dev/null
+  - pip install -r requirements.txt > /dev/null
+  - pip install nose coverage flake8 mock funcsigs > /dev/null
   - flake8 .
   - cp pitchfork/config/config.example.py pitchfork/config/config.py
   - rm tests/test_selenium.py
