@@ -1,0 +1,81 @@
+{% extends "_base.html" %}
+{% block title %} - Favorites{% endblock %}
+{% block addHeaders %}
+    <link href="{{ url_for('static', filename='css/ui.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/pygments.css') }}" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400italic,600,700,900,600italic' rel='stylesheet' type='text/css'>
+{% endblock %}
+{% block body %}
+    <div id="static_div_header">
+        <div id="generated_messages_product">&nbsp;</div>
+        <h2>
+            My Favorites
+        </h2>
+        {%- if session.get('username') %}
+            <div id="global_vars">
+                <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
+                <input id="token" name="token" type="hidden" value="{{ session.get('token') }}"></input>
+                <label class="region-label">Region:</label>
+                <select id="region" name="region">
+                    <option value="none" selected="selected">Select Region</option>
+                    {%- for option in regions %}
+                        <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
+                    {% endfor -%}
+                </select>
+            </div>
+        {% endif -%}
+    </div>
+    <div class="offset-calls">
+        {% if api_calls %}
+            {%- set calls = api_calls %}
+            {%- include '_call_layout.html' %}
+        {% else %}
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <strong>Warning!</strong> No API calls were found to display
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    {%- include '_feedback.html' %}
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
+	<script>
+        var global_count = 0;
+        var endpoints = JSON.parse(
+            '{{ regions|tojson }}'
+        );
+        var restrict_regions = '{{ restrict_regions|lower }}';
+        var require_region = 'true';
+        var testing = '{{ testing|lower }}';
+        var user = '{{ session.get("username") }}';
+
+        $(document).ready(function(){
+            $('.prod-popover').popover();
+            $('.tooltip-title').tooltip();
+            setup_toggle_details();
+            setup_api_call_submit();
+            toggle_results();
+            $(window).scroll(function(){
+                if ( $(this).scrollTop() > 100 ) {
+                    $('.scrollup').fadeIn();
+                } else {
+                    $('.scrollup').fadeOut();
+                }
+            });
+
+            $("#region").change();
+            if (user != 'None') {
+                scroll_if_anchor(window.location.hash, 45);
+            } else {
+                scroll_if_anchor(window.location.hash, 0);
+            }
+        });
+
+        $('body').on('hidden.bs.modal', '.modal', function () {
+            $(this).find('form')[0].reset();
+        });
+	</script>
+{% endblock %}

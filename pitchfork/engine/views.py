@@ -13,16 +13,18 @@
 # limitations under the License.
 
 from . import bp
-from pitchfork.adminbp.decorators import check_perms
-from flask import render_template, redirect, url_for, request, flash, g
-from flask import jsonify, make_response
+from flask import (
+    render_template, redirect, url_for, request, flash,
+    g, jsonify, make_response
+)
+from flask.ext.cloudadmin.decorators import check_perms
 from bson.objectid import ObjectId
 from bson.son import SON
 
 
 import pymongo
 import forms
-import helper as help
+import helper
 
 
 SORT_FIELD = 'completed_at'
@@ -34,7 +36,7 @@ TREND_FIELD = '$completed_at'
 def reporting():
     settings = g.db.settings.find_one()
     report_settings = settings.get('reporting')
-    report_form = help.generate_reporting_form(report_settings)
+    report_form = helper.generate_reporting_form(report_settings)
     return render_template(
         'engine/reporting_index.html',
         form=report_form
@@ -183,7 +185,7 @@ def reporting_fields_add_edit(field_id=None):
                     error=error
                 )
 
-            found = help.check_for_field(field_name, collection)
+            found = helper.check_for_field(field_name, collection)
             if found:
                 g.db.reporting.insert(
                     {
@@ -314,7 +316,7 @@ def generate_report():
     report_settings = settings.get('reporting')
     if report_settings.get('enabled'):
         if request.json:
-            query = help.generate_reporting_query(request)
+            query = helper.generate_reporting_query(request)
         else:
             query = {}
 
@@ -322,7 +324,7 @@ def generate_report():
         results = getattr(g.db, collection).find(query).sort(
             SORT_FIELD, pymongo.DESCENDING
         )
-        graph_data, graph_keys, graph_labels = help.generate_graph_data(
+        graph_data, graph_keys, graph_labels = helper.generate_graph_data(
             results
         )
     return render_template(
@@ -343,7 +345,7 @@ def generate_csv_report():
     report_settings = settings.get('reporting')
     if report_settings.get('enabled'):
         if request.form:
-            query = help.generate_reporting_query(request)
+            query = helper.generate_reporting_query(request)
         else:
             query = {}
 
@@ -370,10 +372,10 @@ def generate_trend_data():
     settings = g.db.settings.find_one()
     report_settings = settings.get('reporting')
     collection = report_settings.get('collection')
-    delta = help.get_delta_days_for_trending(request, collection)
+    delta = helper.get_delta_days_for_trending(request, collection)
     title = '%s : Trending Report' % request.json.get('search_on')
     if report_settings.get('enabled'):
-        query = help.generate_reporting_trend_query(request)
+        query = helper.generate_reporting_trend_query(request)
         match = {
             '$match': query
         }
@@ -418,7 +420,7 @@ def generate_trend_data():
         ]
         results = getattr(g.db, collection).aggregate(results_query)
         if delta < 21:
-            graph_data, graph_labels = help.generate_graph_trending_data(
+            graph_data, graph_labels = helper.generate_graph_trending_data(
                 results,
                 request
             )
@@ -429,7 +431,7 @@ def generate_trend_data():
                 title=title
             )
         elif delta < 63:
-            week_label, week_counts = help.generate_weekly_trend(
+            week_label, week_counts = helper.generate_weekly_trend(
                 results,
                 request
             )
@@ -469,7 +471,7 @@ def generate_trend_data():
                 sort
             ]
             results = getattr(g.db, collection).aggregate(month_query)
-            month_label, month_counts = help.generate_monthly_trend(
+            month_label, month_counts = helper.generate_monthly_trend(
                 results,
                 request
             )

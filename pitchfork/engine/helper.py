@@ -350,7 +350,12 @@ def generate_graph_trending_data(results, request):
             'days'
         )
 
-    for item in results.get('result'):
+    if isinstance(results, dict):
+        result_list = results.get('result')
+    else:
+        result_list = list(results)
+
+    for item in result_list:
         date_info = item.get('_id')
         if date_info:
             year = date_info.get('year')
@@ -445,7 +450,12 @@ def get_delta_days_for_trending(request, collection):
 
 def generate_monthly_trend(results, request):
     label, data, temp_data = [], [], {}
-    for item in results.get('result'):
+    if isinstance(results, dict):
+        result_list = results.get('result')
+    else:
+        result_list = list(results)
+
+    for item in result_list:
         year = item.get('_id').get('year')
         month = item.get('_id').get('month')
         if temp_data.get(year):
@@ -565,9 +575,13 @@ def generate_weekly_trend(results, request):
             'week'
         )
 
-    label, data = [], []
-    temp_data = {}
-    for item in results.get('result'):
+    label, data, temp_data = [], [], {}
+    if isinstance(results, dict):
+        result_list = results.get('result')
+    else:
+        result_list = list(results)
+
+    for item in result_list:
         id_data = item.get('_id')
         temp_date = date(
             id_data.get('year'),

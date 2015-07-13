@@ -1,8 +1,7 @@
 {% extends "_base.html" %}
 {% block title %} - Application Reporting{% endblock %}
 {% block addHeaders %}
-	<link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/engine.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/engine.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/datepicker.min.css') }}" rel="stylesheet" media="screen">
     <link href="{{ url_for('static', filename='css/jquery.jqplot.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='datatables/datatables-bs3.css') }}" rel="stylesheet" media="screen">
@@ -113,10 +112,8 @@
                 Choose and set any options above that you wish to use to query against the data to generate a report. Once the report is generated you will be given the chance to generate a Pareto graph for the given data set found. The graphs available are for the following options:
             </p>
             <ul style="margin-top: 10px; list-style: none;">
-                <li>- Category</li>
-                <li>- Type</li>
-                <li>- Task</li>
-                <li>- User</li>
+                <li>- Region</li>
+                <li>- Verb</li>
             </ul>
             <p style="margin-top: 10px;">
                 You will also have the option to click on the bars of the graph generated to view trends. The trending graph is still based on the criteria you provided above in the selection criteria, and also for the data point you selected. This gives you the ability to drill into the graph to view trends with the data based on your selection criteria.

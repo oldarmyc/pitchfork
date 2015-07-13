@@ -1,62 +1,16 @@
 {% extends "_base.html" %}
 {% block title %} - {{ title }}{% endblock %}
 {% block addHeaders %}
-    <style>
-        input[type=text] {
-            width: 525px;
-        }
-
-        .dl-horizontal dt {
-            text-align: left;
-            width: 140px;
-        }
-
-        .dl-horizontal dd {
-            margin-left: 140px;
-        }
-
-        .col-sm-1 {
-            width: 150px;
-        }
-
-        .col-sm-offset-1 {
-            margin-left: 150px;
-        }
-    </style>
+    <link href="{{ url_for('static', filename='css/products.css') }}" rel="stylesheet">
 {% endblock %}
 {% block body %}
-	<h3>{{ title }}</h3>
-    <h4>Globals</h4>
-    <form method="POST" action="{{ post_url }}" class="form-horizontal" role="form">
-        {{ form.hidden_tag() }}
-        {% for field in form if field.widget.input_type not in ['hidden', 'submit'] %}
-            <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
-                {{ field.label(class="col-sm-1 control-label") }}
-                <div class="col-xs-3">
-                    {% if field.type == 'TextField' or field.type == 'TextAreaField'  %}
-                        {{ field(class="form-control", **{'type': 'text'})|safe }}
-                    {% elif field.type == 'BooleanField' %}
-                        {{ field(type="checkbox") }}
-                    {% else %}
-                        {{ field(class="form-control") }}
-                    {% endif %}
-                    {% for error in field.errors %}
-                        <span class="form-control-feedback">{{ error }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-        {% endfor %}
-        <div class="form-group">
-            <div class="col-sm-offset-1 col-xs-2">
-                {% for field in form if (field.widget.input_type == 'submit') %}
-                    {{ field(class="btn btn-primary") }}
-                {% endfor %}
-            </div>
-        </div>
-    </form>
+	<h1>
+        {{ title }}
+        <a class="btn btn-primary add-menu-button" data-toggle="modal" data-target="#manage_product">Product Settings</a>
+    </h1>
     {% if product %}
-        <h4>Current Settings</h4>
-        <dl class="dl-horizontal">
+        <h4 class="product-header">Product Settings</h4>
+        <dl class="dl-horizontal product-settings">
             <dt>Title:</dt>
             <dd>
                 {{ product.title }}
@@ -98,7 +52,104 @@
                 {% endif %}
             </dd>
         </dl>
+        <h4>Groups</h4>
+        {% if product.groups|length > 0 %}
+            <div class="group-display">
+                {%- include 'manage/_product_groups.html' %}
+            </div>
+        {% else %}
+            <div class="panel panel-danger" style="width: 475px;">
+                <div class="panel-body text-danger">
+                    Groups not set on API Calls
+                </div>
+            </div>
+        {% endif %}
+        <h4>{{ product.title }} Call Statistics</h4>
+        <dl class="dl-horizontal product-settings">
+            <dt>Total Calls</dt>
+            <dd>
+                {{ product.get_total_calls() }}
+            </dd>
+            <dt>Tested Calls:</dt>
+            <dd class="text-success">
+                {{ product.get_active_calls() }}
+            </dd>
+            <dt>Untested Calls:</dt>
+            <dd class="text-danger">
+                {{ product.get_testing_calls() }}
+            </dd>
+            <dt>Execution Count:</dt>
+            <dd class="text-success">
+                {{ product.get_total_executions() }}
+            </dd>
+        </dl>
+    {% else %}
+        <div class="panel panel-info" style="width: 475px;">
+            <div class="panel-body text-info">
+                Product not setup. Add product settings to setup new product.
+            </div>
+        </div>
     {% endif %}
+    <div id="manage_product" class="modal fade" aria-labelledby="AddForm" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4>Product Settings</h4>
+                </div>
+                <div class="modal-body">
+                    {%- set modal = True %}
+                    {%- set form_id = 'manage_product_form' %}
+                    {%- include 'generic/_form.html' %}
+                </div>
+                <div class="modal-footer">
+                    <input class="btn btn-primary" id="manage_product_submit" name="submit" type="submit" form="manage_product_form" value="Submit">
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block jquery %}
+<script>
+    $(document).ready(function() {
+        $('.tooltip-title').tooltip();
+    });
+
+    $('#manage_product_submit').click(function() {
+        $("#manage_product_form").unbind('submit').bind('submit', function(e){
+            return true;
+        });
+    });
+
+    $('body').on('shown.bs.modal', '.modal', function () {
+        $('#title').focus();
+    });
+
+    $('body').on('hidden.bs.modal', '.modal', function () {
+        $(this).removeData();
+    });
+
+    function display_message(message, alert_class) {
+        $('#generated_messages').html(
+            '<div class="alert alert-' + alert_class + '">' +
+            '<button type="button" class="close" data-dismiss="alert">' +
+            '&times;</button><p>' + message + '</p></div>');
+    }
+
+    function demote_promote_group(product, slug, action) {
+        var url = product + '/groups/' + slug + '/' + action;
+        $.ajax({
+            url: url,
+            type: 'GET',
+            contentType: "application/json",
+        }).done(function(result) {
+            $('.group-display').html(result);
+            display_message('Group was successfully ' + action + 'd', 'success');
+            $('body').tooltip({selector: '.tooltip-title'});
+        }).fail(function(error) {
+            display_message('There was an error processing the request', 'error');
+        });
+    }
+</script>
 {% endblock %}

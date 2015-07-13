@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import g, render_template, request, redirect
-from flask import flash, jsonify
+from flask import (
+    g, render_template, request, redirect, session, url_for,
+    flash, jsonify, abort
+)
 from flask.ext.classy import FlaskView, route
-from models import Product, Call
-from pitchfork.adminbp.decorators import check_perms
+from flask.ext.cloudadmin.decorators import check_perms
+from models import Product, Call, Verb, Region, Favorite, Feedback
 from bson.objectid import ObjectId
 
 
@@ -43,21 +45,29 @@ class ProductsView(FlaskView):
 
         api_calls = helper.gather_api_calls(
             found_product,
-            testing_calls
+            testing_calls,
+            found_product.get_sorted_groups()
         )
         restrict_regions, regions = helper.check_for_product_regions(
             found_product
         )
+        favorites = helper.gather_favorites(True)
+        temp_groups = found_product.get_sorted_groups()
+        temp_groups.insert(0, '')
+        feedback_form = forms.SubmitFeedback()
         return render_template(
             'product_front.html',
             api_calls=api_calls,
             api_settings=found_product,
+            api_groups=temp_groups,
             regions=regions,
             title=found_product.title,
             api_process='/%s/api/call/process' % product,
             testing=testing_calls,
             require_region=found_product.require_region,
-            restrict_regions=restrict_regions
+            restrict_regions=restrict_regions,
+            favorites=favorites,
+            feedback_form=feedback_form
         )
 
     """ Product API Call Fire """
@@ -138,17 +148,20 @@ class ProductsView(FlaskView):
         product_data = self.retrieve_product(product)
         if type(product_data) is str:
             title = "%s Manage Settings" % product.title()
-            post_url = "/%s/manage" % product
             product_data = None
             form = forms.ManageProduct()
         else:
             title = "%s Manage Settings" % product_data.title
-            post_url = "%s/manage" % product_data.app_url
             form = forms.ManageProduct(obj=product_data)
 
         if request.method == 'POST' and form.validate_on_submit():
             to_save = Product(request.form.to_dict())
-            to_save.set_db_name()
+            if product_data and product_data.db_name:
+                to_save.db_name = product_data.db_name
+                to_save.groups = product_data.groups
+            else:
+                to_save.set_db_name()
+
             g.db.api_settings.update(
                 {}, {
                     '$set': {
@@ -180,7 +193,6 @@ class ProductsView(FlaskView):
                 title=title,
                 form=form,
                 product=product_data,
-                post_url=post_url
             )
 
     @route('/<product>/manage/api')
@@ -246,6 +258,7 @@ class ProductsView(FlaskView):
             (verb.get('name'), verb.get('name'))
             for verb in api_settings.get('verbs')
         ]
+        form.group.choices = helper.generate_group_choices(found_product)
         form.product.data = product
         if request.method == 'POST' and form.validate_on_submit():
             api_call = Call(request.form.to_dict())
@@ -335,6 +348,85 @@ class ProductsView(FlaskView):
         flash(message, 'error')
         return redirect('/%s/manage/api' % product)
 
+    @route('/<product>/groups/<group>/<action>')
+    def group_actions(self, product, group, action):
+        action_map = ['promote', 'demote']
+        found_product = self.retrieve_product(product)
+        if type(found_product) is not str:
+            if action in action_map:
+                found = g.db.api_settings.find_one(
+                    {
+                        '%s.groups.slug' % product: group
+                    }, {
+                        '%s.groups.$' % product: 1
+                    }
+                )
+                if found:
+                    old_position = (
+                        found.get(product).get('groups')[0].get('order')
+                    )
+                    if action == 'promote':
+                        count = -1
+                    elif action == 'demote':
+                        count = 1
+
+                    helper.change_group_order(
+                        found_product.groups,
+                        old_position + count,
+                        old_position,
+                        group,
+                        product
+                    )
+                    return render_template(
+                        'manage/_product_groups.html',
+                        product=self.retrieve_product(product)
+                    )
+        abort(400)
+
+    @route('/<product>/favorites/<action>', methods=['POST'])
+    def favorites_action(self, product, action):
+        actions = ['add', 'remove']
+        if action not in actions:
+            abort(404)
+
+        found_product = self.retrieve_product(product)
+        if type(found_product) is not str:
+            db_name = found_product.db_name
+            api_call = getattr(g.db, db_name).find_one(
+                {
+                    '_id': ObjectId(request.json.get('call_id'))
+                }
+            )
+            if not api_call:
+                abort(404)
+
+            user_favorites = g.db.favorites.find_one(
+                {
+                    'username': session.get('username')
+                }
+            )
+            if not user_favorites and action == 'add':
+                user_favorites = {'username': session.get('username')}
+            elif user_favorites is None:
+                return jsonify(code=200)
+
+            favorite = Favorite(user_favorites)
+            if action == 'add':
+                favorite.add_to_favorites(
+                    request.json.get('call_id'),
+                    db_name,
+                    found_product.app_url,
+                    session.get('username')
+                )
+            elif action == 'remove':
+                favorite.remove_favorite(
+                    request.json.get('call_id'),
+                    session.get('username')
+                )
+
+            return jsonify(code=200)
+        abort(404)
+
     def retrieve_product(self, product):
         temp_product = g.db.api_settings.find_one()
         if temp_product and temp_product.get(product):
@@ -353,35 +445,23 @@ class ProductsView(FlaskView):
 
 
 class MiscView(FlaskView):
+    decorators = [check_perms(request)]
     route_base = '/'
 
     def index(self):
-        active_products, regions, = [], []
-        api_settings = g.db.api_settings.find_one()
-        if api_settings:
-            active_products = api_settings.get('active_products')
-
-        most_accessed = helper.front_page_most_accessed(active_products)
-        if api_settings:
-            regions = api_settings.get('regions')
-            if not regions:
-                regions = api_settings.get('dcs')
-
+        call_favorites = helper.gather_favorites()
+        favorites = helper.gather_favorites(True)
+        restrict_regions, regions = helper.check_for_product_regions()
+        feedback_form = forms.SubmitFeedback()
         return render_template(
             'index.html',
-            api_settings=api_settings,
-            active_products=active_products,
-            most_accessed=most_accessed,
-            regions=regions
-        )
-
-    @route('/search', methods=['POST'])
-    def search(self):
-        search_string = request.json.get('search_string')
-        api_results = helper.search_for_calls(search_string)
-        return render_template(
-            '_api_call_template.html',
-            call_loop=api_results
+            api_calls=call_favorites,
+            favorites=favorites,
+            restrict_regions=restrict_regions,
+            testing=False,
+            regions=regions,
+            using_favorites=True,
+            feedback_form=feedback_form
         )
 
     @route('/history')
@@ -399,3 +479,201 @@ class MiscView(FlaskView):
             api_settings=api_settings,
             active_products=active_products
         )
+
+    @route('/favorites')
+    def favorites(self):
+        call_favorites = helper.gather_favorites()
+        favorites = helper.gather_favorites(True)
+        restrict_regions, regions = helper.check_for_product_regions()
+        feedback_form = forms.SubmitFeedback()
+        return render_template(
+            'favorites.html',
+            api_calls=call_favorites,
+            favorites=favorites,
+            restrict_regions=restrict_regions,
+            testing=False,
+            regions=regions,
+            using_favorites=True,
+            feedback_form=feedback_form
+        )
+
+
+class FeedbackView(FlaskView):
+    decorators = [check_perms(request)]
+    route_base = '/feedback'
+
+    def index(self):
+        if session.get('role') == 'administrators':
+            feedback = g.db.feedback.find({'complete': False})
+            return render_template(
+                'feedback.html',
+                feedback=feedback
+            )
+        else:
+            flash(
+                'You do not have the correct permissions to access this page',
+                'error'
+            )
+            return redirect('/')
+
+    def post(self):
+        try:
+            feedback = Feedback(request.json)
+            g.db.feedback.insert(feedback.__dict__)
+        except:
+            abort(400)
+
+        return jsonify(code=200)
+
+    def put(self):
+        if session.get('role') == 'administrators':
+            try:
+                g.db.feedback.update(
+                    {
+                        '_id': ObjectId(request.json.get('feedback_id'))
+                    }, {
+                        '$set': {'complete': True}
+                    }
+                )
+                return jsonify(code=200)
+            except:
+                abort(400)
+        else:
+            abort(404)
+
+
+class GlobalManageView(FlaskView):
+    decorators = [check_perms(request)]
+    route_base = '/manage'
+
+    @route('/verbs', methods=['GET', 'POST'])
+    def define_available_verbs(self):
+        api_settings = g.db.api_settings.find_one()
+        form = forms.VerbSet()
+        if request.method == 'POST' and form.validate_on_submit():
+            verb = Verb(request.form)
+            g.db.api_settings.update(
+                {
+                    '_id': api_settings.get('_id')
+                }, {
+                    '$push': {
+                        'verbs': verb.__dict__
+                    }
+                }
+            )
+            flash('Verb successfully added to system', 'success')
+            return redirect(url_for('GlobalManageView:define_available_verbs'))
+        else:
+            if request.method == 'POST':
+                flash(
+                    'There was a form validation error, please '
+                    'check the required values and try again.',
+                    'error'
+                )
+
+        return render_template(
+            'manage/manage_verbs.html',
+            form=form,
+            api_settings=api_settings
+        )
+
+    @route('/regions', methods=['GET', 'POST'])
+    def define_available_regions(self):
+        api_settings = g.db.api_settings.find_one()
+        form = forms.RegionSet()
+        if request.method == 'POST' and form.validate_on_submit():
+            region = Region(request.form)
+            if api_settings.get('regions'):
+                g.db.api_settings.update(
+                    {
+                        '_id': api_settings.get('_id')
+                    }, {
+                        '$push': {
+                            'regions': region.__dict__
+                        }
+                    }
+                )
+            else:
+                g.db.api_settings.update(
+                    {
+                        '_id': api_settings.get('_id')
+                    }, {
+                        '$set': {
+                            'regions': [region.__dict__]
+                        }
+                    }
+                )
+            flash('Region successfully added to system', 'success')
+            return redirect(
+                url_for('GlobalManageView:define_available_regions')
+            )
+        else:
+            if request.method == 'POST':
+                flash(
+                    'There was a form validation error, please '
+                    'check the required values and try again.',
+                    'error'
+                )
+
+            return render_template(
+                'manage/manage_regions.html',
+                form=form,
+                api_settings=api_settings
+            )
+
+    @route('/<key>/<action>/<value>')
+    def data_type_actions(self, key, action, value):
+        actions = ['activate', 'deactivate', 'delete']
+        maps = {
+            'verbs': {
+                'search': 'verbs.name',
+                'change': 'verbs.$.active',
+                'redirect': '/manage/verbs'
+            },
+            'regions': {
+                'search': 'regions.abbreviation',
+                'redirect': '/manage/regions'
+            }
+        }
+        if maps.get(key):
+            work = maps.get(key)
+            if action in actions:
+                found = g.db.api_settings.find_one(
+                    {
+                        work.get('search'): value
+                    }
+                )
+                if found:
+                    if action == 'delete':
+                        keys = work.get('search').split('.')
+                        change = {'$pull': {keys[0]: {keys[1]: value}}}
+                    else:
+                        if action == 'activate':
+                            change = {'$set': {work.get('change'): True}}
+                        elif action == 'deactivate':
+                            change = {'$set': {work.get('change'): False}}
+
+                    g.db.api_settings.update(
+                        {
+                            work.get('search'): value
+                        },
+                        change
+                    )
+                    flash(
+                        '%s was %sd successfully' % (
+                            value.title(),
+                            action
+                        ),
+                        'success'
+                    )
+                else:
+                    flash(
+                        '%s was not found so no action taken' % value.title(),
+                        'error'
+                    )
+            else:
+                flash('Invalid action given so no action taken', 'error')
+            return redirect(work.get('redirect'))
+        else:
+            flash('Invalid data key given so no action taken', 'error')
+            return redirect('/')
