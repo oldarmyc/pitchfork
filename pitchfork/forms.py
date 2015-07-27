@@ -126,6 +126,7 @@ class ApiCall(Form):
     data_object = fields.TextAreaField('Data Object:')
     allow_filter = fields.BooleanField('Allow Filter?:')
     remove_token = fields.BooleanField('Remove Token:')
+    remove_ddi = fields.BooleanField('Remove DDI:')
     remove_content_type = fields.BooleanField('Remove Content Type:')
     required_key = fields.BooleanField('Required Key:')
     required_key_name = fields.TextField('Key Name:')
