@@ -73,6 +73,8 @@
                         <input id="api_id" name="api_id" type="hidden" value="{{ api_call.get('_id') }}">
                         <input id="app_url_link" name="app_url_link" type="hidden" value="{{ api_call.get('product-app_url') }}">
                         <input id="api_endpoint" name="api_endpoint" type="hidden" value="{{ api_call.get('endpoint') }}">
+                        <input id="remove_token" name="remove_token" type="hidden" value="{{ api_call.get('remove_token') }}">
+                        <input id="remove_ddi" name="remove_ddi" type="hidden" value="{{ api_call.get('remove_ddi') }}">
                         {% if api_call.get('variables') or api_call.get('allow_filter') %}
                             <table class="table">
                                 <tr>
