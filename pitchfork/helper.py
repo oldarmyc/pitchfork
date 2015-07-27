@@ -33,6 +33,9 @@ import datetime
 UTC = tz.tzutc()
 
 
+requests.packages.urllib3.disable_warnings()
+
+
 def get_timestamp():
     return datetime.datetime.now(UTC)
 
