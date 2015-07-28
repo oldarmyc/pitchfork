@@ -150,6 +150,12 @@
                 $('#required_key_name_top').show();
                 $('#required_key_type_top').show();
             }
+            if ( $('#group').val() == 'add_new_group' ) {
+                $('#new_group_top').show();
+            } else {
+                $('#new_group_top').hide();
+            }
+
         });
 
         $('#add_to_header').on('change', function() {
@@ -178,7 +184,18 @@
             var selectVal = $('input[name="use_data"]:checked').length > 0;
             if (selectVal) {
                 $('#data_object_top').show();
-            } else { $('#data_object_top').hide(); }
+            } else {
+                $('#data_object_top').hide();
+            }
+        })
+
+        $('#group').on('change', function() {
+            var temp = $('#group').val();
+            if (temp == 'add_new_group') {
+                $('#new_group_top').show();
+            } else {
+                $('#new_group_top').hide();
+            }
         })
 
         var is_edit = {{ edit|lower }};

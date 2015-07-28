@@ -1,155 +1,119 @@
 {% extends "_base.html" %}
-{% block title %}{{ title }}{% endblock %}
+{% block title %} - History{% endblock %}
 {% block addHeaders %}
-    <style>
-        div#history_item {
-            border: 1px solid #E3E3E3;
-            border-radius: 4px 4px 4px 4px;
-            padding: 10px 18px;
-            margin-bottom: 25px;
-            display: inline-block;
-            width: 100%;
-        }
-
-        div#basic_api_info {
-            padding: 5px 0;
-            margin: 5px 0;
-        }
-
-        div#show_details {
-            float: right;
-            margin: -46px 100px 0 0;
-        }
-
-        .well {
-            background-color: #FFF;
-        }
-    </style>
     <link href="{{ url_for('static', filename='css/ui.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/pygments.css') }}" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400italic,600,700,900,600italic' rel='stylesheet' type='text/css'>
 {% endblock %}
 {% block body %}
-    <div class="row">
-        <div class="col-md-2">
-            <div class="well">
-                {% if active_products %}
-                    <ul class="nav nav-pills nav-stacked left-nav">
-                        <li class="navbar-header">Cloud Products</li>
-                        {% for product in active_products %}
-                            {% set setting = api_settings.get(product) %}
-                            <li>
-                                <a href="{{ setting.get('app_url') }}" title="{{ setting.get('title') }}">{{ setting.get('title') }}</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
+    <h2>Call History</h2>
+    <div class="row history">
+        <div class="col-md-offset-1 col-md-1 history-col-title">
+            Account
         </div>
-        <div class="col-md-10">
-            <h3>API Call History</h3>
-            <div id="history_wrapper">
-                {% for item in history %}
-                    <div id="history_item">
-                        <div id="basic_api_info">
-                            <dl class="dl-horizontal">
-                                <dt>DDI:</dt>
-                                <dd>
-                                    {{ item.get('ddi') }}
-                                </dd>
-                                </tr>
-                                <dt>Timestamp:</dt>
-                                <dd>
-                                    {{ item.get('completed_at').strftime('%m-%d-%Y @ %H:%M %p UTC') }}
-                                </dd>
-                                </tr>
-                                <dt>Cloud Product:</dt>
-                                <dd>
-                                    {{ item.get('product') }}
-                                </dd>
-                                </tr>
-                                <dt>Title:</dt>
-                                <dd>
-                                    {{ item.get('details').get('title') }}
-                                </dd>
-                                </tr>
-                                <dt>Description:</dt>
-                                <dd>
-                                    {{ item.get('details').get('description') }}
-                                </dd>
-                                </tr>
-                                <dt>Verb:</dt>
-                                <dd>
-                                    {{ item.get('request').get('verb') }}
-                                </dd>
-                                </tr>
-                                <dt>Response Code:</dt>
-                                <dd>
-                                    {{ item.get('response').get('code') }}
-                                </dd>
-                                </tr>
-                                <dt>Documentation:</dt>
-                                <dd>
-                                    <a href="{{ item.get('details').get('doc_url') }}" class="tooltip-title" title="{{ item.get('details').get('title') }} Documentation" target="_blank">API Documentation</a>
-                                </dd>
-                            </dl>
-                        </div>
-                        <div id="show_details">
-                            <a onclick="toggle_div('details_wrapper_{{ loop.index }}', {{ loop.index }})" title="Show all details for request" class="btn btn-info toggle-element-{{ loop.index }}">Call Details</a>
-                        </div>
-                        <div id="details_wrapper_{{ loop.index }}" style="display: none;">
-                            <div id="request_details">
-                                {% if item.get('request') %}
-                                    {% if item.get('request').get('url') %}
-                                        <div id="api_uri">
-                                            <h5>Request URL</h5>
-                                            <div class="code-block">
-                                                {{ item.get('request').get('url')|pretty_print_url|safe }}
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                    {% if item.get('request').get('headers') %}
-                                        <div id="api_headers">
-                                            <h5>Request Headers</h5>
-                                            <div class="code-block">
-                                                {{ item.get('request').get('headers')|pretty_print_json|safe }}
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                    {% if item.get('request').get('data') %}
-                                        <h5>Request Data Object</h5>
-                                        <div class="code-block data-object">
-                                            {{ item.get('request').get('data')|pretty_print_json|safe }}
-                                        </div>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                            <div id="response_details">
-                                {% if item.get('response') %}
-                                    {% if item.get('response').get('headers') %}
-                                        <div id="api_response_headers">
-                                            <h5>Response Headers</h5>
-                                            <div class="code-block">
-                                                {{ item.get('response').get('headers')|pretty_print_json|safe }}
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                    {% if item.get('response').get('body') %}
-                                        <div id="api_response_body">
-                                            <h5>Response Body</h5>
-                                            <div class="code-block">
-                                                {{ item.get('response').get('body')|pretty_print_json|safe }}
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
+        <div class="col-md-2 history-col-title">
+            Product
+        </div>
+        <div class="col-md-3 history-col-title">
+            Call Made
+        </div>
+        <div class="col-md-1 history-col-title left">
+            Verb
+        </div>
+        <div class="col-md-1 history-col-title center">
+            Response
+        </div>
+        <div class="col-md-2 history-col-title center">
+            Timestamp
+        </div>
+        <div class="col-md-1 history-col-title">
         </div>
     </div>
+
+    {%- for item in history %}
+        <div class="history-wrapper">
+            <div class="row history calls">
+                <div class="col-md-1" id="show_details">
+                    <button data-details="details_wrapper_{{ loop.index }}" data-loop="{{ loop.index }}" class="btn btn-primary toggle-element-{{ loop.index }} history-details">Details</button>
+                </div>
+                <div class="col-md-1 history-call-data">
+                    {{ item.get('ddi') }}
+                </div>
+                <div class="col-md-2 history-call-data">
+                    {{ item.get('product') }}
+                </div>
+                <div class="col-md-3 history-call-data">
+                    {{ item.get('details').get('title') }}
+                </div>
+                <div class="col-md-1 history-call-data left">
+                    {%- if item.get('request').get('verb')|lower in ['post', 'put'] %}
+                        <button type="button" class="btn btn-success btn-sm api-verb" disabled>{{item.get('request').get('verb') }}</button>
+                    {% elif item.get('request').get('verb')|lower == 'delete' %}
+                        <button type="button" class="btn btn-danger btn-sm api-verb" disabled>{{item.get('request').get('verb') }}</button>
+                    {% else %}
+                        <button type="button" class="btn btn-info btn-sm api-verb" disabled>{{item.get('request').get('verb') }}</button>
+                    {% endif -%}
+                </div>
+                <div class="col-md-1 history-call-data center">
+                    {{ item.get('response').get('code') }}
+                </div>
+                <div class="col-md-2 history-call-data center">
+                    {{ item.get('completed_at').strftime('%m-%d-%Y @ %H:%M %Z') }}
+                </div>
+                <div class="col-md-1 history-call-data">
+                    <a href="{{ item.get('details').get('doc_url') }}" class="tooltip-title" title="{{ item.get('details').get('title') }} Documentation" target="_blank">Docs</a>
+                </div>
+            </div>
+            <div id="details_wrapper_{{ loop.index }}" style="display: none;">
+                <div id="request_details">
+                    {% if item.get('request') %}
+                        {% if item.get('request').get('url') %}
+                            <div id="api_uri">
+                                <h5>Request URL</h5>
+                                <div class="code-block">
+                                    {{ item.get('request').get('url')|pretty_print_url|safe }}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if item.get('request').get('headers') %}
+                            <div id="api_headers">
+                                <h5>Request Headers</h5>
+                                <div class="code-block">
+                                    {{ item.get('request').get('headers')|pretty_print_json|safe }}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if item.get('request').get('data') %}
+                            <h5>Request Data Object</h5>
+                            <div class="code-block data-object">
+                                {{ item.get('request').get('data')|pretty_print_json|safe }}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div id="response_details">
+                    {% if item.get('response') %}
+                        {% if item.get('response').get('headers') %}
+                            <div id="api_response_headers">
+                                <h5>Response Headers</h5>
+                                <div class="code-block">
+                                    {{ item.get('response').get('headers')|pretty_print_json|safe }}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if item.get('response').get('body') %}
+                            <div id="api_response_body">
+                                <h5>Response Body</h5>
+                                <div class="code-block">
+                                    {{ item.get('response').get('body')|pretty_print_json|safe }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor -%}
     <a class="scrollup tooltip-title" title="Scroll to Top">Scroll</a>
 {% endblock %}
 {% block jquery %}
@@ -170,20 +134,26 @@
             return false;
         });
 
-        function toggle_div(div_id, index) {
-            $('#' + div_id).find('.data-object').find('pre').children('span').each(function() {
+        $('.history-details').on('click', function() {
+            var parent = $(this).parent().parent().parent();
+            var details = $(this).data('details');
+            var loop = $(this).data('loop');
+            $(parent).toggleClass('history-show');
+
+            $('#' + details).find('.data-object').find('pre').children('span').each(function() {
                 $(this).text(
                     $(this).text().replace(/&#46;/g, '.')
                 );
             });
-            $('#' + div_id).toggle('slow', function() {
-                if ( $('#' + div_id).is(':hidden') ) {
-                    $('.toggle-element-' + index).html('Call Details');
+
+            $('#' + details).toggle('slow', function() {
+                if ( $('#' + details).is(':hidden') ) {
+                    $('.toggle-element-' + loop).html('Details');
                 }
                 else {
-                    $('.toggle-element-' + index).html('Hide Details');
+                    $('.toggle-element-' + loop).html('Hide');
                 }
             });
-        }
+        });
     </script>
 {% endblock %}

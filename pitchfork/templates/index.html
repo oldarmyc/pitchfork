@@ -2,63 +2,57 @@
 {% block title %}{{ title }}{% endblock %}
 {% block addHeaders %}
     <link href="{{ url_for('static', filename='css/ui.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/pygments.css') }}" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400italic,600,700,900,600italic' rel='stylesheet' type='text/css'>
 {% endblock %}
 {% block body %}
     <div class="row">
-        <div class="col-md-2">
-            <div class="well">
-                {% if active_products %}
-                    <ul class="nav nav-pills nav-stacked left-nav">
-                        <li class="navbar-header">Cloud Products</li>
-                        {% for product in active_products %}
-                            {% set setting = api_settings.get(product) %}
-                            <li>
-                                <a href="{{ setting.get('app_url') }}" title="{{ setting.get('title') }}">{{ setting.get('title') }}</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
-        </div>
-        <div class="col-md-10">
-            <div class="jumbotron">
+        <div class="col-md-offset-1 col-md-10">
+            <div class="front-header">
                 <h1 class="site-header">{{ app_title }}</h1>
                 {{ app_well|safe }}
-                {% if not session.get('username') %}
-                    <p><a href="/admin/login" title="Login to Application" class="btn btn-primary">Login to Application</a></p>
-                {% endif %}
+                {%- if not session.get('username') %}
+                    <p class="login-button"><button class="btn btn-primary login-check" title="Login to Application">Login to Application</button></p>
+                {% endif -%}
             </div>
-            <h3>Search for API Call</h3>
-            <p>
-                <input type="text" placeholder="Search Title and Description" id="search_api" name="search_api" class="search-input">
-                <button class="btn btn-info search-button" title="Search API Calls">Search</button>
-            </p>
             {% if session.get('username') %}
-                <h3>Most Accessed Calls</h3>
+                <h3 class="header-group">Favorite Calls</h3>
+                <div id="generated_messages_product">&nbsp;</div>
                 <div id="global_vars">
+                    {% if api_calls %}
                     <input id="ddi" name="ddi" type="hidden" value="{{ session.get('ddi') }}"></input>
-                    <label class="region-label">Region:</label>
-                    <select id="region" name="region">
-                        <option value="none" selected="selected">Select Region</option>
-                        {% for option in regions %}
-                            <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
-                        {% endfor %}
-                    </select>
+                    <input id="token" name="token" type="hidden" value="{{ session.get('token') }}"></input>
+                        <label class="region-label">Region:</label>
+                        <select id="region" name="region">
+                            <option value="none" selected="selected">Select Region</option>
+                            {% for option in regions %}
+                                <option value="{{ option.get('abbreviation')|lower }}">{{ option.get('abbreviation') }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
                 </div>
-            {% else %}
-                <input id="ddi" name="ddi" type="hidden" value="None"></input>
-                <input id="region" name="region" type="hidden" value="None"></input>
+                <div class="front-calls-offset">
+                    {% if api_calls %}
+                        {%- set calls = api_calls %}
+                        {%- include '_call_layout.html' %}
+                    {% else %}
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <strong>Attention!</strong> You have not marked any calls as favorites. Once you do they will show up here.
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="rs-products">
+                    {%- include '_products.html' %}
+                </div>
+                {%- include '_feedback.html' %}
             {% endif %}
-            <div id="api_call_items">
-                {% if most_accessed is string %}
-                    <p>{{ most_accessed }}</p>
-                {% else %}
-                    {% set call_loop = most_accessed %}
-                    {% include '_api_call_template.html' %}
-                {% endif %}
-            </div>
+            {%- if not session.get('username') %}
+                <div class="rs-products">
+                    {%- include '_products.html' %}
+                </div>
+            {% endif -%}
         </div>
     </div>
 

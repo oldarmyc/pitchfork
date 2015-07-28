@@ -3,33 +3,10 @@
 {% block addHeaders %}
 {% endblock %}
 {% block body %}
-	<h1>Manage Regions</h1>
-    <h4>Setup Region</h4>
-    <form method="POST" action="" class="form-horizontal" id="add_form">
-        {{ form.hidden_tag() }}
-        {% for field in form if field.widget.input_type not in ['hidden', 'submit'] %}
-            <div class="form-group{% if field.errors %} has-error has-feedback{% endif %}" id="{{ field.name }}_top">
-                {{ field.label(class="col-sm-1 control-label") }}
-                <div class="col-xs-3">
-                    {% if field.type == 'TextField' %}
-                        {{ field(class="form-control", **{'type': 'text'})|safe }}
-                    {% elif field.type == 'BooleanField' %}
-                        {{ field(type="checkbox") }}
-                    {% else %}
-                        {{ field(class="form-control") }}
-                    {% endif %}
-                    <span class="form-control-feedback {{ field.name }}" style="display: none; color: #B94A48; float: right; margin: -28px 0 0 0;">Field Required</span>
-                </div>
-            </div>
-        {% endfor %}
-        <div class="form-group">
-            <div class="col-sm-offset-1 col-xs-2">
-                {% for field in form if (field.widget.input_type == 'submit') %}
-                    {{ field(class="btn btn-primary") }}
-                {% endfor %}
-            </div>
-        </div>
-    </form>
+	<h1>
+		Manage Regions
+		<a class="btn btn-primary add-menu-button" data-toggle="modal" data-target="#add_region">Add Region</a>
+	</h1>
     <h4>Current Regions</h4>
     {% if api_settings %}
 		{% set regions = api_settings.get('regions') %}
@@ -41,7 +18,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th style="text-align: center;">Abbreviation</th>
+                        <th class="center">Abbreviation</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -51,11 +28,11 @@
                             <td>
                                 {{ region.get('name') }}
                             </td>
-                            <td style="text-align: center;">
+                            <td class="center">
                                 {{ region.get('abbreviation') }}
                             </td>
                             <td>
-                               <a href="/manage/dcs/delete/{{ region.get('name') }}" class="tooltip-title" title="Delete Region"><span class="fa fa-trash-o"></span></a>
+                               <a href="/manage/regions/delete/{{ region.get('abbreviation') }}" class="tooltip-title" title="Delete Region"><span class="fa fa-trash-o"></span></a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -68,11 +45,45 @@
         <p>There are currently no Regions setup in the system</p>
     {% endif %}
 
+	<div id="add_region" class="modal fade" aria-labelledby="AddForm" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4>Add Region</h4>
+                </div>
+                <div class="modal-body">
+                    {%- set modal = True %}
+                    {%- set form_id = 'add_region_form' %}
+                    {%- include 'generic/_form.html' %}
+                </div>
+                <div class="modal-footer">
+                    <input class="btn btn-primary" id="add_region_submit" name="submit" type="submit" form="add_region_form" value="Submit">
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 {% block jquery %}
     <script>
         $(document).ready(function() {
             $('.tooltip-title').tooltip();
+        });
+
+		$('#add_region_submit').click(function() {
+            $("#add_region_form").unbind('submit').bind('submit', function(e){
+                return true;
+            });
+        });
+
+		$('body').on('shown.bs.modal', '.modal', function () {
+            $('#name').focus();
+        });
+
+		$('body').on('hidden.bs.modal', '.modal', function () {
+            $(this).removeData();
         });
     </script>
 {% endblock %}

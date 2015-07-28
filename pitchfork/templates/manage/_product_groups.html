@@ -1,0 +1,29 @@
+<table class="table table-hover table-condensed" style="width: 500px;">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th class="center">Order</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for group in product.get_sorted_groups() %}
+            <tr>
+                <td>
+                    {{ group.get('name') }}
+                </td>
+                <td class="center">
+                    {{ group.get('order') }}
+                </td>
+                <td>
+                    {%- if not loop.first %}
+                        <a onClick="demote_promote_group('{{ product.app_url }}', '{{ group.get('slug') }}', 'promote')" class="tooltip-title" title="Promote group"><span class="fa fa-arrow-up"></span></a>
+                    {% endif -%}
+                    {%- if not loop.last %}
+                        <a onClick="demote_promote_group('{{ product.app_url }}', '{{ group.get('slug') }}', 'demote')" class="tooltip-title" title="Demote group"><span class="fa fa-arrow-down"></span></a>
+                    {% endif -%}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

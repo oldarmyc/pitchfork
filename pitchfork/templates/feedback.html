@@ -1,0 +1,82 @@
+{% extends "_base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block addHeaders %}
+    <link href="{{ url_for('static', filename='css/ui.css') }}" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400italic,600,700,900,600italic' rel='stylesheet' type='text/css'>
+{% endblock %}
+{% block body %}
+    <h3>Submitted Feedback</h3>
+    {% if feedback.count() > 0 %}
+        <table class="table table-condensed table-hover">
+            <thead>
+                <tr>
+                    <th>DB</th>
+                    <th>Category</th>
+                    <th>Call</th>
+                    <th>Submitted</th>
+                    <th>Feedback</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in feedback %}
+                <tr>
+                    <td>
+                        {{ item.get('product_db') }}
+                    </td>
+                    <td>
+                        {{ item.get('category') }}
+                    </td>
+                    <td>
+                        {%- set call = get_product_call(item.get('call_id'), item.get('product_db')) %}
+                        {% if call %}
+                            <a href="{{ item.get('product_url') }}/manage/api/edit/{{ item.get('call_id') }}" target="_blank" title="Edit Call" class="tooltip-title">{{ call.get('title') }}</a>
+                        {% endif %}
+                    </td>
+                    <td style="width: 800px;">
+                        {{ item.get('feedback') }}
+                    </td>
+                    <td>
+                        {{ item.get('submitted').strftime('%m-%d-%Y @ %R') }}
+                    </td>
+                    <td class="left">
+                        <a data-feedback_id="{{ item.get('_id') }}" class="tooltip-title submit-complete" title="Mark feedback complete"><span class="fa fa-check-circle-o"></span></a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="panel panel-success" style="width: 350px;">
+            <div class="panel-heading">
+                <strong>Huzzah!</strong> No feedback has been submitted
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+{% block jquery %}
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    <script>
+        $(document).ready(function(){
+            $('.tooltip-title').tooltip();
+        });
+
+        $('.submit-complete').on('click', function() {
+            var row = $(this).parent().parent();
+            var data = {
+                'feedback_id': $(this).data('feedback_id')
+            }
+            $.ajax({
+                url: '/feedback/',
+                type: 'PUT',
+                data: JSON.stringify(data),
+                contentType: "application/json",
+            }).done(function(result) {
+                display_message('Feedback has been marked completed', 'success');
+                row.remove();
+            }).fail(function(error) {
+                display_message('Feedback not marked correctly', 'error');
+            });
+        });
+    </script>
+{% endblock %}

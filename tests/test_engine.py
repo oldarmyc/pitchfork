@@ -1,7 +1,22 @@
-from pitchfork import setup_application
+# Copyright 2014 Dave Kludt
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from pitchfork.setup_application import create_app
+from pitchfork.config import config
+from uuid import uuid4
 from datetime import datetime, timedelta
 from dateutil import parser
-from uuid import uuid4
 
 
 import unittest
@@ -12,15 +27,20 @@ import re
 
 class PitchforkEngineTests(unittest.TestCase):
     def setUp(self):
-        self.app, self.db = setup_application.create_app('True')
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        self.client = self.app.test_client()
-        self.client.get('/')
+        check_db = re.search('_test', config.MONGO_DATABASE)
+        if not check_db:
+            test_db = '%s_test' % config.MONGO_DATABASE
+        else:
+            test_db = config.MONGO_DATABASE
+
+        self.pitchfork, self.db = create_app(test_db)
+        self.app = self.pitchfork.test_client()
+        self.app.get('/')
 
     def teardown_app_data(self):
         self.db.sessions.remove()
         self.db.settings.remove()
+        self.db.api_settings.remove()
         self.db.forms.remove()
         self.db.reporting.remove()
         self.db.history.remove()
@@ -210,12 +230,8 @@ class PitchforkEngineTests(unittest.TestCase):
                 return token.group(1)
         return 'UNK'
 
-    """ Browse/Permissions Tests """
-
-    """ Engine """
-
     def test_engine_admin(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
 
@@ -227,7 +243,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_engine_user(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
             response = c.get('/engine/')
@@ -247,7 +263,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_all_fields(self):
         self.setup_useable_logged_history()
         self.setup_all_report_fields()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -260,7 +276,7 @@ class PitchforkEngineTests(unittest.TestCase):
     """ Setup """
 
     def test_engine_admin_setup(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/setup')
@@ -271,7 +287,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_engine_user_setup(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
             response = c.get('/engine/setup')
@@ -291,7 +307,7 @@ class PitchforkEngineTests(unittest.TestCase):
     """ Manage Fields """
 
     def test_engine_admin_setup_fields(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/fields/manage')
@@ -302,7 +318,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.teardown_app_data()
 
     def test_engine_user_setup_fields(self):
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
             response = c.get('/engine/fields/manage')
@@ -327,7 +343,7 @@ class PitchforkEngineTests(unittest.TestCase):
                 '$unset': {'reporting': 1}
             }
         )
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/setup')
@@ -380,7 +396,7 @@ class PitchforkEngineTests(unittest.TestCase):
                 '$unset': {'reporting': 1}
             }
         )
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             data = {
@@ -414,7 +430,7 @@ class PitchforkEngineTests(unittest.TestCase):
         settings = self.db.settings.find_one()
         report_settings = settings.get('reporting')
         assert not report_settings, 'Settings should be empty'
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/setup')
@@ -446,7 +462,7 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def test_engine_admin_setup_manage_fields_add_good(self):
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/fields/add')
@@ -480,7 +496,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_setup_manage_fields_add_empty_collection(self):
         self.db.history.remove()
         self.db.reporting.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/fields/add')
@@ -521,7 +537,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_setup_manage_fields_add_bad_field(self):
         self.setup_useable_logged_history()
         self.db.reporting.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/fields/add')
@@ -561,7 +577,7 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def test_engine_admin_setup_manage_fields_add_invalid_form_data(self):
         self.db.reporting.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             data = {
@@ -601,7 +617,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history()
         self.setup_useable_report_field()
         found = self.db.reporting.find_one()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get(
@@ -642,7 +658,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.db.reporting.remove()
         self.setup_useable_report_field()
         found = self.db.reporting.find_one()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get(
@@ -665,7 +681,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.db.reporting.remove()
         self.setup_useable_report_field(True)
         found = self.db.reporting.find_one()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get(
@@ -686,7 +702,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.db.reporting.remove()
         self.setup_useable_report_field()
         found = self.db.reporting.find_one()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get(
@@ -705,7 +721,7 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def test_engine_admin_setup_manage_fields_bad_id(self):
         bad_id = '5319dbead7d30459940487f4'
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get(
@@ -724,7 +740,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.db.reporting.remove()
         self.setup_useable_report_field()
         found = self.db.reporting.find_one()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get(
@@ -749,7 +765,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.db.reporting.remove()
         self.setup_useable_report_field()
         bad_id = '5319dbead7d30459940487f4'
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get(
@@ -774,7 +790,7 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def test_engine_admin_generate(self):
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.post('/engine/generate')
@@ -799,7 +815,7 @@ class PitchforkEngineTests(unittest.TestCase):
         )
         today = datetime.now() - timedelta(days=14)
         use_date = '%d-%d-%d' % (today.year, today.month, today.day)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -861,7 +877,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history()
         today = datetime.now() - timedelta(days=14)
         use_date = '%d-%d-%d' % (today.year, today.month, today.day)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -922,7 +938,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history()
         today = datetime.now()
         use_date = '%d-%d-%d' % (today.year, today.month, today.day)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -981,7 +997,7 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def test_engine_admin_generate_trend_daily_no_date_range(self):
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1041,7 +1057,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_generate_trend_daily_multiple_reworks(self):
         self.setup_useable_logged_history(-7)
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1100,7 +1116,7 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def test_engine_admin_generate_trend_weekly(self):
         self.setup_useable_logged_history(-30)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1164,7 +1180,7 @@ class PitchforkEngineTests(unittest.TestCase):
         )
         today = datetime.now() - timedelta(days=28)
         use_date = '%d-%d-%d' % (today.year, today.month, today.day)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1225,7 +1241,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history()
         today = datetime.now() + timedelta(days=28)
         use_date = '%d-%d-%d' % (today.year, today.month, today.day)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1286,7 +1302,7 @@ class PitchforkEngineTests(unittest.TestCase):
         today = datetime.now() + timedelta(days=-28)
         use_date = '%d-%d-%d' % (today.year, today.month, today.day)
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1346,7 +1362,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_generate_trend_weekly_with_multiple_actions(self):
         self.setup_useable_logged_history(-28)
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1407,7 +1423,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history()
         today = datetime.now() - timedelta(days=65)
         use_date = '%d-%d-%d' % (today.year, today.month, today.day)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1471,7 +1487,7 @@ class PitchforkEngineTests(unittest.TestCase):
         )
         today = datetime.now() - timedelta(days=65)
         use_date = '%d-%d-%d' % (today.year, today.month, today.day)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1530,7 +1546,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history()
         today = datetime.now() + timedelta(days=65)
         use_date = '%d-%d-%d' % (today.year, today.month, today.day)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1586,7 +1602,7 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def test_engine_admin_generate_trend_monthly_no_dates(self):
         self.setup_useable_logged_history(-65)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1644,7 +1660,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_generate_trend_monthly_multiple_reworks(self):
         self.setup_useable_logged_history(-65)
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1702,7 +1718,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_generate_trend_monthly_by_user(self):
         self.setup_useable_logged_history(-65)
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1764,7 +1780,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history(-180)
         self.setup_useable_logged_history(-65)
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1826,7 +1842,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history(-42)
         self.setup_useable_logged_history(-14)
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -1970,7 +1986,7 @@ class PitchforkEngineTests(unittest.TestCase):
                 'completed_at': parser.parse(end_time)
             }
         )
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2034,7 +2050,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history(-14)
         self.setup_useable_logged_history(-7)
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2100,7 +2116,7 @@ class PitchforkEngineTests(unittest.TestCase):
         )
         self.setup_useable_logged_history(-365)
         self.setup_useable_logged_history(-7)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2135,14 +2151,10 @@ class PitchforkEngineTests(unittest.TestCase):
             'Did not find returned data points from trend generate'
         )
         response_data = json.loads(response.data)
-        self.assertEquals(
-            len(response_data.get('labels')),
-            13,
+        assert len(response_data.get('labels')) in [13, 14], (
             'Incorrect number of labels in returned data'
         )
-        self.assertEquals(
-            len(response_data.get('points')),
-            13,
+        assert len(response_data.get('points')) in [13, 14], (
             'Incorrect number of data points in returned data'
         )
         self.assertEquals(
@@ -2163,7 +2175,7 @@ class PitchforkEngineTests(unittest.TestCase):
             start_day.year, start_day.month, start_day.day
         )
         self.setup_useable_logged_history(-7)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2198,14 +2210,10 @@ class PitchforkEngineTests(unittest.TestCase):
             'Did not find returned data points from trend generate'
         )
         response_data = json.loads(response.data)
-        self.assertEquals(
-            len(response_data.get('labels')),
-            13,
+        assert len(response_data.get('labels')) in [13, 14], (
             'Incorrect number of labels in returned data'
         )
-        self.assertEquals(
-            len(response_data.get('points')),
-            13,
+        assert len(response_data.get('points')) in [13, 14], (
             'Incorrect number of data points in returned data'
         )
         self.assertEquals(
@@ -2224,7 +2232,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.db.reporting.remove()
         self.setup_misc_fields()
         self.setup_useable_logged_history()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2274,7 +2282,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_generate_full_query(self):
         self.setup_useable_logged_history()
         self.setup_all_report_fields()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2306,7 +2314,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_generate_only_start_time(self):
         self.setup_useable_logged_history()
         self.setup_all_report_fields()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2337,7 +2345,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_admin_generate_only_end_time(self):
         self.setup_useable_logged_history()
         self.setup_all_report_fields()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2367,7 +2375,7 @@ class PitchforkEngineTests(unittest.TestCase):
 
     def test_engine_admin_setup_manage_fields_nested_dict(self):
         self.setup_recorded_item_edge()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/fields/add')
@@ -2400,7 +2408,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_reporting_trend_nested_dict(self):
         self.setup_useable_logged_history()
         self.setup_useable_logged_history(7)
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/fields/add')
@@ -2439,7 +2447,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_generate_csv(self):
         self.setup_useable_logged_history()
         self.setup_all_report_fields()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2469,7 +2477,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_generate_csv_with_no_form(self):
         self.setup_useable_logged_history()
         self.setup_all_report_fields()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/')
@@ -2495,7 +2503,7 @@ class PitchforkEngineTests(unittest.TestCase):
     def test_engine_view_item_display(self):
         self.setup_useable_logged_history()
         found = self.db.history.find_one()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/view/%s' % found.get('_id'))
@@ -2519,7 +2527,7 @@ class PitchforkEngineTests(unittest.TestCase):
         self.setup_useable_logged_history()
         found = self.db.history.find_one()
         self.db.history.remove()
-        with self.app.test_client() as c:
+        with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_admin_login(sess)
             response = c.get('/engine/view/%s' % found.get('_id'))
@@ -2536,6 +2544,3 @@ class PitchforkEngineTests(unittest.TestCase):
             'Could not find correct error message displayed after redirect'
         )
         self.teardown_app_data()
-
-if __name__ == '__main__':
-    unittest.main()

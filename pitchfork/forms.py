@@ -17,7 +17,17 @@ from flask.ext.wtf import Form
 from wtforms import fields, validators
 
 
-class MySelectField(fields.SelectField):
+import re
+
+
+def slug(string):
+    if string:
+        temp = re.sub(' +', ' ', string.lower())
+        return re.sub(' ', '_', temp)
+    return ''
+
+
+class CustomSelectField(fields.SelectField):
     def pre_validate(self, form):
         """
         Overrides pre validation since all choices are static
@@ -41,7 +51,27 @@ class ManageProduct(Form):
     doc_url = fields.TextField('Docs URL:', validators=[validators.required()])
     require_region = fields.BooleanField('Require Region:')
     active = fields.BooleanField('Active to Use:')
-    submit = fields.SubmitField('Submit')
+
+
+class SubmitFeedback(Form):
+    category = fields.SelectField(
+        choices=[
+            ('', ''),
+            ('not_working', 'Call not working'),
+            ('deprecated', 'Deprecated'),
+            ('doc_link', 'Documentation link broken'),
+            ('missing', 'Missing call'),
+            ('need_variable', 'Missing variable'),
+            ('other', 'Other')
+        ],
+        validators=[validators.required()]
+    )
+    feedback = fields.TextAreaField(
+        'Feedback:',
+        validators=[validators.required()]
+    )
+    call_id = fields.HiddenField()
+    product_db = fields.HiddenField()
 
 
 class CallVariables(Form):
@@ -50,7 +80,7 @@ class CallVariables(Form):
         super(CallVariables, self).__init__(*args, **kwargs)
 
     variable_name = fields.TextField('Variable Name:')
-    field_type = MySelectField(
+    field_type = CustomSelectField(
         'Field Type:',
         choices=[
             ('text', 'text'),
@@ -61,7 +91,7 @@ class CallVariables(Form):
             ('text/integer', 'text/integer')
         ]
     )
-    field_display = MySelectField(
+    field_display = CustomSelectField(
         'Display Field:',
         choices=[
             ('TextField', 'Text Field'),
@@ -71,19 +101,24 @@ class CallVariables(Form):
     field_display_data = fields.TextAreaField('Select Data:')
     description = fields.TextField('Short Description:')
     required = fields.BooleanField('Required:')
-    id_value = fields.HiddenField('id_value')
+    id_value = fields.HiddenField('id_value', default=0)
 
 
 class ApiCall(Form):
     title = fields.TextField('Title:', validators=[validators.required()])
     short_description = fields.TextAreaField('Short Description:')
-    verb = MySelectField(
+    verb = CustomSelectField(
         'Verb:',
         validators=[validators.required()],
         choices=[('', '')]
     )
     api_uri = fields.TextField('API URI:', validators=[validators.required()])
     doc_url = fields.TextField('Doc URL:')
+    group = CustomSelectField(
+        'Product Group:',
+        choices=[('', ''), ('add_new_group', 'Add New Group')]
+    )
+    new_group = fields.TextField('Add Group:')
     add_to_header = fields.BooleanField('Add to Header?:')
     custom_header_key = fields.TextField('Header Key:')
     custom_header_value = fields.TextField('Header Value:')
@@ -91,10 +126,11 @@ class ApiCall(Form):
     data_object = fields.TextAreaField('Data Object:')
     allow_filter = fields.BooleanField('Allow Filter?:')
     remove_token = fields.BooleanField('Remove Token:')
+    remove_ddi = fields.BooleanField('Remove DDI:')
     remove_content_type = fields.BooleanField('Remove Content Type:')
     required_key = fields.BooleanField('Required Key:')
     required_key_name = fields.TextField('Key Name:')
-    required_key_type = MySelectField(
+    required_key_type = CustomSelectField(
         'Key Type:',
         choices=[
             ('', ''),
@@ -105,6 +141,22 @@ class ApiCall(Form):
     tested = fields.BooleanField('Tested?:')
     product = fields.HiddenField()
     id = fields.HiddenField()
+
+    def validate_group(self, field):
+        if self.group.data == 'add_new_group':
+            if self.new_group.data in ['', None]:
+                raise validators.ValidationError('No group specified')
+
+            product = g.db.api_settings.find_one(
+                {}, {self.product.data: 1, '_id': 0}
+            )
+            groups = product.get(self.product.data).get('groups')
+            if not groups:
+                groups = []
+
+            for group in groups:
+                if group.get('slug') == slug(self.new_group.data):
+                    raise validators.ValidationError('Duplicate group')
 
     def validate_title(self, field):
         temp = self.title.data.strip().lower().title()
@@ -118,10 +170,51 @@ class ApiCall(Form):
         found = getattr(g.db, self.product.data).find_one(
             {
                 'api_uri': self.api_uri.data.strip(),
-                'verb': self.verb.data
+                'verb': self.verb.data,
+                'doc_url': self.doc_url.data
             }
         )
         if found and self.id.data != str(found.get('_id')):
             raise validators.ValidationError(
-                'Duplicate URI and Verb combination'
+                'Duplicate URI, Verb, and Doc combination'
             )
+
+
+class VerbSet(Form):
+    name = fields.TextField('Verb:', validators=[validators.required()])
+    active = fields.BooleanField('Active:', default=True)
+
+    def validate_name(self, field):
+        found = g.db.api_settings.find_one(
+            {
+                'verbs.name': self.name.data.upper()
+            }
+        )
+        if found:
+            raise validators.ValidationError('Duplicate verb')
+
+
+class RegionSet(Form):
+    name = fields.TextField('Name:', validators=[validators.required()])
+    abbreviation = fields.TextField(
+        'Abbreviation:',
+        validators=[validators.required()]
+    )
+
+    def validate_abbreviation(self, field):
+        found = g.db.api_settings.find_one(
+            {
+                'regions.abbreviation': self.abbreviation.data.upper()
+            }
+        )
+        if found:
+            raise validators.ValidationError('Duplicate abbreviation')
+
+    def validate_name(self, field):
+        regex = re.compile(
+            '^%s$' % self.name.data,
+            re.IGNORECASE
+        )
+        found = g.db.api_settings.find_one({'regions.name': regex})
+        if found:
+            raise validators.ValidationError('Duplicate name')

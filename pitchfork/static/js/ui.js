@@ -51,7 +51,7 @@ $('#region').on('change', function () {
     $('.code-block').text('None');
     $('.code-blocks-wrapper').hide();
     if (global_count > 1) {
-        display_message('Responses have been cleared as the data does not apply to the new region', 'info');
+        show_product_message('Responses have been cleared as the data does not apply to the new region', 'info');
     }
     else {
         global_count += 1;
@@ -77,9 +77,18 @@ function scroll_if_anchor(href, add_to) {
     }
 }
 
-function display_message(response_message, alert_class) {
-    var message = '<div class="alert alert-' + alert_class +'"><button type="button" class="close" data-dismiss="alert">&times;</button><p>' + response_message + '</p></div>';
-    $('#generated_messages_product').html(message);
+function display_message(message, alert_class) {
+    $('#generated_messages').html(
+        '<div class="alert alert-' + alert_class + '">' +
+        '<button type="button" class="close" data-dismiss="alert">' +
+        '&times;</button><p>' + message + '</p></div>');
+}
+
+function show_product_message(message, alert_class) {
+    $('#generated_messages_product').html(
+        '<div class="alert alert-' + alert_class + '">' +
+        '<button type="button" class="close" data-dismiss="alert">' +
+        '&times;</button><p>' + message + '</p></div>');
 }
 
 function validate_field(field_name) {
@@ -93,20 +102,67 @@ function validate_field(field_name) {
 }
 
 function setup_toggle_details() {
-    $('.panel-title #toggle_details').click(function(e) {
+    $('.row #toggle_details').click(function(e) {
         var loop = $(this).data('loop');
         var title = $(this).data('title');
         var button = $(this);
+        var parent = $(this).closest('.call-wrapper');
+        parent.toggleClass('call-visible');
         $('.' + title).toggle('slow', function() {
             if ( $('.' + title).is(':hidden') ) {
-                button.text('Call Details');
+                button.text('Details');
             } else {
-                button.text('Hide Details');
+                button.text('Hide');
             }
         });
         e.stopPropagation();
     });
 }
+
+function setup_toggle_details_verb() {
+    $('.row #toggle_details_verb').click(function(e) {
+        var loop = $(this).data('loop');
+        var title = $(this).data('title');
+        var button = $(this).parent().parent().find('.details-btn');
+        var parent = $(this).closest('.call-wrapper');
+        parent.toggleClass('call-visible');
+        $('.' + title).toggle('slow', function() {
+            if ( $('.' + title).is(':hidden') ) {
+                button.text('Details');
+            } else {
+                button.text('Hide');
+            }
+        });
+        e.stopPropagation();
+    });
+}
+
+$('.toggle-favorite').click(function(e) {
+    e.preventDefault();
+    var action = $(this).attr('data-action');
+    var product = $(this).data('product');
+    var data = {
+        'call_id': $(this).data('id')
+    };
+    var url = $(this).data('url');
+    var favorite = $(this);
+    $.ajax({
+        url: '/' + url + '/favorites/' + action,
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: "application/json"
+    }).done(function(result) {
+        if (action === 'add') {
+            favorite.find('span').addClass('chosen');
+            favorite.attr('data-action', 'remove');
+        } else {
+            favorite.find('span').removeClass('chosen');
+            favorite.attr('data-action', 'add');
+        }
+    }).fail(function(error) {
+        show_product_message('There was an error processing the request', 'error');
+    });
+});
 
 function send_api_call(send_to, data) {
     return $.ajax({
@@ -170,33 +226,54 @@ function setup_api_call_submit() {
             $("#" + form_submit + "_form").serializeArray().map(function(x){sending[x.name] = x.value;});
             var message = "You must provide the following data before the request can be sent:<br /><br />";
             var region_check = false;
-            if (require_region === 'true' && form_value !== 'Mock API Call') {
-                if ( validate_field('region') ) {
-                    sending.region = $('#region').val();
-                    sending.ddi = $('#ddi').val().trim();
-                    region_check = true;
-                } else {
-                    $('#region').addClass('error');
-                    message += "<span class='text-danger'>Region</span>";
-                }
-            } else if (require_region === 'true') {
-                if ($('#region').length > 0 && $('#region').val() != 'None') {
-                    sending.region = $('#region').val();
-                    sending.ddi = $('#ddi').val().trim();
-                }
-            } else {
-                region_check = true;
-                sending.ddi = $('#ddi').val().trim();
-            }
-            if (region_check) {
-                sending.testing = testing;
-                validated = true;
-            }
-            if (form_value == 'Mock API Call') {
+            var ddi_check = false;
+            var token_check = false;
+            if (form_value === 'Mock API Call') {
+                // Sending mock call
                 validated = true;
                 sending.mock = true;
                 sending.region = '{region}';
                 sending.ddi = '{ddi}';
+                sending.token = '{api-token}';
+            } else {
+                // Sending Real Call
+                if (sending.remove_token === 'True') {
+                    token_check = true;
+                } else {
+                    if ( validate_field('token') ) {
+                        sending.api_token = $('#token').val().trim();
+                        token_check = true;
+                    } else {
+                        $('#token').addClass('error');
+                        message += "<span class='text-danger'>API Token</span><br />";
+                    }
+                }
+                if (sending.remove_ddi === 'True') {
+                    ddi_check = true;
+                } else {
+                    if ( validate_field('ddi') ) {
+                        sending.ddi = $('#ddi').val().trim();
+                        ddi_check = true;
+                    } else {
+                        $('#ddi').addClass('error');
+                        message += "<span class='text-danger'>DDI or Account Number</span><br />";
+                    }
+                }
+                if (require_region === 'true') {
+                    if ( validate_field('region') ) {
+                        sending.region = $('#region').val();
+                        region_check = true;
+                    } else {
+                        $('#region').addClass('error');
+                        message += "<span class='text-danger'>Region</span><br />";
+                    }
+                } else {
+                    region_check = true;
+                }
+                if (region_check && ddi_check && token_check) {
+                    sending.testing = testing;
+                    validated = true;
+                }
             }
             if (validated) {
                 process_display_api_call(
@@ -213,3 +290,80 @@ function setup_api_call_submit() {
         });
     });
 }
+
+$('#get_hybrid_token_submit').on('click', function() {
+    $("#generate_token_form").unbind('submit').bind('submit', function(e){
+        e.preventDefault();
+        var data = {};
+        $.each($(this).serialize().split('&'), function (index, elem) {
+            var vals = elem.split('=');
+            data[vals[0].replace(/\+/g, ' ')] = unescape(vals[1].replace(/\+/g, ' '));
+        });
+        $.ajax({
+            url: '/generate_hybrid_token',
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            beforeSend: function() {
+                $('#token_info').html('<p>Retrieving...<i class="fa fa-spin fa-spinner"></i></p>');
+            }
+        }).done(function(re) {
+                if (re.code === 200) {
+                    $('#token').val(re.token);
+                    $('#ddi').val('hybrid:' + data.dedicated_account);
+                    $('#token_info').html(
+                        '<dl class="dl-horizontal"><dt>Token:</dt><dd>' + re.token +
+                        '</dd><dt>DDI:</dt><dd>hybrid:' + data.dedicated_account + '</dd></dl>'
+                    );
+                    $('#get_hybrid_token_form').modal('hide');
+                } else {
+                    $('#token_info').html('<p><strong>Error:</strong> ' + re.message + ' </p>');
+                }
+        }).fail(function(result) {
+            $('#token_info').html('<p class="text-danger"><strong>Error:</strong> There was an application error</p>');
+        });
+    });
+});
+
+$('#submit_feedback').on('show.bs.modal', function(event) {
+    var link = $(event.relatedTarget);
+    $(this).find('#call_id').val(
+        link.data('call_id')
+    );
+    $(this).find('#product_db').val(
+        link.data('product')
+    );
+});
+
+$('#submit_feedback').on('hide.bs.modal', function(event) {
+    $(this).find('#submit_feedback_form')[0].reset();
+    $(this).find('#product_db').val('');
+    $(this).find('#call_id').val('');
+});
+
+$('#submit_feedback_submit').on('click', function() {
+    $('#submit_feedback_form').unbind('submit').bind('submit', function(e) {
+        e.preventDefault();
+        var data = $("#submit_feedback_form").serialize();
+        var sending = {};
+        $.each(data.split('&'), function (index, elem) {
+            var vals = elem.split('=');
+            if (vals[0] !== 'feedback') {
+                sending[vals[0].replace(/\+/g, ' ')] = unescape(vals[1]);
+            } else {
+                sending[vals[0].replace(/\+/g, ' ')] = vals[1].replace(/\+/g, ' ');
+            }
+        });
+        $.ajax({
+            url: '/feedback/',
+            type: 'POST',
+            data: JSON.stringify(sending),
+            contentType: "application/json",
+        }).done(function(result) {
+            show_product_message('Feedback has been sent successfully', 'success');
+            $('#submit_feedback').modal('hide');
+        }).fail(function(error) {
+            show_product_message('Submit feeback encountered an error and could not be saved', 'error');
+        });
+    });
+});
