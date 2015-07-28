@@ -446,7 +446,8 @@ class SeleniumTests(unittest.TestCase):
         ).is_displayed(), 'Form not displayed properly'
 
         mock = self.client.find_element_by_xpath(
-            "//form[@id='test_call-autoscale_form']/input[7]"
+            "//input[contains(@class, 'api_call_submit') "
+            "and contains(@class, 'btn-info')]"
         )
         mock_results = self.client.find_element_by_class_name(
             'code-blocks-wrapper'
@@ -485,6 +486,7 @@ class SeleniumTests(unittest.TestCase):
         self.setup_user_logged_in()
         self.setup_database(True)
         self.client.get('http://localhost:5000/autoscale/')
+        time.sleep(2)
         with mock.patch('requests.get') as patched_get:
             type(patched_get.return_value).content = mock.PropertyMock(
                 return_value='{"groups_links": [], "groups": []}'
@@ -508,8 +510,8 @@ class SeleniumTests(unittest.TestCase):
             dc_select = Select(self.client.find_element_by_id('region'))
             dc_select.select_by_visible_text('Select Region')
             time.sleep(1)
-            send = self.client.find_element_by_xpath(
-                "//form[@id='test_call-autoscale_form']/input[6]"
+            send = self.client.find_element_by_class_name(
+                'api_call_submit'
             )
             send_results = self.client.find_element_by_class_name(
                 'code-blocks-wrapper'
@@ -591,6 +593,7 @@ class SeleniumTests(unittest.TestCase):
         )
 
     def test_pf_front_product_manage_li_admin(self):
+        self.setup_useable_admin('rusty.shackelford')
         self.setup_user_logged_in(True)
         self.client.get('http://localhost:5000/autoscale/manage')
         self.assertIn(
@@ -605,6 +608,7 @@ class SeleniumTests(unittest.TestCase):
         )
 
     def test_pf_front_product_manage_api_li_admin(self):
+        self.setup_useable_admin('rusty.shackelford')
         self.setup_user_logged_in(True)
         self.setup_database()
         self.client.get('http://localhost:5000/autoscale/manage/api')
@@ -625,6 +629,7 @@ class SeleniumTests(unittest.TestCase):
         )
 
     def test_pf_front_generate_report_li_admin(self):
+        self.setup_useable_admin('rusty.shackelford')
         self.setup_user_logged_in(True)
         self.setup_call_history()
         self.client.get('http://localhost:5000/engine/')

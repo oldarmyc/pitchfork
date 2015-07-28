@@ -237,19 +237,27 @@ function setup_api_call_submit() {
                 sending.token = '{api-token}';
             } else {
                 // Sending Real Call
-                if ( validate_field('token') ) {
-                    sending.api_token = $('#token').val().trim();
+                if (sending.remove_token === 'True') {
                     token_check = true;
                 } else {
-                    $('#token').addClass('error');
-                    message += "<span class='text-danger'>API Token</span><br />";
+                    if ( validate_field('token') ) {
+                        sending.api_token = $('#token').val().trim();
+                        token_check = true;
+                    } else {
+                        $('#token').addClass('error');
+                        message += "<span class='text-danger'>API Token</span><br />";
+                    }
                 }
-                if ( validate_field('ddi') ) {
-                    sending.ddi = $('#ddi').val().trim();
+                if (sending.remove_ddi === 'True') {
                     ddi_check = true;
                 } else {
-                    $('#ddi').addClass('error');
-                    message += "<span class='text-danger'>DDI or Account Number</span><br />";
+                    if ( validate_field('ddi') ) {
+                        sending.ddi = $('#ddi').val().trim();
+                        ddi_check = true;
+                    } else {
+                        $('#ddi').addClass('error');
+                        message += "<span class='text-danger'>DDI or Account Number</span><br />";
+                    }
                 }
                 if (require_region === 'true') {
                     if ( validate_field('region') ) {
@@ -262,7 +270,6 @@ function setup_api_call_submit() {
                 } else {
                     region_check = true;
                 }
-
                 if (region_check && ddi_check && token_check) {
                     sending.testing = testing;
                     validated = true;

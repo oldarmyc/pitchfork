@@ -171,6 +171,7 @@ class Call:
         self.data_object = call.get('data_object')
         self.allow_filter = bool(call.get('allow_filter'))
         self.remove_token = bool(call.get('remove_token'))
+        self.remove_ddi = bool(call.get('remove_ddi'))
         self.remove_content_type = bool(call.get('remove_content_type'))
         self.required_key = bool(call.get('required_key'))
         self.required_key_name = call.get('required_key_name', '').strip()

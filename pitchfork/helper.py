@@ -33,6 +33,9 @@ import datetime
 UTC = tz.tzutc()
 
 
+requests.packages.urllib3.disable_warnings()
+
+
 def get_timestamp():
     return datetime.datetime.now(UTC)
 
@@ -180,6 +183,7 @@ def generate_edit_call_form(product, call, call_id):
     form.doc_url.data = call.doc_url
     form.tested.data = call.tested
     form.remove_token.data = call.remove_token
+    form.remove_ddi.data = call.remove_ddi
     form.remove_content_type.data = call.remove_content_type
     form.required_key.data = call.required_key
     form.required_key_name.data = call.required_key_name
