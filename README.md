@@ -28,7 +28,7 @@ Mocking is available to allow for the call to be built out using the parameters 
 
 **Note:** You do not have to login to the application in order to use the Mock capability for any product
 
-View the public version at [https://cloud-api.info](https://cloud-api.info "Pitchfork Application")
+View the public version at [https://cloudapi.co](https://cloudapi.co "Pitchfork Application")
 
 #### Want to run it locally?
 All you need is Python 2.7, Mongodb, and a web browser
