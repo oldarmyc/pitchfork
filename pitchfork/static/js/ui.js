@@ -31,11 +31,7 @@ function toggle_results() {
         var loop = $(this).data('loop');
         var title = $(this).data('title');
         var results = $(this).data('results');
-        $('#api_results_wrapper_' + title).toggle('slow', function() {
-            // if ( $('#api_results_wrapper_' + title).is(':visible') === false) {
-            //     $('html, body').animate({ scrollTop: $('#' + title).offset().top - 160}, 10);
-            // }
-        });
+        $('#api_results_wrapper_' + title).toggle('slow', function() {});
         e.stopPropagation();
     });
 }
