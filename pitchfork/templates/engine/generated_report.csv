@@ -1,4 +1,0 @@
-Name,DDI,DC,Product,Completed,Call Run,Verb,Resp. Code
-{% for item in results %}
-    "{{ item.get('username') }}","{{ item.get('ddi') }}","{{ item.get('data_center')|upper }}","{{ item.get('product') }}","{{ item.get('completed_at').strftime('%m-%d-%Y') }}","{{ item.get('details').get('title') }}","{{ item.get('request').get('verb') }}","{{ item.get('response').get('code') }}"
-{% endfor %}

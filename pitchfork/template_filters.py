@@ -34,7 +34,7 @@ def unslug(value):
 
 
 def slug(value):
-    text = re.sub('\s+', '_', value)
+    text = re.sub('\s+|\/|\(|\)', '_', value)
     return text
 
 

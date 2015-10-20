@@ -3,7 +3,7 @@ Jinja2
 MarkupSafe
 Werkzeug
 itsdangerous
-pymongo
+pymongo==2.8
 wsgiref
 gunicorn
 happymongo
@@ -12,10 +12,10 @@ WTForms
 python-memcached
 python-dateutil
 requests
-isoweek
 flask-classy
 pygments
 
--i http://pypi.cloudapi.co/simple
-cloudauth
+-i https://pypi.cloudapi.co/simple
+flask-cloudauth
 cloudadmin
+cloudengine

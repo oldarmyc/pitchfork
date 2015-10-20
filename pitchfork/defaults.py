@@ -684,12 +684,15 @@ def application_initialize(db, app):
 
                     ],
                     'reporting': {
-                        'enabled': True,
+                        'active': True,
                         'description': (
                             'History of all calls submitted on the '
                             'site since launch'
                         ),
-                        'collection': 'history'
+                        'collection': 'history',
+                        'sort_field': 'completed_at',
+                        'trend_field': '$completed_at',
+                        'query_field': 'Completed At'
                     },
                     'parent_menu': [
                         {
@@ -1658,73 +1661,113 @@ def application_initialize(db, app):
     if reporting is None:
         db.reporting.insert(
             {
-                'data_type': 'text',
-                'description': 'Full name of user who ran call ',
-                'field_display': 'TextField',
-                'field_display_data': '',
-                'field_display_label': '',
-                'field_name': 'name',
-                'graphable': False,
-                'searchable': True
+                "status": True,
+                "field_display_label": "Username",
+                "description": "User name of user who ran call ",
+                "data_type": "text",
+                "field_display_data": "",
+                "graphable": False,
+                "field_display": "TextField",
+                "searchable": True,
+                "field_name": "username",
+                "order": 1
             }
         )
         db.reporting.insert(
             {
-                'data_type': 'text',
-                'description': 'Account Number used to make call ',
-                'field_display': 'TextField',
-                'field_display_data': '',
-                'field_display_label': 'DDI',
-                'field_name': 'ddi',
-                'graphable': False,
-                'searchable': True
+                "status": True,
+                "field_display_label": "DDI",
+                "description": "Account Number used to make call",
+                "data_type": "text",
+                "field_display_data": "",
+                "graphable": False,
+                "field_display": "TextField",
+                "searchable": True,
+                "field_name": "ddi",
+                "order": 2
             }
         )
         db.reporting.insert(
             {
-                'data_type': 'text',
-                'description': 'Data Center where call was made',
-                'field_display': 'SelectField',
-                'field_display_data': '',
-                'field_display_label': '',
-                'field_name': 'region',
-                'graphable': True,
-                'searchable': True
+                "status": True,
+                "field_display_label": "Region",
+                "description": "Data Center where call was made",
+                "data_type": "text",
+                "field_display_data": "",
+                "graphable": True,
+                "field_display": "TextField",
+                "searchable": True,
+                "field_name": "data_center",
+                "order": 3
             }
         )
         db.reporting.insert(
             {
-                'data_type': 'text',
-                'description': 'Verb used for generating call',
-                'field_display': 'SelectField',
-                'field_display_data': '',
-                'field_display_label': 'Verb',
-                'field_name': 'request.verb',
-                'graphable': True,
-                'searchable': True
+                "status": True,
+                "field_display_label": "Product",
+                "description": "Product call was generated for",
+                "data_type": "text",
+                "field_display_data": "",
+                "graphable": True,
+                "field_display": "TextField",
+                "searchable": True,
+                "field_name": "product",
+                "order": 4
             }
         )
         db.reporting.insert(
             {
-                'data_type': 'text',
-                'description': 'Product call was generated for',
-                'field_display': 'SelectField',
-                'field_display_data': '',
-                'field_display_label': '',
-                'field_name': 'product',
-                'graphable': False,
-                'searchable': True
+                "status": True,
+                "field_display_label": "Call",
+                "description": "Call title that was executed",
+                "data_type": "text",
+                "field_display_data": "",
+                "graphable": False,
+                "field_display": "TextField",
+                "searchable": False,
+                "field_name": "details.title",
+                "order": 5
             }
         )
         db.reporting.insert(
             {
-                'data_type': 'datetime',
-                'field_display_label': '',
-                'description': 'Timestamp when call was executed',
-                'searchable': True,
-                'field_display_data': '',
-                'field_name': 'completed_at',
-                'field_display': 'TextField',
-                'graphable': False
+                "status": True,
+                "field_display_label": "Verb",
+                "description": "Verb used for generating call",
+                "data_type": "text",
+                "field_display_data": "",
+                "graphable": True,
+                "field_display": "TextField",
+                "searchable": True,
+                "field_name": "request.verb",
+                "order": 6
+            }
+        )
+        db.reporting.insert(
+            {
+                "status": True,
+                "field_display_label": "Resp. Code",
+                "description": "Response code give for the request ",
+                "data_type": "text",
+                "field_display_data": "",
+                "graphable": False,
+                "field_display": "TextField",
+                "searchable": False,
+                "field_name": "response.code",
+                "order": 7
+            }
+        )
+        db.reporting.insert(
+            {
+                "status": True,
+                "field_display_label": "Completed At",
+                "description": "Timestamp when call was executed",
+                "data_type": "datetime",
+                "field_display_data": "",
+                "graphable": False,
+                "field_display": "TextField",
+                "searchable": True,
+                "field_name": "completed_at",
+                "order": 8
             }
         )

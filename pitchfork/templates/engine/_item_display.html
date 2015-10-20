@@ -1,96 +1,104 @@
+<link href="{{ url_for('static', filename='css/pygments.css') }}" rel="stylesheet">
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-    <h4>View Call Details</h4>
+    <h4>Call Details</h4>
 </div>
 <div class="modal-body">
-    <h4>
-        Call Information
-    </h4>
-    <dl class="dl-horizontal modify-dl">
-        <dt>DDI:</dt>
-        <dd>
-            {{ item.get('ddi') }}
-        </dd>
-        <dt>Timestamp:</dt>
-        <dd>
-            {{ item.get('completed_at').strftime('%m-%d-%Y @ %H:%M %p UTC') }}
-        </dd>
-        <dt>Cloud Product:</dt>
-        <dd>
-            {{ item.get('product') }}
-        </dd>
-        <dt>Title:</dt>
-        <dd>
-            {{ item.get('details').get('title') }}
-        </dd>
-        <dt>Description:</dt>
-        <dd>
-            {{ item.get('details').get('description') }}
-        </dd>
-        <dt>Verb:</dt>
-        <dd>
-            {{ item.get('request').get('verb') }}
-        </dd>
-        <dt>Response Code:</dt>
-        <dd>
-            {{ item.get('response').get('code') }}
-        </dd>
-        <dt>Documentation:</dt>
-        <dd>
-            <a href="{{ item.get('details').get('doc_url') }}" title="{{ item.get('details').get('title') }} Documentation" target="_blank">API Documentation</a>
-        </dd>
-    </dl>
-    <div id="request_details">
-        {% if item.get('request') %}
-            {% if item.get('request').get('url') %}
-                <div id="api_uri">
-                    <h5>Request URL</h5>
-                    <div class="code-block">
-                        {{ item.get('request').get('url')|pretty_print_url|safe }}
+    {%- if item %}
+        <h4>
+            Call Information
+        </h4>
+        <dl class="dl-horizontal modify-dl">
+            <dt>DDI:</dt>
+            <dd>
+                {{ item.get('ddi') }}
+            </dd>
+            <dt>Timestamp:</dt>
+            <dd>
+                {{ item.get('completed_at').strftime('%m-%d-%Y @ %H:%M %p UTC') }}
+            </dd>
+            <dt>Cloud Product:</dt>
+            <dd>
+                {{ item.get('product') }}
+            </dd>
+            <dt>Title:</dt>
+            <dd>
+                {{ item.get('details').get('title') }}
+            </dd>
+            <dt>Description:</dt>
+            <dd>
+                {{ item.get('details').get('description') }}
+            </dd>
+            <dt>Verb:</dt>
+            <dd>
+                {{ item.get('request').get('verb') }}
+            </dd>
+            <dt>Response Code:</dt>
+            <dd>
+                {{ item.get('response').get('code') }}
+            </dd>
+            <dt>Documentation:</dt>
+            <dd>
+                <a href="{{ item.get('details').get('doc_url') }}" title="{{ item.get('details').get('title') }} Documentation" target="_blank">API Documentation</a>
+            </dd>
+        </dl>
+        <div id="request_details">
+            {% if item.get('request') %}
+                {% if item.get('request').get('url') %}
+                    <div id="api_uri">
+                        <h5>Request URL</h5>
+                        <div class="code-block">
+                            {{ item.get('request').get('url')|pretty_print_url|safe }}
+                        </div>
                     </div>
-                </div>
-            {% endif %}
-            {% if item.get('request').get('headers') %}
-                <div id="api_headers">
-                    <h5>Request Headers</h5>
-                    <div class="code-block">
-                        {{ item.get('request').get('headers')|pretty_print_json|safe }}
+                {% endif %}
+                {% if item.get('request').get('headers') %}
+                    <div id="api_headers">
+                        <h5>Request Headers</h5>
+                        <div class="code-block">
+                            {{ item.get('request').get('headers')|pretty_print_json|safe }}
+                        </div>
                     </div>
-                </div>
-            {% endif %}
-            {% if item.get('request').get('data') %}
-                <h5>Request Data Object</h5>
-                <div class="code-block data-object">
-                    {{ item.get('request').get('data')|pretty_print_json|safe }}
-                </div>
-            {% endif %}
-        {% endif %}
-    </div>
-    <div id="response_details">
-        {% if item.get('response') %}
-            {% if item.get('response').get('headers') %}
-                <div id="api_response_headers">
-                    <h5>Response Headers</h5>
-                    <div class="code-block">
-                        {{ item.get('response').get('headers')|pretty_print_json|safe }}
+                {% endif %}
+                {% if item.get('request').get('data') %}
+                    <h5>Request Data Object</h5>
+                    <div class="code-block data-object">
+                        {{ item.get('request').get('data')|pretty_print_json|safe }}
                     </div>
-                </div>
+                {% endif %}
             {% endif %}
-            {% if item.get('response').get('body') %}
-                <div id="api_response_body">
-                    <h5>Response Body</h5>
-                    <div class="code-block">
-                        {{ item.get('response').get('body')|pretty_print_json|safe }}
+        </div>
+        <div id="response_details">
+            {% if item.get('response') %}
+                {% if item.get('response').get('headers') %}
+                    <div id="api_response_headers">
+                        <h5>Response Headers</h5>
+                        <div class="code-block">
+                            {{ item.get('response').get('headers')|pretty_print_json|safe }}
+                        </div>
                     </div>
-                </div>
+                {% endif %}
+                {% if item.get('response').get('body') %}
+                    <div id="api_response_body">
+                        <h5>Response Body</h5>
+                        <div class="code-block">
+                            {{ item.get('response').get('body')|pretty_print_json|safe }}
+                        </div>
+                    </div>
+                {% endif %}
             {% endif %}
-        {% endif %}
-    </div>
+        </div>
+    {% else %}
+        <div class="panel panel-danger" style="width: 350px;">
+            <div class="panel-heading">
+                <strong>Error</strong> Either the ID was bad or no item was found
+            </div>
+        </div>
+    {% endif -%}
 </div>
 <div class="modal-footer">
     <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Close</button>
 </div>
-
 <script>
     $(document).ready(function() {
         $('.tooltip-title').tooltip();
