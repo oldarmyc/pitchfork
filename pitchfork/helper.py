@@ -183,8 +183,7 @@ def generate_edit_call_form(product, call, call_id):
 
 
 def get_vars_for_call(submissions):
-    data = []
-    count = []
+    data, count = [], []
     for key, value in submissions:
         temp = re.search('variable_(\d+?)-(\w.*)', key)
         if temp:
@@ -513,6 +512,12 @@ def create_custom_header(api_call, request):
 
     if request.get('mock') and not api_call.get('remove_token'):
         header['X-Auth-Token'] = '{api-token}'
+
+    if (
+        api_call.get('change_content_type') and
+        api_call.get('custom_content_type') is not None
+    ):
+        header['Content-Type'] = api_call.get('custom_content_type')
 
     if api_call.get('add_to_header'):
         temp_value = api_call.get('custom_header_value')
