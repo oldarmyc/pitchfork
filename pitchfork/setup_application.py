@@ -16,8 +16,8 @@ from flask import Flask, g
 from config import config
 from datetime import timedelta
 from happymongo import HapPyMongo
-from engine import bp as engine_bp
 from flask.ext.cloudadmin import Admin
+from flask.ext.cloudengine import Engine
 from flask.ext.cloudauth import CloudAuth
 from inspect import getmembers, isfunction
 
@@ -36,8 +36,7 @@ def create_app(db_name=None):
         config.MONGO_DATABASE = db_name
 
     Admin(app)
-    app.register_blueprint(engine_bp, url_prefix='/engine')
-
+    Engine(app)
     mongo, db = HapPyMongo(config)
     app.permanent_session_lifetime = timedelta(hours=2)
     auth = CloudAuth(app, db)
