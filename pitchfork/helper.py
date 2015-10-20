@@ -327,21 +327,23 @@ def recursive_dict_object(
                 temp_dict[parent_key] = req_key_value
 
     elif isinstance(value, list):
-        temp_list = {}
+        temp_list, temp_list_dict = [], {}
         sub_list = []
         for value_list in value:
             if isinstance(value_list, dict):
                 for sub_dict_key, sub_dict_value in value_list.iteritems():
-                    temp_list = recursive_dict_object(
+                    temp_list_dict = recursive_dict_object(
                         sub_dict_key,
                         sub_dict_value,
                         api_call,
                         json_data,
                         data_object,
-                        temp_list,
+                        temp_list_dict,
                         req_key,
                         req_key_value
                     )
+
+                temp_list.append(copy.deepcopy(temp_list_dict))
             else:
                 _key = re.match('\{(.+?)\}', value_list)
                 if _key:
@@ -377,7 +379,7 @@ def recursive_dict_object(
             temp_dict[str(parent_key)] = sub_list
 
         if temp_list:
-            temp_dict[str(parent_key)] = [temp_list]
+            temp_dict[str(parent_key)] = temp_list
 
     else:
         if value:
