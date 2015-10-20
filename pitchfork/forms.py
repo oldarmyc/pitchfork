@@ -122,6 +122,8 @@ class ApiCall(Form):
     add_to_header = fields.BooleanField('Add to Header?:')
     custom_header_key = fields.TextField('Header Key:')
     custom_header_value = fields.TextField('Header Value:')
+    change_content_type = fields.BooleanField('Custom Content Type?:')
+    custom_content_type = fields.TextField('Custom Content Type:')
     use_data = fields.BooleanField('Use Data?:')
     data_object = fields.TextAreaField('Data Object:')
     allow_filter = fields.BooleanField('Allow Filter?:')

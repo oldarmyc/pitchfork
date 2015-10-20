@@ -167,6 +167,8 @@ class Call:
         self.add_to_header = bool(call.get('add_to_header'))
         self.custom_header_key = call.get('custom_header_key', '').strip()
         self.custom_header_value = call.get('custom_header_value', '').strip()
+        self.change_content_type = bool(call.get('change_content_type'))
+        self.custom_content_type = call.get('custom_content_type', '').strip()
         self.use_data = bool(call.get('use_data'))
         self.data_object = call.get('data_object')
         self.allow_filter = bool(call.get('allow_filter'))

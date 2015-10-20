@@ -23,6 +23,7 @@ from bson.objectid import ObjectId
 
 
 import re
+import copy
 import requests
 import json
 import forms
@@ -173,32 +174,16 @@ def generate_edit_call_form(product, call, call_id):
             )
             temp.form.id_value.data = temp_variable.id_value
 
-    form.title.data = call.title
-    form.verb.data = call.verb
-    form.api_uri.data = call.api_uri
-    form.short_description.data = call.short_description
-    form.use_data.data = call.use_data
-    form.allow_filter.data = call.allow_filter
-    form.data_object.data = call.data_object
-    form.doc_url.data = call.doc_url
-    form.tested.data = call.tested
-    form.remove_token.data = call.remove_token
-    form.remove_ddi.data = call.remove_ddi
-    form.remove_content_type.data = call.remove_content_type
-    form.required_key.data = call.required_key
-    form.required_key_name.data = call.required_key_name
-    form.required_key_type.data = call.required_key_type
-    form.add_to_header.data = call.add_to_header
-    form.custom_header_key.data = call.custom_header_key
-    form.custom_header_value.data = call.custom_header_value
-    form.group.data = call.group
+    for key, value in call.__dict__.iteritems():
+        if key != 'variables':
+            setattr(getattr(form, key), 'data', value)
+
     form.id.data = call_id
     return form, count
 
 
 def get_vars_for_call(submissions):
-    data = []
-    count = []
+    data, count = [], []
     for key, value in submissions:
         temp = re.search('variable_(\d+?)-(\w.*)', key)
         if temp:
@@ -342,21 +327,23 @@ def recursive_dict_object(
                 temp_dict[parent_key] = req_key_value
 
     elif isinstance(value, list):
-        temp_list = {}
+        temp_list, temp_list_dict = [], {}
         sub_list = []
         for value_list in value:
             if isinstance(value_list, dict):
                 for sub_dict_key, sub_dict_value in value_list.iteritems():
-                    temp_list = recursive_dict_object(
+                    temp_list_dict = recursive_dict_object(
                         sub_dict_key,
                         sub_dict_value,
                         api_call,
                         json_data,
                         data_object,
-                        temp_list,
+                        temp_list_dict,
                         req_key,
                         req_key_value
                     )
+
+                temp_list.append(copy.deepcopy(temp_list_dict))
             else:
                 _key = re.match('\{(.+?)\}', value_list)
                 if _key:
@@ -392,7 +379,7 @@ def recursive_dict_object(
             temp_dict[str(parent_key)] = sub_list
 
         if temp_list:
-            temp_dict[str(parent_key)] = [temp_list]
+            temp_dict[str(parent_key)] = temp_list
 
     else:
         if value:
@@ -527,6 +514,12 @@ def create_custom_header(api_call, request):
 
     if request.get('mock') and not api_call.get('remove_token'):
         header['X-Auth-Token'] = '{api-token}'
+
+    if (
+        api_call.get('change_content_type') and
+        api_call.get('custom_content_type') is not None
+    ):
+        header['Content-Type'] = api_call.get('custom_content_type')
 
     if api_call.get('add_to_header'):
         temp_value = api_call.get('custom_header_value')
