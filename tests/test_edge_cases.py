@@ -81,6 +81,8 @@ class EdgeCasesTests(unittest.TestCase):
             'add_to_header': True,
             'custom_header_value': 'Custom Value',
             'custom_header_key': 'Custom Key',
+            'change_content_type': 'True',
+            'custom_content_type': 'application/octet-stream',
             'variables': [
                 {
                     'field_type': 'text',
@@ -276,6 +278,11 @@ class EdgeCasesTests(unittest.TestCase):
         assert data.get('request_headers'), 'No request headers was received'
         assert data.get('data_package'), (
             'No response data package was received'
+        )
+        self.assertIn(
+            'octet-stream',
+            data.get('request_headers'),
+            'Could not find appropriate custom headers'
         )
 
     def test_misc_post_call_complex_list(self):
