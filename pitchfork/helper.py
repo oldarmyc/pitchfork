@@ -343,7 +343,9 @@ def recursive_dict_object(
                         req_key_value
                     )
 
-                temp_list.append(copy.deepcopy(temp_list_dict))
+                if len(temp_list_dict) > 0:
+                    temp_list.append(copy.deepcopy(temp_list_dict))
+
             else:
                 _key = re.match('\{(.+?)\}', value_list)
                 if _key:
