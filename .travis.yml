@@ -1,0 +1,14 @@
+language: python
+python:
+  - 2.7
+services:
+  - mongodb
+install:
+  - pip install -r requirements.txt
+  - pip install coverage flake8 mock funcsigs
+before_script:
+  - cp pitchfork/config/config.example.py pitchfork/config/config.py
+  - rm tests/test_selenium.py
+  - flake8 .
+script:
+  - nosetests -v --cover-erase --with-coverage --cover-package=pitchfork
