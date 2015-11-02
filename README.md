@@ -1,4 +1,4 @@
-[![Build Status](https://drone.cloudapi.co/api/badge/github.com/rackerlabs/pitchfork/status.svg?branch=master)](https://drone.cloudapi.co/github.com/rackerlabs/pitchfork)
+[![Build Status](https://travis-ci.org/oldarmyc/pitchfork.svg)](https://travis-ci.org/oldarmyc/pitchfork)
 
 Pitchfork
 =========
