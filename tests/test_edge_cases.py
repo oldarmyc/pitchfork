@@ -121,11 +121,12 @@ class EdgeCasesTests(unittest.TestCase):
             'required_key_name': 'required_key',
             'required_key_type': 'list',
             'data_object': (
-                '[{"var_1": "{test_var_value}","test_nest": {"var_2": "{'
-                'test_var_value_2}"},"test_list_dict": [{"var_3": "{test_'
-                'var_value_3}"}],"test_list": ["{test_var_value_4}","{test_'
-                'var_value_7}","{test_var_value_8}","{test_var_value_9}"],"t'
-                'est_list_key_value": [{"{test_var_value_6}": "{test_var_val'
+                '[{"var_1": "{test_var_value}", "var_3": 1, "var_4": '
+                '"test_value", "test_nest": {"var_2": "{test_var_value_2}"},'
+                '"test_list_dict": [{"var_3": "{test_var_value_3}"}],'
+                '"test_list": ["{test_var_value_4}","{test_var_value_7}",'
+                '"{test_var_value_8}","{test_var_value_9}"],'
+                '"test_list_key_value": [{"{test_var_value_6}": "{test_var_val'
                 'ue_5}"}]}]'
             ),
             'variables': [
