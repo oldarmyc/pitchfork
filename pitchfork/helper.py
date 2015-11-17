@@ -396,7 +396,6 @@ def recursive_dict_object(
             except:
                 _key = None
 
-            _key = re.match('\{(.+?)\}', value)
             if _key:
                 _value = json_data.get(_key.group(1))
                 if _value and _value != '':
