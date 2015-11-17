@@ -391,6 +391,11 @@ def recursive_dict_object(
             else:
                 _pkey_value = parent_key
 
+            try:
+                _key = re.match('\{(.+?)\}', value)
+            except:
+                _key = None
+
             _key = re.match('\{(.+?)\}', value)
             if _key:
                 _value = json_data.get(_key.group(1))
@@ -425,6 +430,8 @@ def recursive_dict_object(
                             temp_dict[str(_pkey_value)] = _value.strip()
                     else:
                         temp_dict[str(_pkey_value)] = None
+            else:
+                temp_dict[str(parent_key)] = value
 
         if value == 'none' or value is None:
             temp_dict[str(_pkey_value)] = value
