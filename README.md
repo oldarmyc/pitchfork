@@ -3,7 +3,7 @@
 Pitchfork
 =========
 
-#### Cloud API Interactive Application
+#### Rackspace Cloud API Interactive Application
 
 Using a browser you can execute any Rackspace API command for any Cloud product without the need to get on a command line or use another CLI tool.
 
@@ -18,7 +18,7 @@ Each call includes the following information:
 For each API call you will be shown the following information in the browser.
 * Request URL
 * Request Headers
-* Request Object (If data object is used i.e. on Create or Update Statements)
+* Request Object (If data object is used i.e. on Create and Update Statements)
 * Response Headers
 * Response Body
 
@@ -28,7 +28,7 @@ Mocking is available to allow for the call to be built out using the parameters 
 
 **Note:** You do not have to login to the application in order to use the Mock capability for any product
 
-View the public version at [https://cloudapi.co](https://cloudapi.co "Pitchfork Application")
+View the public version at [https://pitchfork.cloudapi.co](https://pitchfork.cloudapi.co "Pitchfork Application")
 
 #### Want to run it locally?
 All you need is Python 2.7, Mongodb, and a web browser
@@ -39,7 +39,7 @@ All you need is Python 2.7, Mongodb, and a web browser
 ````
 mkvirtualenv pitchfork
 cd pitchfork
-git clone https://github.com/rackerlabs/pitchfork.git
+git clone https://github.com/oldarmyc/pitchfork.git
 cd pitchfork
 workon pitchfork
 ````
