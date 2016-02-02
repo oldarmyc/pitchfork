@@ -97,6 +97,19 @@ db.reporting.remove()
 
 Browse to the home page and after it loads refresh the page. The refresh will force the app to repopulate the settings, reporting, and api_settings collections automatically to work with the new changes.
 
+#### Adding API Calls
+
+[Pitchfork API Calls](http://fa9cf45cb52b602f2bad-e447b4b840d054d4f862ad6101a6d6ee.r86.cf5.rackcdn.com/api_calls/api_calls.tar.gz)
+
+The download above will provide all of the mongodb bson files for each of the Rackspace products. Once you download the files you can do the following to restore all of the product collections to the pitchfork database.
+
+```
+tar xzvf api_calls.tar.gz
+mongorestore -d pitchfork --drop pitchfork/
+```
+
+**Note:** If you have added your own calls into the collections you can omit the --drop in the call above, and the calls will be added to the existing collection.
+
 #### Testing
 The application unit tests can be run with nose and selenium. To install the requirements to run test do the following in your virtual environment
 ````
