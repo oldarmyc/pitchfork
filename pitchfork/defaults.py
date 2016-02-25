@@ -751,7 +751,8 @@ def application_initialize(db, app):
                                 '/feedback/',
                                 '/<product>/favorites/<action>',
                                 '/admin/logout/',
-                                '/history'
+                                '/history',
+                                '/history/scrub',
                             ]
                         }, {
                             'active': True,
