@@ -480,6 +480,25 @@ class MiscView(FlaskView):
             active_products=active_products
         )
 
+    @route('/history/scrub')
+    @check_perms(request)
+    def clear_history(self):
+        history = g.db.history.update(
+            {
+                'username': session.get('username'),
+                'request.data': {'$ne': None}
+            }, {
+                '$set': {
+                    'request.data': 'SCRUBBED'
+                }
+            }, multi=True
+        )
+        if history:
+            flash('History has been scrubbed successfully', 'success')
+        else:
+            flash('There was an issue scrubbing the history data', 'error')
+        return redirect(url_for('MiscView:history'))
+
     @route('/favorites')
     def favorites(self):
         call_favorites = helper.gather_favorites()
