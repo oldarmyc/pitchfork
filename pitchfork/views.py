@@ -493,7 +493,7 @@ class MiscView(FlaskView):
                 }
             }, multi=True
         )
-        if history:
+        if history and history.get('updatedExisting'):
             flash('History has been scrubbed successfully', 'success')
         else:
             flash('There was an issue scrubbing the history data', 'error')
