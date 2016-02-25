@@ -14,6 +14,7 @@
 
 from pitchfork.setup_application import create_app
 from pitchfork.config import config
+from datetime import datetime
 from uuid import uuid4
 
 
@@ -38,6 +39,7 @@ class PitchforkManageTests(unittest.TestCase):
         self.db.sessions.remove()
         self.db.settings.remove()
         self.db.api_settings.remove()
+        self.db.history.remove()
         self.db.forms.remove()
 
     def setup_user_login(self, session):
@@ -70,6 +72,73 @@ class PitchforkManageTests(unittest.TestCase):
                 }
             }
         )
+
+    def setup_useable_history(self):
+        history = {
+            'username': 'skeletor',
+            'ddi': '1234567',
+            'details': {
+                'description': 'Resizes the specified server',
+                'doc_url': 'http://docs.rackspace.com/servers',
+                'title': 'Resize Server'
+            },
+            'data_center': 'ord',
+            'completed_at': datetime.now(),
+            'product': 'Load Balancers',
+            'request': {
+                'url': (
+                    'https://iad.loadbalancers.api.rackspacecloud.com/v1.0'
+                    '/1234567/loadbalancers/9999999/ssltermination/'
+                    'certificatemappings'
+                ),
+                'verb': 'POST',
+                'data': {
+                    'certificateMapping': {
+                        'hostName': 'test.com',
+                        'privateKey': (
+                            '-----BEGIN RSA PRIVATE KEY-----\\nPrivate '
+                            'Key Data\\n-----END RSA PRIVATE KEY-----\\n'
+                        ),
+                        'certificate': (
+                            '-----BEGIN CERTIFICATE-----\\nCertificate '
+                            'Data\\n-----END CERTIFICATE-----\\n'
+                        ),
+                        'intermediateCertificate': (
+                            '-----BEGIN CERTIFICATE-----\\nIntermediate '
+                            'Cert Data\\n-----END CERTIFICATE-----\\n'
+                        )
+                    }
+                }
+            },
+            'response': {
+                'body': {
+                    'certificateMapping': {
+                        'hostName': 'test.com',
+                        'id': 9999999,
+                        'certificate': (
+                            '-----BEGIN CERTIFICATE-----\n'
+                            'Certificate Data\n-----END CERTIFICATE-----'
+                        ),
+                        'intermediateCertificate': (
+                            '-----BEGIN CERTIFICATE-----\n'
+                            'Intermediate Cert Data\n-----END CERTIFICATE-----'
+                        )
+                    }
+                },
+                'headers': {
+                    'content-length': '0',
+                    'via': '1.1 Repose (Repose/2.8.0.2), 1.1 varnish',
+                    'age': '0',
+                    'server': 'Jetty(8.0.y.z-SNAPSHOT)',
+                    'connection': 'keep-alive',
+                    'cache-control': 'no-cache',
+                    'content-type': 'text/xml'
+                },
+                'code': 202
+            },
+            'name': 'Skeletor'
+        }
+        self.db.history.insert(history)
 
     def setup_default_field(self, form_name):
         data = {
@@ -111,6 +180,56 @@ class PitchforkManageTests(unittest.TestCase):
             'Call History',
             response.data,
             'Did not find correct HTML on page'
+        )
+        self.assertIn(
+            'No API calls have been executed as of yet.',
+            response.data,
+            'Did not find correct no call message'
+        )
+
+    def test_pf_history_scrub(self):
+        self.setup_useable_history()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            response = c.get(
+                '/history/scrub',
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Call History',
+            response.data,
+            'Did not find correct HTML on page'
+        )
+        self.assertIn(
+            'History has been scrubbed successfully',
+            response.data,
+            'Did not find correct message after scrub'
+        )
+        history = self.db.history.find_one({'request.data': 'SCRUBBED'})
+        assert history, 'Could not find scrubbed request data after scrub'
+
+    def test_pf_history_scrub_no_history(self):
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_user_login(sess)
+
+            response = c.get(
+                '/history/scrub',
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'Call History',
+            response.data,
+            'Did not find correct HTML on page'
+        )
+        self.assertIn(
+            'There was an issue scrubbing the history data',
+            response.data,
+            'Did not find correct message after scrub'
         )
 
     def test_pf_favorites(self):
