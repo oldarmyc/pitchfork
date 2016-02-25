@@ -8,120 +8,130 @@
 {% block body %}
     <h2>
         Call History
-        <button class="btn btn-danger" data-toggle="modal" data-target="#confirm-delete">Scrub History</button>
+        {%- if history.count() > 0 %}
+            <button class="btn btn-danger" data-toggle="modal" data-target="#confirm-delete">Scrub History</button>
+        {% endif -%}
     </h2>
-    <div class="row history">
-        <div class="col-md-offset-1 col-md-1 history-col-title">
-            Account
+    {%- if history.count() > 0 %}
+        <div class="row history">
+            <div class="col-md-offset-1 col-md-1 history-col-title">
+                Account
+            </div>
+            <div class="col-md-2 history-col-title">
+                Product
+            </div>
+            <div class="col-md-3 history-col-title">
+                Call Made
+            </div>
+            <div class="col-md-1 history-col-title left">
+                Verb
+            </div>
+            <div class="col-md-1 history-col-title center">
+                Response
+            </div>
+            <div class="col-md-2 history-col-title center">
+                Timestamp
+            </div>
+            <div class="col-md-1 history-col-title">
+            </div>
         </div>
-        <div class="col-md-2 history-col-title">
-            Product
-        </div>
-        <div class="col-md-3 history-col-title">
-            Call Made
-        </div>
-        <div class="col-md-1 history-col-title left">
-            Verb
-        </div>
-        <div class="col-md-1 history-col-title center">
-            Response
-        </div>
-        <div class="col-md-2 history-col-title center">
-            Timestamp
-        </div>
-        <div class="col-md-1 history-col-title">
-        </div>
-    </div>
 
-    {%- for item in history %}
-        <div class="history-wrapper">
-            <div class="row history calls">
-                <div class="col-md-1" id="show_details">
-                    <button data-details="details_wrapper_{{ loop.index }}" data-loop="{{ loop.index }}" class="btn btn-primary toggle-element-{{ loop.index }} history-details">Details</button>
+        {%- for item in history %}
+            <div class="history-wrapper">
+                <div class="row history calls">
+                    <div class="col-md-1" id="show_details">
+                        <button data-details="details_wrapper_{{ loop.index }}" data-loop="{{ loop.index }}" class="btn btn-primary toggle-element-{{ loop.index }} history-details">Details</button>
+                    </div>
+                    <div class="col-md-1 history-call-data">
+                        {{ item.get('ddi') }}
+                    </div>
+                    <div class="col-md-2 history-call-data">
+                        {{ item.get('product') }}
+                    </div>
+                    <div class="col-md-3 history-call-data">
+                        {{ item.get('details').get('title') }}
+                    </div>
+                    <div class="col-md-1 history-call-data left">
+                        {%- if item.get('request').get('verb')|lower in ['post', 'put'] %}
+                            <button type="button" class="btn btn-success btn-sm api-verb" disabled>{{item.get('request').get('verb') }}</button>
+                        {% elif item.get('request').get('verb')|lower == 'delete' %}
+                            <button type="button" class="btn btn-danger btn-sm api-verb" disabled>{{item.get('request').get('verb') }}</button>
+                        {% else %}
+                            <button type="button" class="btn btn-info btn-sm api-verb" disabled>{{item.get('request').get('verb') }}</button>
+                        {% endif -%}
+                    </div>
+                    <div class="col-md-1 history-call-data center">
+                        {{ item.get('response').get('code') }}
+                    </div>
+                    <div class="col-md-2 history-call-data center">
+                        {{ item.get('completed_at').strftime('%m-%d-%Y @ %H:%M %Z') }}
+                    </div>
+                    <div class="col-md-1 history-call-data">
+                        <a href="{{ item.get('details').get('doc_url') }}" class="tooltip-title" title="{{ item.get('details').get('title') }} Documentation" target="_blank">Docs</a>
+                    </div>
                 </div>
-                <div class="col-md-1 history-call-data">
-                    {{ item.get('ddi') }}
-                </div>
-                <div class="col-md-2 history-call-data">
-                    {{ item.get('product') }}
-                </div>
-                <div class="col-md-3 history-call-data">
-                    {{ item.get('details').get('title') }}
-                </div>
-                <div class="col-md-1 history-call-data left">
-                    {%- if item.get('request').get('verb')|lower in ['post', 'put'] %}
-                        <button type="button" class="btn btn-success btn-sm api-verb" disabled>{{item.get('request').get('verb') }}</button>
-                    {% elif item.get('request').get('verb')|lower == 'delete' %}
-                        <button type="button" class="btn btn-danger btn-sm api-verb" disabled>{{item.get('request').get('verb') }}</button>
-                    {% else %}
-                        <button type="button" class="btn btn-info btn-sm api-verb" disabled>{{item.get('request').get('verb') }}</button>
-                    {% endif -%}
-                </div>
-                <div class="col-md-1 history-call-data center">
-                    {{ item.get('response').get('code') }}
-                </div>
-                <div class="col-md-2 history-call-data center">
-                    {{ item.get('completed_at').strftime('%m-%d-%Y @ %H:%M %Z') }}
-                </div>
-                <div class="col-md-1 history-call-data">
-                    <a href="{{ item.get('details').get('doc_url') }}" class="tooltip-title" title="{{ item.get('details').get('title') }} Documentation" target="_blank">Docs</a>
+                <div id="details_wrapper_{{ loop.index }}" style="display: none;">
+                    <div id="request_details">
+                        {%- if item.get('request') %}
+                            {%- if item.get('request').get('url') %}
+                                <div id="api_uri">
+                                    <h5>Request URL</h5>
+                                    <div class="code-block">
+                                        {{ item.get('request').get('url')|pretty_print_url|safe }}
+                                    </div>
+                                </div>
+                            {% endif -%}
+                            {%- if item.get('request').get('headers') %}
+                                <div id="api_headers">
+                                    <h5>Request Headers</h5>
+                                    <div class="code-block">
+                                        {{ item.get('request').get('headers')|pretty_print_json|safe }}
+                                    </div>
+                                </div>
+                            {% endif -%}
+                            {%- if item.get('request').get('data') %}
+                                <h5>Request Data Object</h5>
+                                <div class="code-block data-object">
+                                    {%- if item.get('request').get('data') == 'SCRUBBED' %}
+                                        <pre><span class="s2">[SCRUBBED]</span></pre>
+                                    {% else %}
+                                        {{ item.get('request').get('data')|pretty_print_json|safe }}
+                                    {% endif -%}
+                                </div>
+                            {% endif -%}
+                        {% endif -%}
+                    </div>
+                    <div id="response_details">
+                        {% if item.get('response') %}
+                            {%- if item.get('response').get('headers') %}
+                                <div id="api_response_headers">
+                                    <h5>Response Headers</h5>
+                                    <div class="code-block">
+                                        {{ item.get('response').get('headers')|pretty_print_json|safe }}
+                                    </div>
+                                </div>
+                            {% endif -%}
+                            {%- if item.get('response').get('body') %}
+                                <div id="api_response_body">
+                                    <h5>Response Body</h5>
+                                    <div class="code-block">
+                                        {{ item.get('response').get('body')|pretty_print_json|safe }}
+                                    </div>
+                                </div>
+                            {% endif -%}
+                        {% endif -%}
+                    </div>
                 </div>
             </div>
-            <div id="details_wrapper_{{ loop.index }}" style="display: none;">
-                <div id="request_details">
-                    {%- if item.get('request') %}
-                        {%- if item.get('request').get('url') %}
-                            <div id="api_uri">
-                                <h5>Request URL</h5>
-                                <div class="code-block">
-                                    {{ item.get('request').get('url')|pretty_print_url|safe }}
-                                </div>
-                            </div>
-                        {% endif -%}
-                        {%- if item.get('request').get('headers') %}
-                            <div id="api_headers">
-                                <h5>Request Headers</h5>
-                                <div class="code-block">
-                                    {{ item.get('request').get('headers')|pretty_print_json|safe }}
-                                </div>
-                            </div>
-                        {% endif -%}
-                        {%- if item.get('request').get('data') %}
-                            <h5>Request Data Object</h5>
-                            <div class="code-block data-object">
-                                {%- if item.get('request').get('data') == 'SCRUBBED' %}
-                                    <pre><span class="s2">[SCRUBBED]</span></pre>
-                                {% else %}
-                                    {{ item.get('request').get('data')|pretty_print_json|safe }}
-                                {% endif -%}
-                            </div>
-                        {% endif -%}
-                    {% endif -%}
-                </div>
-                <div id="response_details">
-                    {% if item.get('response') %}
-                        {%- if item.get('response').get('headers') %}
-                            <div id="api_response_headers">
-                                <h5>Response Headers</h5>
-                                <div class="code-block">
-                                    {{ item.get('response').get('headers')|pretty_print_json|safe }}
-                                </div>
-                            </div>
-                        {% endif -%}
-                        {%- if item.get('response').get('body') %}
-                            <div id="api_response_body">
-                                <h5>Response Body</h5>
-                                <div class="code-block">
-                                    {{ item.get('response').get('body')|pretty_print_json|safe }}
-                                </div>
-                            </div>
-                        {% endif -%}
-                    {% endif -%}
-                </div>
+        {% endfor -%}
+        <a class="scrollup tooltip-title" title="Scroll to Top">Scroll</a>
+    {% else %}
+        <div class="panel panel-danger">
+            <div class="panel-heading">
+                <strong>Warning!</strong> No API calls have been executed as of yet.
             </div>
         </div>
-    {% endfor -%}
-    <a class="scrollup tooltip-title" title="Scroll to Top">Scroll</a>
+    {% endif -%}
 
     <div class="modal fade" id="confirm-delete" role="dialog" aria-labelledby="history_scrub" aria-hidden="true">
         <div class="modal-dialog">
