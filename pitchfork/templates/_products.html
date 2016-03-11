@@ -179,13 +179,33 @@
             </a>
         </h3>
     </div>
-    <!-- <div class="col-md-3 product-display">
+    <div class="col-md-3 product-display">
         <h3 class="product-name">
-            <img src="{# url_for('static', filename='images/products/servers.png') #}" class="product-image" />
-            <a href="/#">
+            <img src="{{ url_for('static', filename='images/products/metrics.png') }}" class="product-image" />
+            <a href="/preferences" class="product-link">
+                <span class="product-name-top">Cloud</span>
+                <span class="product-name-bottom">Preferences</span>
+            </a>
+        </h3>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-3 product-display">
+        <h3 class="product-name">
+            <img src="{{ url_for('static', filename='images/products/dns.png') }}" class="product-image" />
+            <a href="/managed_dns" class="product-link">
+                <span class="product-name-top">Managed</span>
+                <span class="product-name-bottom">DNS</span>
+            </a>
+        </h3>
+    </div>
+    <div class="col-md-3 product-display">
+        <h3 class="product-name">
+            <img src="{{ url_for('static', filename='images/products/servers.png') }}" class="product-image" />
+            <a href="/keep">
                 <span class="product-name-top">Cloud</span>
                 <span class="product-name-bottom">Keep</span>
             </a>
         </h3>
-    </div> -->
+    </div>
 </div>
