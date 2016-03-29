@@ -96,6 +96,7 @@ class ProductTests(unittest.TestCase):
                     'field_type': 'text',
                     'description': 'Test Variable',
                     'required': True,
+                    'duplicate': True,
                     'field_display_data': '',
                     'id_value': 0,
                     'field_display': 'TextField',
@@ -878,6 +879,7 @@ class ProductTests(unittest.TestCase):
         )
 
     def test_pf_autoscale_api_user_perms(self):
+        self.setup_useable_api_call_with_variables()
         with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
@@ -891,6 +893,11 @@ class ProductTests(unittest.TestCase):
             'Autoscale',
             response.data,
             'Did not find correct HTML on page'
+        )
+        self.assertIn(
+            'duplicate-field',
+            response.data.decode('utf-8'),
+            'Could not find expected class on page'
         )
 
     def test_pf_autoscale_api_admin_perms_no_settings(self):
