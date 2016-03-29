@@ -208,6 +208,7 @@ class Variable:
         self.field_type = variable.get('field_type')
         self.description = variable.get('description')
         self.required = bool(variable.get('required'))
+        self.duplicate = bool(variable.get('duplicate'))
         self.field_display_data = variable.get('field_display_data')
         self.id_value = int(variable.get('id_value', 0))
         self.field_display = variable.get('field_display')

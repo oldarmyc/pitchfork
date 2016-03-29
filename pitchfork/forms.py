@@ -101,6 +101,7 @@ class CallVariables(Form):
     field_display_data = fields.TextAreaField('Select Data:')
     description = fields.TextField('Short Description:')
     required = fields.BooleanField('Required:')
+    duplicate = fields.BooleanField('Allow Duplicate:', default=False)
     id_value = fields.HiddenField('id_value', default=0)
 
 

@@ -78,6 +78,7 @@
                         {% if api_call.get('variables') or api_call.get('allow_filter') %}
                             <table class="table">
                                 <tr>
+                                    <th></th>
                                     <th>Parameter</th>
                                     <th></th>
                                     <th>Type</th>
@@ -86,6 +87,11 @@
                                 </tr>
                                 {% for var in api_call.get('variables') %}
                                     <tr>
+                                        <td width="26px">
+                                            {% if var.get('duplicate') %}
+                                                <a class="duplicate-field tooltip-title" title="Add Network"><span class="fa fa-plus text-success"></span></a>
+                                            {% endif -%}
+                                        </td>
                                         <td>
                                             {{ var.get('variable_name') }}
                                         </td>
