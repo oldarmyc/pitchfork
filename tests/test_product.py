@@ -567,7 +567,6 @@ class ProductTests(unittest.TestCase):
         found_call = self.db.autoscale.find()
         assert found_call.count() == 0, 'No calls should have been found'
 
-
     def test_pf_autoscale_manage_api_add_post_with_vars(self):
         self.db.autoscale.remove()
         with self.app as c:
