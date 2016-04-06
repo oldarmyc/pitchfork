@@ -41,7 +41,7 @@
                     <td>
                         {% if api.get('variables') %}
                             {% for var in api.get('variables') %}
-                                <span {% if var.get('required') %}class="text-danger"><span class="fa fa-start tooltip-title" title="Required Attribute"></span{% endif %}>{{ var.get('variable_name') }}</span><br />
+                                <span {% if var.get('required') %}class="text-danger">{% else %}>{% endif %}{{ var.get('variable_name') }}</span>{% if var.get('duplicate') %}<span class="text-success tooltip_show" title="Allow duplicate values">&nbsp; &nbsp;<strong>D</strong></span>{% endif -%}<br />
                             {% endfor %}
                         {% endif %}
                     </td>

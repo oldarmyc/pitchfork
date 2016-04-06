@@ -96,6 +96,7 @@ class ProductTests(unittest.TestCase):
                     'field_type': 'text',
                     'description': 'Test Variable',
                     'required': True,
+                    'duplicate': True,
                     'field_display_data': '',
                     'id_value': 0,
                     'field_display': 'TextField',
@@ -566,6 +567,60 @@ class ProductTests(unittest.TestCase):
         found_call = self.db.autoscale.find()
         assert found_call.count() == 0, 'No calls should have been found'
 
+    def test_pf_autoscale_manage_api_add_post_with_vars(self):
+        self.db.autoscale.remove()
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get(
+                '/autoscale/manage/api/add'
+            )
+            token = self.retrieve_csrf_token(response.data)
+            data = {
+                'csrf_token': token,
+                'title': 'Add Call',
+                'doc_url': 'http://docs.rackspace.com',
+                'verb': 'GET',
+                'api_uri': '/v1.0/{ddi}/groups',
+                'group': 'add_new_group',
+                'new_group': 'Test Group',
+                'product': 'autoscale',
+                'variable_0-description': 'Test variable',
+                'variable_0-duplicate': 'y',
+                'variable_0-field_display': 'TextField',
+                'variable_0-field_type': 'text',
+                'variable_0-variable_name': 'test_var',
+                'variable_0-field_display_data': '',
+                'variable_0-required': 'y'
+            }
+            response = c.post(
+                '/autoscale/manage/api/add',
+                data=data,
+                follow_redirects=True
+            )
+
+        self.assertIn(
+            'API Call was added successfully',
+            response.data,
+            'Bad message when submitting good call'
+        )
+        calls = self.db.autoscale.find()
+        found = self.db.autoscale.find_one()
+        assert calls.count() == 1, 'Incorrect count of calls'
+        assert found.get('group') == 'test_group', (
+            'Group not find or incorrect group'
+        )
+        group = self.db.api_settings.find_one(
+            {'autoscale.groups.slug': 'test_group'}
+        )
+        assert group, 'Could not find added group'
+
+        assert len(found.get('variables')) == 1, 'Incorrect variable length'
+        variable = found.get('variables')[0]
+        assert variable.get('required'), 'Variable should be required'
+        assert variable.get('duplicate'), 'Variable should be a duplicate'
+
     """ Edit API Call """
 
     def test_pf_autoscale_manage_api_edit_user_perms(self):
@@ -877,7 +932,45 @@ class ProductTests(unittest.TestCase):
             'Did not find correct HTML on page'
         )
 
+    def test_pf_autoscale_api_not_active(self):
+        temp = {
+            'app_url': '/autoscale',
+            'db_name': 'autoscale',
+            'doc_url': (
+                'http://docs.rackspace.com/cas/api/v1.0/autosca'
+                'le-devguide/content/Overview.html'
+            ),
+            'title': 'Autoscale',
+            'active': False,
+            'require_region': True,
+            'uk_api': 'https://{region}.autoscale.api.rackspacecloud.com',
+            'us_api': 'https://{region}.autoscale.api.rackspacecloud.com'
+        }
+        self.db.api_settings.update({}, {'$set': {'autoscale': temp}})
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get('/autoscale/')
+            assert response.status_code == 302, (
+                'Invalid response code %s' % response.status_code
+            )
+            response = c.get(
+                '/autoscale/',
+                follow_redirects=True
+            )
+
+        assert response.status_code == 200, (
+            'Invalid response code %s' % response.status_code
+        )
+        self.assertIn(
+            'Product is not active and cannot be used at this time',
+            response.data.decode('utf-8'),
+            'Did not find correct HTML on page'
+        )
+
     def test_pf_autoscale_api_user_perms(self):
+        self.setup_useable_api_call_with_variables()
         with self.app as c:
             with c.session_transaction() as sess:
                 self.setup_user_login(sess)
@@ -891,6 +984,11 @@ class ProductTests(unittest.TestCase):
             'Autoscale',
             response.data,
             'Did not find correct HTML on page'
+        )
+        self.assertIn(
+            'duplicate-field',
+            response.data.decode('utf-8'),
+            'Could not find expected class on page'
         )
 
     def test_pf_autoscale_api_admin_perms_no_settings(self):

@@ -137,5 +137,37 @@
         $('body').on('hidden.bs.modal', '.modal', function () {
             $(this).find('form')[0].reset();
         });
+
+        $('.duplicate-field').on('click', function() {
+            $(this).tooltip('destroy');
+            var parent_row = $(this).parent().parent();
+            var orig_input = parent_row.find('input');
+            var clone_row = $(this).parent().parent().clone(true);
+            var current_name = parent_row.find('input').attr('name');
+            var items = current_name.split('_');
+            var count = parseInt(items[items.length -1]);
+            if (count < 2 || isNaN(count)) {
+                if (parseInt(items[items.length -1])) {
+                    items.pop();
+                    clone_row.find('input').attr('name', items.join('_') + '_' + (count + 1));
+                    clone_row.find('input').attr('id', items.join('_') + '_' + (count + 1));
+                } else {
+                    clone_row.find('input').attr('name', items.join('_') + '_1');
+                    clone_row.find('input').attr('id', items.join('_') + '_1');
+                }
+                clone_row.find('input').val('');
+                $(this).hide();
+
+                var duplicate = clone_row.find('.duplicate-field');
+                if ((count + 1) === 2) {
+                    duplicate.hide();
+                } else {
+                    duplicate.attr('title', 'Add Network');
+                    duplicate.removeAttr('data-original-title');
+                }
+                parent_row.after(clone_row);
+                $('.tooltip-title').tooltip();
+            }
+        });
 	</script>
 {% endblock %}
