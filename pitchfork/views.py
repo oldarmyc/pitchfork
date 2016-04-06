@@ -43,6 +43,10 @@ class ProductsView(FlaskView):
             flash('Product not found, please check the URL and try again')
             return redirect('/')
 
+        if not found_product.active:
+            flash('Product is not active and cannot be used at this time')
+            return redirect('/')
+
         api_calls = helper.gather_api_calls(
             found_product,
             testing_calls,

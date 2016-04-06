@@ -932,6 +932,43 @@ class ProductTests(unittest.TestCase):
             'Did not find correct HTML on page'
         )
 
+    def test_pf_autoscale_api_not_active(self):
+        temp = {
+            'app_url': '/autoscale',
+            'db_name': 'autoscale',
+            'doc_url': (
+                'http://docs.rackspace.com/cas/api/v1.0/autosca'
+                'le-devguide/content/Overview.html'
+            ),
+            'title': 'Autoscale',
+            'active': False,
+            'require_region': True,
+            'uk_api': 'https://{region}.autoscale.api.rackspacecloud.com',
+            'us_api': 'https://{region}.autoscale.api.rackspacecloud.com'
+        }
+        self.db.api_settings.update({}, {'$set': {'autoscale': temp}})
+        with self.app as c:
+            with c.session_transaction() as sess:
+                self.setup_admin_login(sess)
+
+            response = c.get('/autoscale/')
+            assert response.status_code == 302, (
+                'Invalid response code %s' % response.status_code
+            )
+            response = c.get(
+                '/autoscale/',
+                follow_redirects=True
+            )
+
+        assert response.status_code == 200, (
+            'Invalid response code %s' % response.status_code
+        )
+        self.assertIn(
+            'Product is not active and cannot be used at this time',
+            response.data.decode('utf-8'),
+            'Did not find correct HTML on page'
+        )
+
     def test_pf_autoscale_api_user_perms(self):
         self.setup_useable_api_call_with_variables()
         with self.app as c:
