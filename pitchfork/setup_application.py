@@ -23,11 +23,11 @@ from flask import Flask, g
 from config import config
 
 
-import views
-import logging
-import defaults
-import template_filters
 import template_functions
+import template_filters
+import defaults
+import logging
+import views
 
 
 def create_app(db_name=None):
