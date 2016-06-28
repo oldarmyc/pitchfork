@@ -12,6 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+    If you are running the application within docker using the provided
+    Dockerfile and docker-compose then you will need to change the MONGO_HOST
+    option to use the correct container.
+
+    import os
+
+    MONGO_HOST = os.environ['PITCHFORK_DB_1_PORT_27017_TCP_ADDR']
+
+"""
+
 MONGO_HOST = 'localhost'
 MONGO_PORT = 27017
 MONGO_KWARGS = {'tz_aware': True}
