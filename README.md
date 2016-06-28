@@ -33,7 +33,7 @@ Mocking is available to allow for the call to be built out using the parameters 
 View the public version at [https://pitchfork.cloudapi.co](https://pitchfork.cloudapi.co "Pitchfork Application")
 
 #### Want to run it locally?
-All you need is Python 2.7, Mongodb, and a web browser
+All you need is Python 2.7, Mongodb, and a web browser or use docker
 
 ##### Create a virtual environment
 **Note:** The below example uses virtualenvwrapper
@@ -80,6 +80,53 @@ python runapp.py
 ````
 Browse to http://localhost:5000 to view the application and login using your Cloud credentials
 
+##### Create and git the code
+```
+mkdir pitchfork
+git clone https://github.com/oldarmyc/pitchfork.git
+cd pitchfork
+```
+
+##### Copy over sample configs
+````
+cp pitchfork/config/config.example.py pitchfork/config/config.py
+````
+
+##### Edit the config.py file
+```
+vim pitchfork/config/config.py
+```
+
+##### Add import at top of file
+```python
+import os
+```
+
+##### Change MONGO_HOST from localhost to the following:
+```python
+MONGO_HOST = os.environ['PITCHFORK_DB_1_PORT_27017_TCP_ADDR']
+```
+
+##### Start the build
+```
+docker-compose build
+```
+
+##### Bring the containers up and run in the background
+```
+docker-compose up -d
+```
+
+##### Verify that everything is running
+```
+docker ps
+```
+
+##### Stoping the application
+```
+docker-compose stop
+```
+
 #### Upgrading
 To upgrade an existing install to work with the recent changes do the following:
 
@@ -111,6 +158,8 @@ mongorestore -d pitchfork --drop pitchfork/
 ```
 
 **Note:** If you have added your own calls into the collections you can omit the --drop in the call above, and the calls will be added to the existing collection.
+
+If you are running pitchfork using the docker method above, the mongo container has the port 27017 exposed to the local machine. You can connect and do the restore just as you would using the above method.
 
 #### Testing
 The application unit tests can be run with nose and selenium. To install the requirements to run test do the following in your virtual environment
