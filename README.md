@@ -80,6 +80,8 @@ python runapp.py
 ````
 Browse to http://localhost:5000 to view the application and login using your Cloud credentials
 
+#### Run the application using docker
+
 ##### Create and git the code
 ```
 mkdir pitchfork
