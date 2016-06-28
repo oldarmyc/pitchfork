@@ -13,13 +13,13 @@
 # limitations under the License.
 
 
-from flask import g, session
-from dateutil import tz
-from models import Variable
-from pygments import highlight
 from pygments.lexers import JsonLexer, XmlLexer
 from pygments.formatters import HtmlFormatter
 from bson.objectid import ObjectId
+from pygments import highlight
+from flask import g, session
+from models import Variable
+from dateutil import tz
 
 
 import re

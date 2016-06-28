@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from flask import g
 from models import Product
 from bson.objectid import ObjectId

@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from flask import (
     g, render_template, request, redirect, session, url_for,
     flash, jsonify, abort
 )
-from flask.ext.classy import FlaskView, route
-from flask.ext.cloudadmin.decorators import check_perms
 from models import Product, Call, Verb, Region, Favorite, Feedback
+from flask_cloudadmin.decorators import check_perms
+from flask_classy import FlaskView, route
 from bson.objectid import ObjectId
 
 
