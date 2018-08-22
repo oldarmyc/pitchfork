@@ -378,7 +378,7 @@ def recursive_dict_object(
                         elif var_type == 'text/integer':
                             try:
                                 sub_list.append(int(_value.strip()))
-                            except:
+                            except Exception:
                                 sub_list.append(_value.strip())
                         else:
                             sub_list.append(_value.strip())
@@ -399,7 +399,7 @@ def recursive_dict_object(
 
             try:
                 _key = re.match('\{(.+?)\}', value)
-            except:
+            except Exception:
                 _key = None
 
             if _key:
@@ -429,7 +429,7 @@ def recursive_dict_object(
                                 temp_dict[str(_pkey_value)] = int(
                                     _value.strip()
                                 )
-                            except:
+                            except Exception:
                                 temp_dict[str(_pkey_value)] = _value.strip()
                         else:
                             temp_dict[str(_pkey_value)] = _value.strip()
@@ -570,12 +570,12 @@ def process_api_request(url, verb, data, headers, html_convert=True):
 
     try:
         response_headers = json.loads(response.headers)
-    except:
+    except Exception:
         response_headers = dict(response.headers)
 
     try:
         content_type = response_headers.get('content-type').split(';')
-    except:
+    except Exception:
         content_type = []
 
     try:
@@ -592,7 +592,7 @@ def process_api_request(url, verb, data, headers, html_convert=True):
                 content = pretty_format_data(json.loads(response.content))
             else:
                 content = json.loads(response.content)
-    except:
+    except Exception:
         temp = re.findall('<body>(.+?)<\/body>', response.content, re.S)
         if temp:
             formatted_content = re.sub(
@@ -683,7 +683,7 @@ def log_api_call_request(
                 'product': title
             }
         )
-    except:
+    except Exception:
         pass
 
     return

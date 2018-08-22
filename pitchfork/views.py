@@ -218,7 +218,7 @@ class ProductsView(FlaskView):
                     ['title', pymongo.ASCENDING]
                 ]
             )
-        except:
+        except Exception:
             api_commands = []
 
         return render_template(
@@ -285,7 +285,7 @@ class ProductsView(FlaskView):
                         api_call.__dict__
                     )
                     flash('API Call was added successfully', 'success')
-                except:
+                except Exception:
                     flash(
                         'There was an issue storing the API Call. Check '
                         'the product and ensure the db_name is specified',
@@ -544,7 +544,7 @@ class FeedbackView(FlaskView):
         try:
             feedback = Feedback(request.json)
             g.db.feedback.insert(feedback.__dict__)
-        except:
+        except Exception:
             abort(400)
 
         return jsonify(code=200)
@@ -560,7 +560,7 @@ class FeedbackView(FlaskView):
                     }
                 )
                 return jsonify(code=200)
-            except:
+            except Exception:
                 abort(400)
         else:
             abort(404)

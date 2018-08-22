@@ -1094,7 +1094,6 @@ class ProductTests(unittest.TestCase):
 
             data = {
                 'api_verb': 'GET',
-                'testing': False,
                 'api_url': '{ddi}/groups',
                 'api_token': 'test_token',
                 'api_id': str(api_id),
@@ -1146,7 +1145,6 @@ class ProductTests(unittest.TestCase):
 
             data = {
                 'api_verb': 'GET',
-                'testing': False,
                 'api_url': '{ddi}/groups',
                 'api_token': 'test_token',
                 'api_id': str(api_id),
